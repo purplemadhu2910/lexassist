@@ -144,9 +144,9 @@ async def explain_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Error processing document: {str(e)}")
 
 @app.get("/history")
-async def get_history(limit: int = 50, user_id: int = None):
+async def get_history(limit: int = 50, user_id: Optional[int] = None):
     try:
-        history = db.get_history(limit, int(user_id) if user_id is not None else None)
+        history = db.get_history(limit, user_id)
         return {"history": history, "count": len(history)}
     except Exception as e:
         logger.error(f"Error fetching history: {str(e)}")

@@ -1,15 +1,15 @@
+import os
 import streamlit as st
 import requests
 from datetime import datetime
 
 st.set_page_config(
     page_title="LexAssist - AI Legal & Tax Assistant",
-    page_icon="",
+    page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-import os
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 if 'query_history' not in st.session_state:
