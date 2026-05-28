@@ -3,6 +3,7 @@ services:
     name: lexassist-backend
     runtime: python
     rootDir: .
+    pythonVersion: "3.11.9"
     buildCommand: pip install -r requirements.txt && python ingestion/load_pdfs.py && python ingestion/load_json.py && python ingestion/load_excel.py && python ingestion/chunk_text.py && python backend/build_index.py
     startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -13,6 +14,7 @@ services:
     name: lexassist-frontend
     runtime: python
     rootDir: .
+    pythonVersion: "3.11.9"
     buildCommand: pip install -r requirements.txt
     startCommand: cd frontend && streamlit run app.py --server.port $PORT --server.address 0.0.0.0
     envVars:
