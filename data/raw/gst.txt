@@ -1,0 +1,19 @@
+GST (Goods and Services Tax) registration is required for businesses in India under certain conditions.
+
+Documents required for GST registration:
+- PAN Card of business/entity
+- Aadhaar Card
+- Proof of business registration (if applicable)
+- Address proof of business place
+- Bank account statement or cancelled cheque
+- Digital Signature (for companies and LLPs)
+
+GST is mandatory if:
+- Annual turnover exceeds prescribed limit
+- Business involves interstate supply
+- E-commerce selling is involved
+
+GST helps in:
+- Tax transparency
+- Avoiding multiple taxes
+- Legal compliance

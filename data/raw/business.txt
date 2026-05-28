@@ -1,0 +1,16 @@
+To open a business in India, the following documents are generally required:
+
+- PAN Card of the owner or company
+- Aadhaar Card for identity verification
+- Address proof of business (electricity bill, rent agreement, etc.)
+- Bank account details
+- Passport-size photographs
+- GST registration (if turnover exceeds threshold or applicable)
+- Business registration certificate (for company/LLP)
+- Digital Signature Certificate (for company registration)
+
+Types of business structures in India:
+- Sole Proprietorship
+- Partnership
+- Limited Liability Partnership (LLP)
+- Private Limited Company

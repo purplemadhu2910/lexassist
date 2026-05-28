@@ -1,0 +1,16 @@
+A rental agreement is a legal contract between a landlord and tenant.
+
+Key elements of a rental agreement:
+- Names of landlord and tenant
+- Property details
+- Rent amount and payment terms
+- Security deposit
+- Duration of agreement
+- Maintenance responsibilities
+- Termination conditions
+
+Legal points:
+- Agreement should be in writing
+- Stamp duty and registration may be required
+- Tenant must follow terms to avoid eviction
+- Landlord must return deposit as per agreement
