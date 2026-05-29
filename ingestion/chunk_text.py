@@ -1,7 +1,8 @@
 import os
 
-INPUT_FOLDER = "data/processed/cleaned_text"
-OUTPUT_FOLDER = "data/processed/chunks"
+BASE = os.path.dirname(os.path.abspath(__file__))
+INPUT_FOLDER = os.path.join(BASE, "..", "data", "processed", "cleaned_text")
+OUTPUT_FOLDER = os.path.join(BASE, "..", "data", "processed", "chunks")
 
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
@@ -23,7 +24,7 @@ for file in os.listdir(INPUT_FOLDER):
             start += CHUNK_SIZE - CHUNK_OVERLAP
 
         for i, chunk in enumerate(chunks):
-            chunk_filename = f"{file.replace('.txt','')}_chunk_{i}.txt"
+            chunk_filename = f"{file.replace('.txt', '')}_chunk_{i}.txt"
             chunk_path = os.path.join(OUTPUT_FOLDER, chunk_filename)
 
             with open(chunk_path, "w", encoding="utf-8") as f:

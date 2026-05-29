@@ -3,7 +3,7 @@ services:
     name: lexassist-backend
     runtime: python
     rootDir: .
-    buildCommand: pip install -r requirements.txt && python ingestion/load_pdfs.py && python ingestion/load_json.py && python ingestion/load_excel.py && python ingestion/chunk_text.py && python backend/build_index.py
+    buildCommand: pip install -r requirements.txt && python ingestion/load_pdfs.py && python ingestion/load_json.py && python ingestion/load_excel.py && cp data/raw/*.txt data/processed/cleaned_text/ && python ingestion/chunk_text.py && python backend/build_index.py
     startCommand: cd backend && uvicorn main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: GROQ_API_KEY
