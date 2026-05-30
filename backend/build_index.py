@@ -2,7 +2,7 @@ import os
 import pickle
 import faiss
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from fastembed import TextEmbedding
 
 CHUNKS_FOLDER = os.path.join(os.path.dirname(__file__), "..", "data", "processed", "chunks")
 RAW_FOLDER = os.path.join(os.path.dirname(__file__), "..", "data", "raw")
@@ -37,8 +37,10 @@ def build_index():
     print(f"Total texts to index: {len(texts)}")
     print("Generating embeddings...")
 
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-    embeddings = model.encode(texts, batch_size=64, show_progress_bar=True, convert_to_numpy=True).astype("float32")
+    model = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
+    embeddings = list(model.embed(texts))
+    import numpy as np
+    embeddings = np.array(embeddings).astype("float32")
 
     print("Building FAISS index...")
     dimension = embeddings.shape[1]
