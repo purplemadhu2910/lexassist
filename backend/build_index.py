@@ -37,7 +37,7 @@ def build_index():
     print(f"Total texts to index: {len(texts)}")
     print("Generating embeddings...")
 
-    model = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
+    model = TextEmbedding("BAAI/bge-small-en-v1.5")
     embeddings = list(model.embed(texts))
     import numpy as np
     embeddings = np.array(embeddings).astype("float32")

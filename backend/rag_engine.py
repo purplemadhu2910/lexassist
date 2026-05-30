@@ -21,7 +21,7 @@ def _load_resources():
         return False
 
     if _model is None:
-        _model = TextEmbedding("sentence-transformers/all-MiniLM-L6-v2")
+        _model = TextEmbedding("BAAI/bge-small-en-v1.5")
 
     if _index is None:
         _index = faiss.read_index(index_path)

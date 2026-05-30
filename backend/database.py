@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class Database:
     def __init__(self, db_path: str = None):
         if db_path is None:
-            db_path = os.path.join(os.path.dirname(__file__), "lexassist.db")
+            db_path = os.path.join("/tmp", "lexassist.db")
         self.db_path = db_path
         self.init_db()
 
