@@ -4,9 +4,11 @@
 # Database
 *.db
 
-# Auto-generated during build - do NOT commit these
-data/vector_store/
+# Processed text - regenerated during build
 data/processed/
+
+# Do NOT ignore vector store - commit it
+# data/vector_store/
 
 # Python
 __pycache__/
