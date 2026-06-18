@@ -38,9 +38,7 @@ def build_index():
     print("Generating embeddings...")
 
     model = TextEmbedding("BAAI/bge-small-en-v1.5")
-    embeddings = list(model.embed(texts))
-    import numpy as np
-    embeddings = np.array(embeddings).astype("float32")
+    embeddings = np.array(list(model.embed(texts))).astype("float32")
 
     print("Building FAISS index...")
     dimension = embeddings.shape[1]

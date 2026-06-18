@@ -51,19 +51,36 @@ def check_rate_limit(ip: str):
         raise HTTPException(status_code=429, detail="Too many login attempts. Try again in a minute.")
     _login_attempts[ip].append(now)
 
-# Fix 5: Simple token store (in-memory)
-_sessions: dict = {}
+# Fix 5: File-backed token store so sessions survive process restarts
+_SESSIONS_FILE = "/tmp/lexassist_sessions.pkl"
+
+def _load_sessions() -> dict:
+    if os.path.exists(_SESSIONS_FILE):
+        with open(_SESSIONS_FILE, "rb") as f:
+            import pickle
+            return pickle.load(f)
+    return {}
+
+def _save_sessions(sessions: dict):
+    with open(_SESSIONS_FILE, "wb") as f:
+        import pickle
+        pickle.dump(sessions, f)
 
 def create_token(user_id: int) -> str:
     token = secrets.token_hex(32)
-    _sessions[token] = user_id
+    sessions = _load_sessions()
+    sessions[token] = user_id
+    _save_sessions(sessions)
     return token
 
 def get_current_user(request: Request) -> int:
     token = request.headers.get("X-Auth-Token")
-    if not token or token not in _sessions:
+    if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return _sessions[token]
+    sessions = _load_sessions()
+    if token not in sessions:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return sessions[token]
 
 # Fix 2: Input sanitization
 BLOCKED_PATTERNS = ["ignore previous", "disregard", "you are now", "new instructions", "system prompt"]
