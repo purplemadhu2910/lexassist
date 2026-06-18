@@ -7,7 +7,9 @@ from document_parser import DocumentParser
 from database import Database
 import logging
 import os
+import pickle
 import secrets
+import threading
 import time
 from collections import defaultdict
 from dotenv import load_dotenv
@@ -23,8 +25,11 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Fix 3: Restrict CORS to frontend origin only
-ALLOWED_ORIGINS = os.getenv("FRONTEND_URL", "http://localhost:8501").split(",")
+# Fix 3: CORS — allow localhost for dev, and the Render public URL for prod
+_frontend_url = os.getenv("FRONTEND_URL", "")
+ALLOWED_ORIGINS = ["http://localhost:8501", "http://127.0.0.1:8501"]
+if _frontend_url:
+    ALLOWED_ORIGINS += [u.strip() for u in _frontend_url.split(",")]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
@@ -51,33 +56,39 @@ def check_rate_limit(ip: str):
         raise HTTPException(status_code=429, detail="Too many login attempts. Try again in a minute.")
     _login_attempts[ip].append(now)
 
-# Fix 5: File-backed token store so sessions survive process restarts
+# Fix 4+5: File-backed token store with file locking to prevent corruption
 _SESSIONS_FILE = "/tmp/lexassist_sessions.pkl"
+_sessions_lock = threading.Lock()
 
 def _load_sessions() -> dict:
     if os.path.exists(_SESSIONS_FILE):
-        with open(_SESSIONS_FILE, "rb") as f:
-            import pickle
-            return pickle.load(f)
+        try:
+            with open(_SESSIONS_FILE, "rb") as f:
+                return pickle.load(f)
+        except Exception:
+            return {}
     return {}
 
 def _save_sessions(sessions: dict):
-    with open(_SESSIONS_FILE, "wb") as f:
-        import pickle
+    tmp = _SESSIONS_FILE + ".tmp"
+    with open(tmp, "wb") as f:
         pickle.dump(sessions, f)
+    os.replace(tmp, _SESSIONS_FILE)  # atomic write
 
 def create_token(user_id: int) -> str:
     token = secrets.token_hex(32)
-    sessions = _load_sessions()
-    sessions[token] = user_id
-    _save_sessions(sessions)
+    with _sessions_lock:
+        sessions = _load_sessions()
+        sessions[token] = user_id
+        _save_sessions(sessions)
     return token
 
 def get_current_user(request: Request) -> int:
     token = request.headers.get("X-Auth-Token")
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    sessions = _load_sessions()
+    with _sessions_lock:
+        sessions = _load_sessions()
     if token not in sessions:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return sessions[token]
