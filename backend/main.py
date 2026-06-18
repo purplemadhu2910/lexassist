@@ -1,12 +1,15 @@
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional
 from ai_engine import AIEngine
 from document_parser import DocumentParser
 from database import Database
 import logging
 import os
+import secrets
+import time
+from collections import defaultdict
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
@@ -20,11 +23,13 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# Fix 3: Restrict CORS to frontend origin only
+ALLOWED_ORIGINS = os.getenv("FRONTEND_URL", "http://localhost:8501").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST"],
     allow_headers=["*"],
 )
 
@@ -32,10 +37,55 @@ ai_engine = AIEngine()
 doc_parser = DocumentParser()
 db = Database()
 
+# Fix 1: Simple in-memory rate limiter for login attempts
+_login_attempts: dict = defaultdict(list)
+MAX_LOGIN_ATTEMPTS = 5
+RATE_LIMIT_WINDOW = 60  # seconds
+
+def check_rate_limit(ip: str):
+    now = time.time()
+    attempts = _login_attempts[ip]
+    # Remove attempts outside the window
+    _login_attempts[ip] = [t for t in attempts if now - t < RATE_LIMIT_WINDOW]
+    if len(_login_attempts[ip]) >= MAX_LOGIN_ATTEMPTS:
+        raise HTTPException(status_code=429, detail="Too many login attempts. Try again in a minute.")
+    _login_attempts[ip].append(now)
+
+# Fix 5: Simple token store (in-memory)
+_sessions: dict = {}
+
+def create_token(user_id: int) -> str:
+    token = secrets.token_hex(32)
+    _sessions[token] = user_id
+    return token
+
+def get_current_user(request: Request) -> int:
+    token = request.headers.get("X-Auth-Token")
+    if not token or token not in _sessions:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return _sessions[token]
+
+# Fix 2: Input sanitization
+BLOCKED_PATTERNS = ["ignore previous", "disregard", "you are now", "new instructions", "system prompt"]
+
+def sanitize_query(query: str) -> str:
+    lower = query.lower()
+    for pattern in BLOCKED_PATTERNS:
+        if pattern in lower:
+            raise HTTPException(status_code=400, detail="Invalid query content.")
+    return query.strip()[:2000]  # cap length
+
+
 class QueryRequest(BaseModel):
     query: str
     category: str = "general"
-    user_id: Optional[int] = None
+
+    @field_validator("category")
+    @classmethod
+    def validate_category(cls, v):
+        if v not in ("legal", "tax", "general", "document"):
+            return "general"
+        return v
 
 class QueryResponse(BaseModel):
     response: str
@@ -46,13 +96,25 @@ class AuthRequest(BaseModel):
     username: str
     password: str
 
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v):
+        v = v.strip()
+        if not v or len(v) > 50:
+            raise ValueError("Invalid username")
+        return v
+
+    @field_validator("password")
+    @classmethod
+    def validate_password(cls, v):
+        if not v or len(v) > 128:
+            raise ValueError("Invalid password")
+        return v
+
+
 @app.get("/")
 async def root():
-    return {
-        "message": "Welcome to LexAssist API",
-        "version": "1.0.0",
-        "endpoints": ["/ask", "/explain-document", "/health", "/login", "/register"]
-    }
+    return {"message": "Welcome to LexAssist API", "version": "1.0.0"}
 
 @app.get("/health")
 async def health_check():
@@ -69,44 +131,48 @@ async def health_check():
 
 @app.post("/register")
 async def register(request: AuthRequest):
-    if not request.username.strip() or not request.password.strip():
-        raise HTTPException(status_code=400, detail="Username and password cannot be empty")
-    success = db.register_user(request.username.strip(), request.password)
+    success = db.register_user(request.username, request.password)
     if not success:
         raise HTTPException(status_code=400, detail="Username already exists")
     return {"message": "Account created successfully"}
 
 @app.post("/login")
-async def login(request: AuthRequest):
-    user = db.login_user(request.username.strip(), request.password)
+async def login(request: AuthRequest, req: Request):
+    # Fix 1: Rate limit by IP
+    client_ip = req.client.host
+    check_rate_limit(client_ip)
+
+    user = db.login_user(request.username, request.password)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid username or password")
-    return {"message": "Login successful", "user_id": user["id"], "username": user["username"]}
+
+    token = create_token(user["id"])
+    return {"message": "Login successful", "token": token, "user_id": user["id"], "username": user["username"]}
 
 @app.post("/ask", response_model=QueryResponse)
-async def ask_question(request: QueryRequest):
+async def ask_question(request: QueryRequest, user_id: int = Depends(get_current_user)):
     try:
-        if not request.query.strip():
-            raise HTTPException(status_code=400, detail="Query cannot be empty")
+        # Fix 2: Sanitize input
+        query = sanitize_query(request.query)
 
-        logger.info(f"Processing query: {request.query[:50]}...")
-
-        response = await ai_engine.process_query(request.query, request.category)
-        db.save_query(request.query, response, request.category, request.user_id)
-        suggestions = ai_engine.generate_suggestions(request.query, request.category)
+        logger.info(f"Processing query: {query[:50]}...")
+        response = await ai_engine.process_query(query, request.category)
+        db.save_query(query, response, request.category, user_id)
+        suggestions = ai_engine.generate_suggestions(query, request.category)
 
         return QueryResponse(
             response=response,
             category=request.category,
             suggested_questions=suggestions
         )
-
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error processing query")
 
 @app.post("/explain-document")
-async def explain_document(file: UploadFile = File(...)):
+async def explain_document(file: UploadFile = File(...), user_id: int = Depends(get_current_user)):
     try:
         if not file.filename:
             raise HTTPException(status_code=400, detail="No file provided")
@@ -115,16 +181,13 @@ async def explain_document(file: UploadFile = File(...)):
         file_ext = '.' + file.filename.split('.')[-1].lower()
 
         if file_ext not in allowed_extensions:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Unsupported file type. Allowed: {', '.join(allowed_extensions)}"
-            )
-
-        logger.info(f"Processing document: {file.filename}")
+            raise HTTPException(status_code=400, detail=f"Unsupported file type. Allowed: {', '.join(allowed_extensions)}")
 
         content = await file.read()
-        extracted_text = doc_parser.extract_text(content, file_ext)
+        if len(content) > 5 * 1024 * 1024:  # 5MB limit
+            raise HTTPException(status_code=400, detail="File too large. Maximum size is 5MB.")
 
+        extracted_text = doc_parser.extract_text(content, file_ext)
         if not extracted_text.strip():
             raise HTTPException(status_code=400, detail="Could not extract text from document")
 
@@ -136,21 +199,21 @@ async def explain_document(file: UploadFile = File(...)):
             "explanation": explanation,
             "text_length": len(extracted_text)
         }
-
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error processing document: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error processing document: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error processing document")
 
+# Fix 4: /history now requires authentication, only returns own history
 @app.get("/history")
-async def get_history(limit: int = 50, user_id: Optional[int] = None):
+async def get_history(limit: int = 50, user_id: int = Depends(get_current_user)):
     try:
         history = db.get_history(limit, user_id)
         return {"history": history, "count": len(history)}
     except Exception as e:
         logger.error(f"Error fetching history: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error fetching history: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching history")
 
 if __name__ == "__main__":
     import uvicorn
