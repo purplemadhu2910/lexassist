@@ -51,6 +51,7 @@ def show_login_page():
         tab1, tab2 = st.tabs(["Sign In", "Create Account"])
 
         with tab1:
+            login_alert = st.empty()
             with st.form("login_form"):
                 username = st.text_input("Username", placeholder="Enter your username")
                 password = st.text_input("Password", type="password", placeholder="Enter your password")
@@ -71,16 +72,16 @@ def show_login_page():
                                 st.session_state.user_id = data["user_id"]
                                 st.session_state.username = data["username"]
                                 st.session_state.token = data["token"]
-                                st.success(f"Welcome back, {data['username']}!")
+                                login_alert.success(f"Welcome back, {data['username']}!")
                                 st.rerun()
                             elif response.status_code == 429:
-                                st.error("Too many login attempts. Please wait a minute and try again.")
+                                login_alert.error("Too many login attempts. Please wait a minute and try again.")
                             else:
-                                st.error("That username or password doesn't look right. Please try again.")
+                                login_alert.error("That username or password doesn't look right. Please try again.")
                         except requests.exceptions.ConnectionError:
-                            st.error("Could not reach the server. Please try again shortly.")
+                            login_alert.error("Could not reach the server. Please try again shortly.")
                 else:
-                    st.warning("Please fill in both your username and password.")
+                    login_alert.warning("Please fill in both your username and password.")
 
         with tab2:
             # Show error above the form
