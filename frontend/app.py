@@ -21,6 +21,7 @@ for key, default in {
     "legal_messages": [], "tax_messages": [], "general_messages": [],
     "legal_prefill": "", "tax_prefill": "", "general_prefill": "",
     "history_page": 0, "history_filter": "All",
+    "register_error": "",
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
@@ -82,6 +83,11 @@ def show_login_page():
                     st.warning("Please fill in both your username and password.")
 
         with tab2:
+            # Show error above the form
+            if st.session_state.register_error:
+                st.error(st.session_state.register_error)
+                st.session_state.register_error = ""
+
             with st.form("register_form"):
                 new_username = st.text_input("Choose a username", placeholder="Pick something you'll remember")
                 new_password = st.text_input("Choose a password", type="password", placeholder="At least 6 characters")
@@ -91,9 +97,11 @@ def show_login_page():
             if submit_reg:
                 if new_username.strip() and new_password.strip() and confirm_password.strip():
                     if len(new_password) < 6:
-                        st.error("Password should be at least 6 characters long.")
+                        st.session_state.register_error = "Password should be at least 6 characters long."
+                        st.rerun()
                     elif new_password != confirm_password:
-                        st.error("The passwords you entered don't match. Please try again.")
+                        st.session_state.register_error = "The passwords you entered don't match. Please try again."
+                        st.rerun()
                     else:
                         with st.spinner("Creating your account..."):
                             try:
@@ -103,13 +111,30 @@ def show_login_page():
                                     timeout=10
                                 )
                                 if response.status_code == 200:
-                                    st.success("Account created! Head over to Sign In to get started.")
+                                    # Auto sign-in after registration
+                                    login_resp = requests.post(
+                                        f"{API_URL}/login",
+                                        json={"username": new_username.strip(), "password": new_password},
+                                        timeout=10
+                                    )
+                                    if login_resp.status_code == 200:
+                                        data = login_resp.json()
+                                        st.session_state.logged_in = True
+                                        st.session_state.user_id = data["user_id"]
+                                        st.session_state.username = data["username"]
+                                        st.session_state.token = data["token"]
+                                        st.rerun()
+                                    else:
+                                        st.success("Account created! Please sign in.")
                                 else:
-                                    st.error("That username is already taken. Try a different one.")
+                                    st.session_state.register_error = "That username is already taken. Try a different one."
+                                    st.rerun()
                             except requests.exceptions.ConnectionError:
-                                st.error("Could not reach the server. Please try again shortly.")
+                                st.session_state.register_error = "Could not reach the server. Please try again shortly."
+                                st.rerun()
                 else:
-                    st.warning("Please fill in all three fields to create your account.")
+                    st.session_state.register_error = "Please fill in all three fields to create your account."
+                    st.rerun()
 
         st.markdown('<div class="auth-divider">Trusted by law students, professionals, and everyday citizens</div>', unsafe_allow_html=True)
 
