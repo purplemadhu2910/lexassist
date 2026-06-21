@@ -38,6 +38,18 @@ class Database:
             )
         """)
 
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS bookmarks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                query_id INTEGER NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, query_id),
+                FOREIGN KEY (user_id) REFERENCES users(id),
+                FOREIGN KEY (query_id) REFERENCES query_history(id)
+            )
+        """)
+
         conn.commit()
         conn.close()
         logger.info("Database initialized")
@@ -91,25 +103,80 @@ class Database:
         conn.close()
         return query_id
 
-    def get_history(self, limit: int = 50, user_id: int = None) -> List[Dict]:
+    def get_history(self, limit: int = 10, offset: int = 0, user_id: int = None) -> List[Dict]:
         conn = sqlite3.connect(self.db_path)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
         if user_id is not None:
             cursor.execute(
-                "SELECT * FROM query_history WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?",
-                (int(user_id), limit)
+                "SELECT * FROM query_history WHERE user_id = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?",
+                (int(user_id), limit, offset)
             )
         else:
             cursor.execute(
-                "SELECT * FROM query_history ORDER BY timestamp DESC LIMIT ?",
-                (limit,)
+                "SELECT * FROM query_history ORDER BY timestamp DESC LIMIT ? OFFSET ?",
+                (limit, offset)
             )
 
         rows = cursor.fetchall()
         conn.close()
         return [dict(row) for row in rows]
+
+    def get_history_count(self, user_id: int = None) -> int:
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        if user_id is not None:
+            cursor.execute("SELECT COUNT(*) FROM query_history WHERE user_id = ?", (int(user_id),))
+        else:
+            cursor.execute("SELECT COUNT(*) FROM query_history")
+        count = cursor.fetchone()[0]
+        conn.close()
+        return count
+
+    def toggle_bookmark(self, user_id: int, query_id: int) -> bool:
+        """Returns True if bookmarked, False if unbookmarked."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT id FROM bookmarks WHERE user_id = ? AND query_id = ?",
+                (user_id, query_id)
+            )
+            existing = cursor.fetchone()
+            if existing:
+                cursor.execute("DELETE FROM bookmarks WHERE user_id = ? AND query_id = ?", (user_id, query_id))
+                conn.commit()
+                return False
+            else:
+                cursor.execute("INSERT INTO bookmarks (user_id, query_id) VALUES (?, ?)", (user_id, query_id))
+                conn.commit()
+                return True
+        finally:
+            conn.close()
+
+    def get_bookmarks(self, user_id: int) -> List[Dict]:
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("""
+            SELECT qh.*, 1 as bookmarked
+            FROM query_history qh
+            INNER JOIN bookmarks b ON b.query_id = qh.id
+            WHERE b.user_id = ?
+            ORDER BY b.created_at DESC
+        """, (user_id,))
+        rows = cursor.fetchall()
+        conn.close()
+        return [dict(row) for row in rows]
+
+    def get_bookmarked_ids(self, user_id: int) -> set:
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT query_id FROM bookmarks WHERE user_id = ?", (user_id,))
+        ids = {row[0] for row in cursor.fetchall()}
+        conn.close()
+        return ids
 
     def get_stats(self) -> Dict:
         conn = sqlite3.connect(self.db_path)

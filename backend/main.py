@@ -1,10 +1,13 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator
 from typing import Optional
 from ai_engine import AIEngine
 from document_parser import DocumentParser
 from database import Database
+import csv
+import io
 import logging
 import os
 import pickle
@@ -205,7 +208,7 @@ async def explain_document(file: UploadFile = File(...), user_id: int = Depends(
         if not file.filename:
             raise HTTPException(status_code=400, detail="No file provided")
 
-        allowed_extensions = ['.pdf', '.txt']
+        allowed_extensions = ['.pdf', '.txt', '.docx']
         file_ext = '.' + file.filename.split('.')[-1].lower()
 
         if file_ext not in allowed_extensions:
@@ -235,13 +238,61 @@ async def explain_document(file: UploadFile = File(...), user_id: int = Depends(
 
 # Fix 4: /history now requires authentication, only returns own history
 @app.get("/history")
-async def get_history(limit: int = 50, user_id: int = Depends(get_current_user)):
+async def get_history(limit: int = 10, offset: int = 0, user_id: int = Depends(get_current_user)):
     try:
-        history = db.get_history(limit, user_id)
-        return {"history": history, "count": len(history)}
+        history = db.get_history(limit, offset, user_id)
+        total = db.get_history_count(user_id)
+        return {"history": history, "count": len(history), "total": total}
     except Exception as e:
         logger.error(f"Error fetching history: {str(e)}")
         raise HTTPException(status_code=500, detail="Error fetching history")
+
+@app.get("/history/export")
+async def export_history(user_id: int = Depends(get_current_user)):
+    try:
+        history = db.get_history(limit=10000, offset=0, user_id=user_id)
+        output = io.StringIO()
+        writer = csv.DictWriter(output, fieldnames=["id", "timestamp", "category", "query", "response"])
+        writer.writeheader()
+        for item in history:
+            writer.writerow({
+                "id": item["id"],
+                "timestamp": item["timestamp"],
+                "category": item["category"],
+                "query": item["query"],
+                "response": item["response"]
+            })
+        output.seek(0)
+        return StreamingResponse(
+            iter([output.getvalue()]),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=lexassist_history.csv"}
+        )
+    except Exception as e:
+        logger.error(f"Error exporting history: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error exporting history")
+
+
+class BookmarkRequest(BaseModel):
+    query_id: int
+
+@app.post("/bookmarks/toggle")
+async def toggle_bookmark(request: BookmarkRequest, user_id: int = Depends(get_current_user)):
+    try:
+        bookmarked = db.toggle_bookmark(user_id, request.query_id)
+        return {"bookmarked": bookmarked, "query_id": request.query_id}
+    except Exception as e:
+        logger.error(f"Error toggling bookmark: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error toggling bookmark")
+
+@app.get("/bookmarks")
+async def get_bookmarks(user_id: int = Depends(get_current_user)):
+    try:
+        bookmarks = db.get_bookmarks(user_id)
+        return {"bookmarks": bookmarks, "count": len(bookmarks)}
+    except Exception as e:
+        logger.error(f"Error fetching bookmarks: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching bookmarks")
 
 if __name__ == "__main__":
     import uvicorn

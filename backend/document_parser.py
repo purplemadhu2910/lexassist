@@ -11,6 +11,8 @@ class DocumentParser:
                 return self._extract_from_txt(content)
             elif file_extension == '.pdf':
                 return self._extract_from_pdf(content)
+            elif file_extension == '.docx':
+                return self._extract_from_docx(content)
             else:
                 raise ValueError(f"Unsupported file extension: {file_extension}")
 
@@ -49,3 +51,17 @@ class DocumentParser:
 
         except Exception as e:
             raise Exception(f"Failed to extract text from PDF: {str(e)}")
+
+    def _extract_from_docx(self, content: bytes) -> str:
+        try:
+            try:
+                from docx import Document
+            except ImportError:
+                raise Exception("python-docx not installed. Run: pip install python-docx")
+
+            doc = Document(io.BytesIO(content))
+            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+            return "\n".join(paragraphs).strip()
+
+        except Exception as e:
+            raise Exception(f"Failed to extract text from DOCX: {str(e)}")
