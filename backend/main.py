@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator
-from typing import Optional
 from ai_engine import AIEngine
 from document_parser import DocumentParser
 from database import Database
@@ -60,7 +59,7 @@ def check_rate_limit(ip: str):
     _login_attempts[ip].append(now)
 
 # Fix 4+5: File-backed token store with file locking to prevent corruption
-_SESSIONS_FILE = "/tmp/lexassist_sessions.pkl"
+_SESSIONS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lexassist_sessions.pkl")
 _sessions_lock = threading.Lock()
 
 def _load_sessions() -> dict:
@@ -239,6 +238,8 @@ async def explain_document(file: UploadFile = File(...), user_id: int = Depends(
 # Fix 4: /history now requires authentication, only returns own history
 @app.get("/history")
 async def get_history(limit: int = 10, offset: int = 0, user_id: int = Depends(get_current_user)):
+    limit = min(max(1, limit), 100)
+    offset = max(0, offset)
     try:
         history = db.get_history(limit, offset, user_id)
         total = db.get_history_count(user_id)

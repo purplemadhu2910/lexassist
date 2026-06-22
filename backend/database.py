@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class Database:
     def __init__(self, db_path: str = None):
         if db_path is None:
-            db_path = os.path.join("/tmp", "lexassist.db")
+            db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lexassist.db")
         self.db_path = db_path
         self.init_db()
 
@@ -93,15 +93,17 @@ class Database:
 
     def save_query(self, query: str, response: str, category: str, user_id: int = None) -> int:
         conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO query_history (user_id, query, response, category) VALUES (?, ?, ?, ?)",
-            (user_id, query, response, category)
-        )
-        query_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        return query_id
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO query_history (user_id, query, response, category) VALUES (?, ?, ?, ?)",
+                (user_id, query, response, category)
+            )
+            query_id = cursor.lastrowid
+            conn.commit()
+            return query_id
+        finally:
+            conn.close()
 
     def get_history(self, limit: int = 10, offset: int = 0, user_id: int = None) -> List[Dict]:
         conn = sqlite3.connect(self.db_path)
@@ -180,13 +182,12 @@ class Database:
 
     def get_stats(self) -> Dict:
         conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT COUNT(*) FROM query_history")
-        total = cursor.fetchone()[0]
-
-        cursor.execute("SELECT category, COUNT(*) FROM query_history GROUP BY category")
-        by_category = dict(cursor.fetchall())
-
-        conn.close()
-        return {"total_queries": total, "by_category": by_category}
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM query_history")
+            total = cursor.fetchone()[0]
+            cursor.execute("SELECT category, COUNT(*) FROM query_history GROUP BY category")
+            by_category = dict(cursor.fetchall())
+            return {"total_queries": total, "by_category": by_category}
+        finally:
+            conn.close()
