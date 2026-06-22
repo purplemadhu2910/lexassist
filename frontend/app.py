@@ -165,13 +165,13 @@ def show_chat_page(category: str, page_title: str):
     st.markdown('<div class="rag-badge">RAG-Enhanced answers from Indian legal documents</div>', unsafe_allow_html=True)
 
     # Render existing conversation
-    for msg in st.session_state[messages_key]:
+    for idx, msg in enumerate(st.session_state[messages_key]):
         with st.chat_message(msg["role"], avatar="👤" if msg["role"] == "user" else "⚖️"):
             st.markdown(msg["content"])
             if msg["role"] == "assistant" and msg.get("suggestions"):
                 st.markdown("**Suggested follow-up questions:**")
                 for i, s in enumerate(msg["suggestions"]):
-                    if st.button(s, key=f"{category}_sugg_{len(st.session_state[messages_key])}_{i}", use_container_width=True):
+                    if st.button(s, key=f"{category}_sugg_{idx}_{i}", use_container_width=True):
                         st.session_state[prefill_key] = s
                         st.rerun()
 
