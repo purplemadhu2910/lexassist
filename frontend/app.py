@@ -84,9 +84,9 @@ def show_login_page():
                     login_alert.warning("Please fill in both your username and password.")
 
         with tab2:
-            # Show error above the form
+            register_alert = st.empty()
             if st.session_state.register_error:
-                st.error(st.session_state.register_error)
+                register_alert.error(st.session_state.register_error)
                 st.session_state.register_error = ""
 
             with st.form("register_form"):
@@ -126,7 +126,7 @@ def show_login_page():
                                         st.session_state.token = data["token"]
                                         st.rerun()
                                     else:
-                                        st.success("Account created! Please sign in.")
+                                        register_alert.success("Account created! Please sign in.")
                                 else:
                                     st.session_state.register_error = "That username is already taken. Try a different one."
                                     st.rerun()
