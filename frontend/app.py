@@ -42,6 +42,7 @@ st.markdown("""
 
 
 def show_login_page():
+    top_alert = st.empty()
     _, center, _ = st.columns([1, 2, 1])
     with center:
         st.markdown('<div style="text-align:center;font-size:3rem">⚖</div>', unsafe_allow_html=True)
@@ -51,7 +52,6 @@ def show_login_page():
         tab1, tab2 = st.tabs(["Sign In", "Create Account"])
 
         with tab1:
-            login_alert = st.empty()
             with st.form("login_form"):
                 username = st.text_input("Username", placeholder="Enter your username")
                 password = st.text_input("Password", type="password", placeholder="Enter your password")
@@ -72,21 +72,20 @@ def show_login_page():
                                 st.session_state.user_id = data["user_id"]
                                 st.session_state.username = data["username"]
                                 st.session_state.token = data["token"]
-                                login_alert.success(f"Welcome back, {data['username']}!")
+                                top_alert.success(f"Welcome back, {data['username']}!")
                                 st.rerun()
                             elif response.status_code == 429:
-                                login_alert.error("Too many login attempts. Please wait a minute and try again.")
+                                top_alert.error("Too many login attempts. Please wait a minute and try again.")
                             else:
-                                login_alert.error("That username or password doesn't look right. Please try again.")
+                                top_alert.error("That username or password doesn't look right. Please try again.")
                         except requests.exceptions.ConnectionError:
-                            login_alert.error("Could not reach the server. Please try again shortly.")
+                            top_alert.error("Could not reach the server. Please try again shortly.")
                 else:
-                    login_alert.warning("Please fill in both your username and password.")
+                    top_alert.warning("Please fill in both your username and password.")
 
         with tab2:
-            register_alert = st.empty()
             if st.session_state.register_error:
-                register_alert.error(st.session_state.register_error)
+                top_alert.error(st.session_state.register_error)
                 st.session_state.register_error = ""
 
             with st.form("register_form"):
@@ -126,16 +125,13 @@ def show_login_page():
                                         st.session_state.token = data["token"]
                                         st.rerun()
                                     else:
-                                        register_alert.success("Account created! Please sign in.")
+                                        top_alert.success("Account created! Head over to Sign In to get started.")
                                 else:
-                                    st.session_state.register_error = "That username is already taken. Try a different one."
-                                    st.rerun()
+                                    top_alert.error("That username is already taken. Try a different one.")
                             except requests.exceptions.ConnectionError:
-                                st.session_state.register_error = "Could not reach the server. Please try again shortly."
-                                st.rerun()
+                                top_alert.error("Could not reach the server. Please try again shortly.")
                 else:
-                    st.session_state.register_error = "Please fill in all three fields to create your account."
-                    st.rerun()
+                    top_alert.warning("Please fill in all three fields to create your account.")
 
         st.markdown('<div class="auth-divider">Trusted by law students, professionals, and everyday citizens</div>', unsafe_allow_html=True)
 
