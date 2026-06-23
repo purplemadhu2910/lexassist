@@ -45,6 +45,39 @@ class AIEngine:
             logger.error(f"Error calling Groq API: {str(e)}")
             raise Exception(f"AI processing error: {str(e)}")
 
+    async def analyze_contract_risks(self, contract_text: str) -> dict:
+        if not self.client:
+            return {"error": "GROQ_API_KEY not configured"}
+        try:
+            if len(contract_text) > 4000:
+                contract_text = contract_text[:4000] + "..."
+
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": (
+                        "You are a contract risk analyst specializing in Indian contract law. "
+                        "Analyze the contract and respond in this exact JSON structure:\n"
+                        "{\"summary\": \"one paragraph overview\", "
+                        "\"risk_score\": <1-10>, "
+                        "\"risks\": [{\"clause\": \"...\", \"risk\": \"...\", \"severity\": \"High|Medium|Low\"}], "
+                        "\"missing_clauses\": [\"...\"], "
+                        "\"recommendations\": [\"...\"]}"
+                    )},
+                    {"role": "user", "content": f"Analyze this contract for risks:\n\n{contract_text}"}
+                ],
+                max_tokens=1500
+            )
+            import json, re
+            raw = response.choices[0].message.content.strip()
+            match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+            return {"summary": raw, "risk_score": 0, "risks": [], "missing_clauses": [], "recommendations": []}
+        except Exception as e:
+            logger.error(f"Error analyzing contract: {str(e)}")
+            raise Exception(f"Contract analysis error: {str(e)}")
+
     async def explain_document(self, document_text: str) -> str:
         if not self.client:
             return self._mock_document_explanation(document_text)

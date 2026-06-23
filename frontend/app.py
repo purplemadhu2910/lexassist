@@ -240,7 +240,7 @@ def show_main_app():
         st.markdown("---")
         page = st.radio("Navigation", [
             "Home", "Ask Legal Question", "Tax Assistant", "General Assistant",
-            "Document Explanation", "Query History", "Bookmarks", "About"
+            "Document Explanation", "Contract Risk Analyzer", "Query History", "Bookmarks", "About"
         ])
         st.markdown("---")
         st.markdown("### Quick Stats")
@@ -266,7 +266,7 @@ def show_main_app():
         st.markdown('<div class="main-header">Welcome to LexAssist</div>', unsafe_allow_html=True)
         st.markdown('<div class="sub-header">Your AI-Powered Legal and Tax Assistant for Indian Law</div>', unsafe_allow_html=True)
         st.markdown('<div class="rag-badge">RAG-Enhanced: Answers grounded in real Indian legal documents</div>', unsafe_allow_html=True)
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4, col5 = st.columns(5)
         with col1:
             st.markdown("### Legal Assistance")
             st.write("Get simplified explanations of IPC sections, Constitutional articles, and your rights under Indian law.")
@@ -279,6 +279,9 @@ def show_main_app():
         with col4:
             st.markdown("### Document Analysis")
             st.write("Upload PDF, TXT, or DOCX legal documents and get easy-to-understand explanations.")
+        with col5:
+            st.markdown("### ⚠️ Contract Risks")
+            st.write("Upload any contract to detect risks, missing clauses, and get actionable recommendations.")
         st.markdown("---")
         st.markdown('<div class="disclaimer-box"><strong>Disclaimer:</strong> LexAssist provides general information only and is not a substitute for professional legal or tax advice.</div>', unsafe_allow_html=True)
 
@@ -290,6 +293,58 @@ def show_main_app():
 
     elif page == "General Assistant":
         show_chat_page("general", "General Assistant")
+
+    elif page == "Contract Risk Analyzer":
+        st.markdown('<div class="main-header">⚠️ Contract Risk Analyzer</div>', unsafe_allow_html=True)
+        st.write("Upload a contract (PDF, TXT, or DOCX) to identify risks, missing clauses, and get recommendations under Indian contract law.")
+        uploaded_file = st.file_uploader("Choose a contract document", type=["pdf", "txt", "docx"], key="contract_upload")
+        if uploaded_file:
+            st.info(f"File: {uploaded_file.name} ({uploaded_file.size} bytes)")
+            if st.button("Analyze Contract Risks", type="primary"):
+                with st.spinner("Analyzing contract for risks..."):
+                    try:
+                        files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                        response = requests.post(f"{API_URL}/analyze-contract", files=files, headers=auth_headers(), timeout=60)
+                        if response.status_code == 200:
+                            data = response.json()["analysis"]
+
+                            # Risk Score
+                            score = data.get("risk_score", 0)
+                            color = "🟢" if score <= 3 else "🟡" if score <= 6 else "🔴"
+                            st.markdown(f"### {color} Overall Risk Score: **{score}/10**")
+                            st.progress(score / 10)
+
+                            st.markdown(f"**Summary:** {data.get('summary', 'N/A')}")
+
+                            # Identified Risks
+                            risks = data.get("risks", [])
+                            if risks:
+                                st.markdown("---\n### 🚨 Identified Risks")
+                                for r in risks:
+                                    sev = r.get("severity", "Medium")
+                                    badge = "🔴" if sev == "High" else "🟡" if sev == "Medium" else "🟢"
+                                    with st.expander(f"{badge} {sev} — {r.get('clause', 'Clause')}"):
+                                        st.write(r.get("risk", ""))
+
+                            # Missing Clauses
+                            missing = data.get("missing_clauses", [])
+                            if missing:
+                                st.markdown("---\n### 📋 Missing Clauses")
+                                for m in missing:
+                                    st.markdown(f"- {m}")
+
+                            # Recommendations
+                            recs = data.get("recommendations", [])
+                            if recs:
+                                st.markdown("---\n### ✅ Recommendations")
+                                for rec in recs:
+                                    st.markdown(f"- {rec}")
+
+                            st.markdown('<div class="disclaimer-box"><strong>Disclaimer:</strong> This analysis is AI-generated and not a substitute for professional legal advice.</div>', unsafe_allow_html=True)
+                        else:
+                            st.error("Could not analyze the contract. Please try again.")
+                    except Exception:
+                        st.error("Could not reach the server. Please try again shortly.")
 
     elif page == "Document Explanation":
         st.markdown('<div class="main-header">Document Explanation</div>', unsafe_allow_html=True)

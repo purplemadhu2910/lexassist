@@ -295,6 +295,30 @@ async def get_bookmarks(user_id: int = Depends(get_current_user)):
         logger.error(f"Error fetching bookmarks: {str(e)}")
         raise HTTPException(status_code=500, detail="Error fetching bookmarks")
 
+@app.post("/analyze-contract")
+async def analyze_contract(file: UploadFile = File(...), user_id: int = Depends(get_current_user)):
+    try:
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No file provided")
+        file_ext = '.' + file.filename.split('.')[-1].lower()
+        if file_ext not in ['.pdf', '.txt', '.docx']:
+            raise HTTPException(status_code=400, detail="Unsupported file type. Allowed: pdf, txt, docx")
+        content = await file.read()
+        if len(content) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="File too large. Maximum size is 5MB.")
+        extracted_text = doc_parser.extract_text(content, file_ext)
+        if not extracted_text.strip():
+            raise HTTPException(status_code=400, detail="Could not extract text from document")
+        result = await ai_engine.analyze_contract_risks(extracted_text)
+        db.save_query(f"[Contract Risk Analysis] {file.filename}", str(result), "document", user_id)
+        return {"filename": file.filename, "analysis": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error analyzing contract: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error analyzing contract")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
