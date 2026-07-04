@@ -4,8 +4,9 @@ import faiss
 from fastembed import TextEmbedding
 from typing import List
 
-INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "vector_store", "index.faiss")
-CHUNKS_META_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "vector_store", "chunks_meta.pkl")
+_BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+INDEX_PATH = os.path.join(_BASE, "data", "vector_store", "index.faiss")
+CHUNKS_META_PATH = os.path.join(_BASE, "data", "vector_store", "chunks_meta.pkl")
 
 _model = None
 _index = None

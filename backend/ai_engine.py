@@ -13,11 +13,7 @@ class AIEngine:
             self.client = None
         else:
             self.client = Groq(api_key=api_key)
-            self.model = "llama-3.1-8b-instant"
-    
-    @property
-    def _model(self):
-        return getattr(self, 'model', 'llama-3.1-8b-instant')
+        self.model = "llama-3.1-8b-instant"
 
     async def process_query(self, query: str, category: str = "general") -> str:
         if not self.client:
@@ -68,7 +64,8 @@ class AIEngine:
                 ],
                 max_tokens=1500
             )
-            import json, re
+            import json
+            import re
             raw = response.choices[0].message.content.strip()
             match = re.search(r'\{.*\}', raw, re.DOTALL)
             if match:
