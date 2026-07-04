@@ -121,6 +121,7 @@ class QueryResponse(BaseModel):
     response: str
     category: str
     suggested_questions: list[str] = []
+    sources: list[str] = []
 
 class AuthRequest(BaseModel):
     username: str
@@ -186,14 +187,15 @@ async def ask_question(request: QueryRequest, user_id: int = Depends(get_current
         query = sanitize_query(request.query)
 
         logger.info(f"Processing query: {query[:50]}...")
-        response = await ai_engine.process_query(query, request.category)
+        response, sources = await ai_engine.process_query(query, request.category)
         db.save_query(query, response, request.category, user_id)
         suggestions = ai_engine.generate_suggestions(query, request.category)
 
         return QueryResponse(
             response=response,
             category=request.category,
-            suggested_questions=suggestions
+            suggested_questions=suggestions,
+            sources=sources
         )
     except HTTPException:
         raise

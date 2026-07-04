@@ -48,9 +48,37 @@ def search_chunks(query: str, top_k: int = 3) -> List[str]:
 
     return results
 
+def search_chunks_with_sources(query: str, top_k: int = 3):
+    """Returns list of (chunk_text, source_label) tuples."""
+    if not _load_resources():
+        return []
+
+    query_embedding = list(_model.embed([query]))[0].reshape(1, -1).astype("float32")
+    distances, indices = _index.search(query_embedding, top_k)
+
+    results = []
+    for rank, idx in enumerate(indices[0]):
+        if idx != -1 and idx < len(_chunks):
+            chunk = _chunks[idx]
+            # Use first 80 chars of chunk as a readable source label
+            label = chunk.strip().replace("\n", " ")[:80].rstrip() + "…"
+            results.append((chunk, label))
+
+    return results
+
 def build_context(query: str) -> str:
     relevant_chunks = search_chunks(query, top_k=3)
     if not relevant_chunks:
         return ""
     context = "\n\n---\n\n".join(relevant_chunks)
     return context[:3000]
+
+def build_context_with_sources(query: str):
+    """Returns (context_str, sources_list) where sources_list is list of short labels."""
+    pairs = search_chunks_with_sources(query, top_k=3)
+    if not pairs:
+        return "", []
+    chunks = [p[0] for p in pairs]
+    sources = [p[1] for p in pairs]
+    context = "\n\n---\n\n".join(chunks)
+    return context[:3000], sources

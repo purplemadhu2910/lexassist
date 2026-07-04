@@ -1,7 +1,7 @@
 import os
 import logging
 from groq import Groq
-from rag_engine import build_context
+from rag_engine import build_context, build_context_with_sources
 
 logger = logging.getLogger(__name__)
 
@@ -15,11 +15,12 @@ class AIEngine:
             self.client = Groq(api_key=api_key)
         self.model = "llama-3.1-8b-instant"
 
-    async def process_query(self, query: str, category: str = "general") -> str:
+    async def process_query(self, query: str, category: str = "general") -> tuple:
+        """Returns (answer, sources) tuple."""
         if not self.client:
-            return self._mock_response(query, category)
+            return self._mock_response(query, category), []
         try:
-            context = build_context(query)
+            context, sources = build_context_with_sources(query)
             user_message = query
             if context:
                 user_message = f"Relevant legal context from Indian law documents:\n\n{context}\n\n---\n\nUser question: {query}"
@@ -35,7 +36,7 @@ class AIEngine:
             answer = response.choices[0].message.content
             if not answer:
                 raise Exception("Empty response from Groq API")
-            return answer
+            return answer, sources
 
         except Exception as e:
             logger.error(f"Error calling Groq API: {str(e)}")
@@ -135,7 +136,7 @@ class AIEngine:
             return []
 
     def _mock_response(self, query: str, category: str) -> str:
-        context = build_context(query)
+        context, _ = build_context_with_sources(query)
         context_note = "Relevant context was found in Indian legal documents." if context else "No matching legal documents were found for this query."
         return f"""Mock Response (GROQ_API_KEY not configured)
 

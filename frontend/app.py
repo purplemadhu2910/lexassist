@@ -13,6 +13,7 @@ st.set_page_config(
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 PAGE_SIZE = 10
+MAX_QUERY_CHARS = 2000
 
 for key, default in {
     "query_history": [], "logged_in": False, "user_id": None,
@@ -20,7 +21,7 @@ for key, default in {
     "legal_messages": [], "tax_messages": [], "general_messages": [],
     "legal_prefill": "", "tax_prefill": "", "general_prefill": "",
     "history_page": 0, "history_filter": "All",
-    "auth_alert": None,
+    "auth_alert": None, "dark_mode": True,
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
@@ -28,17 +29,62 @@ for key, default in {
 def auth_headers():
     return {"X-Auth-Token": st.session_state.token} if st.session_state.token else {}
 
-st.markdown("""
+def toast(msg: str, icon: str = "ℹ️"):
+    st.toast(msg, icon=icon)
+
+# ── Theme CSS ──────────────────────────────────────────────────────────────
+_DARK_CSS = """
 <style>
-    .main-header { font-size: 2.5rem; font-weight: bold; color: #1f77b4; text-align: center; margin-bottom: 1rem; }
-    .sub-header { font-size: 1.2rem; color: #666; text-align: center; margin-bottom: 2rem; }
-    .disclaimer-box { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 1rem; margin: 1rem 0; border-radius: 5px; color: #000000; }
-    .rag-badge { background-color: #d4edda; border: 1px solid #28a745; padding: 0.3rem 0.8rem; border-radius: 20px; color: #155724; font-size: 0.85rem; display: inline-block; margin-bottom: 1rem; }
+    .stApp { background-color: #0e1117; color: #fafafa; }
+    .main-header { font-size: 2.5rem; font-weight: bold; color: #4da6ff; text-align: center; margin-bottom: 1rem; }
+    .sub-header { font-size: 1.2rem; color: #aaa; text-align: center; margin-bottom: 2rem; }
+    .disclaimer-box { background-color: #2a2200; border-left: 5px solid #ffc107; padding: 1rem; margin: 1rem 0; border-radius: 5px; color: #ffe082; }
+    .rag-badge { background-color: #1a3a2a; border: 1px solid #28a745; padding: 0.3rem 0.8rem; border-radius: 20px; color: #66bb6a; font-size: 0.85rem; display: inline-block; margin-bottom: 1rem; }
     .auth-divider { text-align: center; color: #aaa; margin: 1rem 0; font-size: 0.85rem; }
     .response-box { background-color: #1e2a3a; color: #e8f4ff; padding: 1.5rem; border-radius: 12px; border: 1px solid #2e4a6a; margin: 1rem 0; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+    .char-counter { font-size: 0.78rem; color: #888; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem; }
+    .char-counter.warn { color: #ffc107; }
+    .char-counter.over { color: #f44336; }
 </style>
-""", unsafe_allow_html=True)
+"""
+_LIGHT_CSS = """
+<style>
+    .stApp { background-color: #f5f7fa; color: #111; }
+    .main-header { font-size: 2.5rem; font-weight: bold; color: #1f77b4; text-align: center; margin-bottom: 1rem; }
+    .sub-header { font-size: 1.2rem; color: #555; text-align: center; margin-bottom: 2rem; }
+    .disclaimer-box { background-color: #fff3cd; border-left: 5px solid #ffc107; padding: 1rem; margin: 1rem 0; border-radius: 5px; color: #000; }
+    .rag-badge { background-color: #d4edda; border: 1px solid #28a745; padding: 0.3rem 0.8rem; border-radius: 20px; color: #155724; font-size: 0.85rem; display: inline-block; margin-bottom: 1rem; }
+    .auth-divider { text-align: center; color: #aaa; margin: 1rem 0; font-size: 0.85rem; }
+    .response-box { background-color: #ffffff; color: #111; padding: 1.5rem; border-radius: 12px; border: 1px solid #cce0ff; margin: 1rem 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .char-counter { font-size: 0.78rem; color: #888; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem; }
+    .char-counter.warn { color: #e65100; }
+    .char-counter.over { color: #c62828; }
+</style>
+"""
+st.markdown(_DARK_CSS if st.session_state.dark_mode else _LIGHT_CSS, unsafe_allow_html=True)
 
+# Back-to-top anchor
+st.markdown('<a name="top"></a>', unsafe_allow_html=True)
+
+
+def _char_counter_html(text: str) -> str:
+    n = len(text)
+    cls = "over" if n > MAX_QUERY_CHARS else "warn" if n > MAX_QUERY_CHARS * 0.85 else ""
+    return f'<div class="char-counter {cls}">{n} / {MAX_QUERY_CHARS}</div>'
+
+def _copy_button(text: str, key: str):
+    """Renders a copy-to-clipboard button using st.components."""
+    import streamlit.components.v1 as components
+    safe = text.replace("`", "'").replace("\\", "\\\\").replace("\n", "\\n").replace('"', '\\"')
+    components.html(
+        f"""
+        <button onclick="navigator.clipboard.writeText(\"{ safe }\").then(()=>{{this.innerText='✅ Copied!';setTimeout(()=>this.innerText='📋 Copy',1500)}})"
+                style="background:#1f77b4;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem">
+            📋 Copy
+        </button>
+        """,
+        height=36,
+    )
 
 def show_login_page():
     _, center, _ = st.columns([1, 2, 1])
@@ -159,6 +205,7 @@ def ask_api(query, category):
 def show_chat_page(category: str, page_title: str):
     messages_key = f"{category}_messages"
     prefill_key = f"{category}_prefill"
+    draft_key = f"{category}_draft"
 
     st.markdown(f'<div class="main-header">{page_title}</div>', unsafe_allow_html=True)
     st.markdown('<div class="rag-badge">RAG-Enhanced answers from Indian legal documents</div>', unsafe_allow_html=True)
@@ -167,67 +214,78 @@ def show_chat_page(category: str, page_title: str):
     for idx, msg in enumerate(st.session_state[messages_key]):
         with st.chat_message(msg["role"], avatar="👤" if msg["role"] == "user" else "⚖️"):
             st.markdown(msg["content"])
-            if msg["role"] == "assistant" and msg.get("suggestions"):
-                st.markdown("**Suggested follow-up questions:**")
-                for i, s in enumerate(msg["suggestions"]):
-                    if st.button(s, key=f"{category}_sugg_{idx}_{i}", use_container_width=True):
-                        st.session_state[prefill_key] = s
-                        st.rerun()
+            if msg["role"] == "assistant":
+                # Copy-to-clipboard button
+                _copy_button(msg["content"], key=f"{category}_copy_{idx}")
+                # RAG sources
+                if msg.get("sources"):
+                    with st.expander(f"📚 Sources ({len(msg['sources'])} chunks used)", expanded=False):
+                        for si, src in enumerate(msg["sources"], 1):
+                            st.markdown(f"**{si}.** {src}")
+                # Suggested follow-ups
+                if msg.get("suggestions"):
+                    st.markdown("**Suggested follow-up questions:**")
+                    for i, s in enumerate(msg["suggestions"]):
+                        if st.button(s, key=f"{category}_sugg_{idx}_{i}", use_container_width=True):
+                            st.session_state[prefill_key] = s
+                            st.rerun()
+
+    def _do_ask(query: str):
+        st.session_state[messages_key].append({"role": "user", "content": query})
+        with st.spinner("Generating answer..."):
+            try:
+                resp = ask_api(query, category)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    st.session_state[messages_key].append({
+                        "role": "assistant",
+                        "content": data["response"],
+                        "suggestions": data.get("suggested_questions", []),
+                        "sources": data.get("sources", []),
+                    })
+                    st.session_state.query_history.append({
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "query": query, "category": category
+                    })
+                    toast("Answer ready!", "✅")
+                elif resp.status_code == 400:
+                    toast("Invalid query — please rephrase.", "⚠️")
+                    st.session_state[messages_key].append({"role": "assistant", "content": "Invalid query. Please rephrase your question."})
+                else:
+                    toast("Something went wrong. Please try again.", "❌")
+                    st.session_state[messages_key].append({"role": "assistant", "content": "Something went wrong. Please try again."})
+            except Exception:
+                toast("Could not reach the server.", "❌")
+                st.session_state[messages_key].append({"role": "assistant", "content": "Could not reach the server. Please try again shortly."})
 
     # Handle prefill from suggestion click
     prefill_query = st.session_state.get(prefill_key, "")
     if prefill_query:
         st.session_state[prefill_key] = ""
-        st.session_state[messages_key].append({"role": "user", "content": prefill_query})
-        with st.spinner("Generating answer..."):
-            try:
-                resp = ask_api(prefill_query, category)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    st.session_state[messages_key].append({
-                        "role": "assistant",
-                        "content": data["response"],
-                        "suggestions": data.get("suggested_questions", [])
-                    })
-                    st.session_state.query_history.append({
-                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "query": prefill_query, "category": category
-                    })
-                else:
-                    st.session_state[messages_key].append({"role": "assistant", "content": "Something went wrong. Please try again."})
-            except Exception:
-                st.session_state[messages_key].append({"role": "assistant", "content": "Could not reach the server. Please try again shortly."})
+        _do_ask(prefill_query)
         st.rerun()
 
+    # Character counter above chat input
+    draft = st.session_state.get(draft_key, "")
+    st.markdown(_char_counter_html(draft), unsafe_allow_html=True)
+
     # Chat input
-    user_input = st.chat_input(f"Ask a {category} question...")
-    if user_input and user_input.strip():
-        st.session_state[messages_key].append({"role": "user", "content": user_input.strip()})
-        with st.spinner("Generating answer..."):
-            try:
-                resp = ask_api(user_input.strip(), category)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    st.session_state[messages_key].append({
-                        "role": "assistant",
-                        "content": data["response"],
-                        "suggestions": data.get("suggested_questions", [])
-                    })
-                    st.session_state.query_history.append({
-                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "query": user_input.strip(), "category": category
-                    })
-                elif resp.status_code == 400:
-                    st.session_state[messages_key].append({"role": "assistant", "content": "Invalid query. Please rephrase your question."})
-                else:
-                    st.session_state[messages_key].append({"role": "assistant", "content": "Something went wrong. Please try again."})
-            except Exception:
-                st.session_state[messages_key].append({"role": "assistant", "content": "Could not reach the server. Please try again shortly."})
+    user_input = st.chat_input(f"Ask a {category} question... (max {MAX_QUERY_CHARS} chars)")
+    if user_input:
+        st.session_state[draft_key] = user_input  # update counter
+        stripped = user_input.strip()
+        if stripped:
+            if len(stripped) > MAX_QUERY_CHARS:
+                toast(f"Query too long — max {MAX_QUERY_CHARS} characters.", "⚠️")
+            else:
+                _do_ask(stripped)
+                st.session_state[draft_key] = ""
         st.rerun()
 
     if st.session_state[messages_key]:
         if st.button("Clear conversation", key=f"{category}_clear"):
             st.session_state[messages_key] = []
+            toast("Conversation cleared.", "🗑️")
             st.rerun()
 
 
@@ -236,6 +294,14 @@ def show_main_app():
         st.image("https://img.icons8.com/fluency/96/000000/law.png", width=80)
         st.title("LexAssist")
         st.markdown(f"Logged in as **{st.session_state.username}**")
+        st.markdown("---")
+
+        # Dark / Light mode toggle
+        mode_label = "🌙 Dark Mode" if st.session_state.dark_mode else "☀️ Light Mode"
+        if st.button(mode_label, use_container_width=True):
+            st.session_state.dark_mode = not st.session_state.dark_mode
+            st.rerun()
+
         st.markdown("---")
         page = st.radio("Navigation", [
             "Home", "Ask Legal Question", "Tax Assistant", "General Assistant",
@@ -340,10 +406,11 @@ def show_main_app():
                                     st.markdown(f"- {rec}")
 
                             st.markdown('<div class="disclaimer-box"><strong>Disclaimer:</strong> This analysis is AI-generated and not a substitute for professional legal advice.</div>', unsafe_allow_html=True)
+                            toast("Contract analysis complete!", "✅")
                         else:
-                            st.error("Could not analyze the contract. Please try again.")
+                            toast("Could not analyze the contract. Please try again.", "❌")
                     except Exception:
-                        st.error("Could not reach the server. Please try again shortly.")
+                        toast("Could not reach the server. Please try again shortly.", "❌")
 
     elif page == "Document Explanation":
         st.markdown('<div class="main-header">Document Explanation</div>', unsafe_allow_html=True)
@@ -366,10 +433,11 @@ def show_main_app():
                             with st.expander("Extracted Text (Preview)"):
                                 st.text(data["extracted_text"])
                             st.markdown(f'<div class="response-box"><h3>AI Explanation</h3>{data["explanation"]}</div>', unsafe_allow_html=True)
+                            toast("Document explained successfully!", "✅")
                         else:
-                            st.error("Could not process the document. Please try again.")
+                            toast("Could not process the document. Please try again.", "❌")
                     except Exception:
-                        st.error("Could not reach the server. Please try again shortly.")
+                        toast("Could not reach the server. Please try again shortly.", "❌")
 
     elif page == "Query History":
         st.markdown('<div class="main-header">Query History</div>', unsafe_allow_html=True)
@@ -429,13 +497,15 @@ def show_main_app():
                                         headers=auth_headers(), timeout=10
                                     )
                                     if toggle_resp.status_code == 200:
+                                        action = "Bookmarked" if toggle_resp.json().get("bookmarked") else "Removed bookmark"
+                                        toast(f"{action}!", "⭐")
                                         st.rerun()
                             st.markdown("---")
                             st.write(item["response"])
 
                     # Pagination controls
                     st.markdown("---")
-                    prev_col, page_col, next_col = st.columns([1, 2, 1])
+                    prev_col, page_col, next_col, top_col = st.columns([1, 2, 1, 1])
                     with prev_col:
                         if st.session_state.history_page > 0:
                             if st.button("← Previous", use_container_width=True):
@@ -448,12 +518,14 @@ def show_main_app():
                             if st.button("Next →", use_container_width=True):
                                 st.session_state.history_page += 1
                                 st.rerun()
+                    with top_col:
+                        st.markdown("<a href='#top' style='display:block;text-align:center;padding-top:0.4rem;text-decoration:none;font-size:0.9rem'>⬆️ Top</a>", unsafe_allow_html=True)
                 else:
                     st.info("No queries yet. Start asking questions!")
             else:
-                st.error("Failed to load history.")
+                toast("Failed to load history.", "❌")
         except Exception:
-            st.error("Could not reach the server. Please try again shortly.")
+            toast("Could not reach the server. Please try again shortly.", "❌")
 
     elif page == "Bookmarks":
         st.markdown('<div class="main-header">Bookmarks</div>', unsafe_allow_html=True)
@@ -477,15 +549,16 @@ def show_main_app():
                                         headers=auth_headers(), timeout=10
                                     )
                                     if toggle_resp.status_code == 200:
+                                        toast("Bookmark removed.", "🗑️")
                                         st.rerun()
                             st.markdown("---")
                             st.write(item["response"])
                 else:
                     st.info("No bookmarks yet. Star queries in Query History to save them here.")
             else:
-                st.error("Failed to load bookmarks.")
+                toast("Failed to load bookmarks.", "❌")
         except Exception:
-            st.error("Could not reach the server. Please try again shortly.")
+            toast("Could not reach the server. Please try again shortly.", "❌")
 
     elif page == "About":
         st.markdown('<div class="main-header">About LexAssist</div>', unsafe_allow_html=True)
@@ -517,12 +590,7 @@ if not st.session_state.logged_in:
     if st.session_state.auth_alert:
         kind, msg = st.session_state.auth_alert
         st.session_state.auth_alert = None
-        if kind == "success":
-            st.success(msg)
-        elif kind == "error":
-            st.error(msg)
-        else:
-            st.warning(msg)
+        toast(msg, "✅" if kind == "success" else "⚠️" if kind == "warning" else "❌")
     show_login_page()
 else:
     show_main_app()
