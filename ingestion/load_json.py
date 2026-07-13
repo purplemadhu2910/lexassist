@@ -8,9 +8,10 @@ OUTPUT_FOLDER = os.path.join(BASE, "..", "data", "processed", "cleaned_text")
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
 for file in os.listdir(INPUT_FOLDER):
-    if file.endswith(".json"):
-        file_path = os.path.join(INPUT_FOLDER, file)
-
+    if not file.endswith(".json"):
+        continue
+    file_path = os.path.join(INPUT_FOLDER, file)
+    try:
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
@@ -23,8 +24,9 @@ for file in os.listdir(INPUT_FOLDER):
             text_content = json.dumps(data, indent=2)
 
         output_path = os.path.join(OUTPUT_FOLDER, file.replace(".json", ".txt"))
-
         with open(output_path, "w", encoding="utf-8") as f:
             f.write(text_content)
 
         print(f"Processed: {file}")
+    except Exception as e:
+        print(f"ERROR processing {file}: {e}")

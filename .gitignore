@@ -3,6 +3,7 @@
 
 # Database
 *.db
+*.pkl
 
 # Processed text - regenerated during build
 data/processed/

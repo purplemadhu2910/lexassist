@@ -1,9 +1,15 @@
 import os
+import json
+import re
 import logging
 from groq import Groq
-from rag_engine import build_context, build_context_with_sources
+from rag_engine import build_context_with_sources
 
 logger = logging.getLogger(__name__)
+
+# Configurable via environment variable; default 4000 chars
+MAX_DOC_CHARS = int(os.getenv("MAX_DOC_CHARS", "4000"))
+
 
 class AIEngine:
     def __init__(self):
@@ -13,7 +19,7 @@ class AIEngine:
             self.client = None
         else:
             self.client = Groq(api_key=api_key)
-        self.model = "llama-3.1-8b-instant"
+        self.model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
     async def process_query(self, query: str, category: str = "general") -> tuple:
         """Returns (answer, sources) tuple."""
@@ -23,8 +29,10 @@ class AIEngine:
             context, sources = build_context_with_sources(query)
             user_message = query
             if context:
-                user_message = f"Relevant legal context from Indian law documents:\n\n{context}\n\n---\n\nUser question: {query}"
-
+                user_message = (
+                    f"Relevant legal context from Indian law documents:\n\n{context}\n\n---\n\n"
+                    f"User question: {query}"
+                )
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -37,7 +45,6 @@ class AIEngine:
             if not answer:
                 raise Exception("Empty response from Groq API")
             return answer, sources
-
         except Exception as e:
             logger.error(f"Error calling Groq API: {str(e)}")
             raise Exception(f"AI processing error: {str(e)}")
@@ -46,8 +53,8 @@ class AIEngine:
         if not self.client:
             return {"error": "GROQ_API_KEY not configured"}
         try:
-            if len(contract_text) > 4000:
-                contract_text = contract_text[:4000] + "..."
+            if len(contract_text) > MAX_DOC_CHARS:
+                contract_text = contract_text[:MAX_DOC_CHARS] + "..."
 
             response = self.client.chat.completions.create(
                 model=self.model,
@@ -65,8 +72,6 @@ class AIEngine:
                 ],
                 max_tokens=1500
             )
-            import json
-            import re
             raw = response.choices[0].message.content.strip()
             match = re.search(r'\{.*\}', raw, re.DOTALL)
             if match:
@@ -80,13 +85,17 @@ class AIEngine:
         if not self.client:
             return self._mock_document_explanation(document_text)
         try:
-            if len(document_text) > 4000:
-                document_text = document_text[:4000] + "..."
+            if len(document_text) > MAX_DOC_CHARS:
+                document_text = document_text[:MAX_DOC_CHARS] + "..."
 
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a legal and tax document expert. Summarize the document in simple language, identify key points and clauses, explain legal/tax terminology, highlight implications, and use bullet points for clarity."},
+                    {"role": "system", "content": (
+                        "You are a legal and tax document expert. Summarize the document in simple language, "
+                        "identify key points and clauses, explain legal/tax terminology, highlight implications, "
+                        "and use bullet points for clarity."
+                    )},
                     {"role": "user", "content": f"Please explain this document:\n\n{document_text}"}
                 ],
                 max_tokens=1024
@@ -95,7 +104,6 @@ class AIEngine:
             if not answer:
                 raise Exception("Empty response from Groq API")
             return answer
-
         except Exception as e:
             logger.error(f"Error explaining document: {str(e)}")
             raise Exception(f"Document explanation error: {str(e)}")
@@ -106,7 +114,11 @@ class AIEngine:
             "tax": "Focus on Indian tax laws, Income Tax Act sections, GST, deductions, and filing requirements.",
             "document": "Focus on explaining legal documents and contracts under Indian law."
         }
-        base = "You are LexAssist, an AI legal and tax assistant specializing in Indian law. Provide clear simplified explanations, reference relevant Indian legal sections, and remind users this is not professional legal advice."
+        base = (
+            "You are LexAssist, an AI legal and tax assistant specializing in Indian law. "
+            "Provide clear simplified explanations, reference relevant Indian legal sections, "
+            "and remind users this is not professional legal advice."
+        )
         return base + " " + extras.get(category, "")
 
     def generate_suggestions(self, query: str, category: str) -> list:
@@ -117,18 +129,18 @@ class AIEngine:
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You generate follow-up questions about Indian law."},
-                    {"role": "user", "content": f"Based on this {category} question: \"{query}\"\n\nGenerate exactly 3 short follow-up questions. Return only the 3 questions as a plain numbered list, no explanations."}
+                    {"role": "user", "content": (
+                        f"Based on this {category} question: \"{query}\"\n\n"
+                        "Generate exactly 3 short follow-up questions. "
+                        "Return only the 3 questions as a plain numbered list, no explanations."
+                    )}
                 ],
                 max_tokens=150
             )
             raw = response.choices[0].message.content.strip()
             suggestions = []
             for line in raw.splitlines():
-                line = line.strip()
-                if not line:
-                    continue
-                # Strip leading numbering like "1." or "1)" or "-"
-                cleaned = line.lstrip("0123456789.-) ").strip()
+                cleaned = line.strip().lstrip("0123456789.-) ").strip()
                 if cleaned:
                     suggestions.append(cleaned)
             return suggestions[:3]
@@ -137,23 +149,23 @@ class AIEngine:
 
     def _mock_response(self, query: str, category: str) -> str:
         context, _ = build_context_with_sources(query)
-        context_note = "Relevant context was found in Indian legal documents." if context else "No matching legal documents were found for this query."
-        return f"""Mock Response (GROQ_API_KEY not configured)
-
-Your question: "{query}"
-Category: {category}
-
-{context_note}
-
-To get real responses, add your GROQ_API_KEY to the .env file and restart the backend.
-
-Disclaimer: This is AI-generated information and not legal advice."""
+        context_note = (
+            "Relevant context was found in Indian legal documents."
+            if context else
+            "No matching legal documents were found for this query."
+        )
+        return (
+            f"Mock Response (GROQ_API_KEY not configured)\n\n"
+            f"Your question: \"{query}\"\nCategory: {category}\n\n"
+            f"{context_note}\n\n"
+            f"To get real responses, add your GROQ_API_KEY to the .env file and restart the backend.\n\n"
+            f"Disclaimer: This is AI-generated information and not legal advice."
+        )
 
     def _mock_document_explanation(self, text: str) -> str:
-        return f"""Mock Document Explanation (GROQ_API_KEY not configured)
-
-Document contains {len(text.split())} words.
-
-To get real explanations, add your GROQ_API_KEY to the .env file and restart the backend.
-
-Disclaimer: This is an AI-generated explanation and not legal advice."""
+        return (
+            f"Mock Document Explanation (GROQ_API_KEY not configured)\n\n"
+            f"Document contains {len(text.split())} words.\n\n"
+            f"To get real explanations, add your GROQ_API_KEY to the .env file and restart the backend.\n\n"
+            f"Disclaimer: This is an AI-generated explanation and not legal advice."
+        )

@@ -1,10 +1,16 @@
 import os
 import sqlite3
-from typing import List, Dict
+import secrets
+import time
+from contextlib import contextmanager
+from typing import List, Dict, Optional
 import bcrypt
 import logging
 
 logger = logging.getLogger(__name__)
+
+SESSION_TTL = 60 * 60 * 24 * 7  # 7 days in seconds
+
 
 class Database:
     def __init__(self, db_path: str = None):
@@ -13,45 +19,63 @@ class Database:
         self.db_path = db_path
         self.init_db()
 
-    def init_db(self):
+    @contextmanager
+    def _conn(self):
         conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA foreign_keys=ON")
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
+    def init_db(self):
+        with self._conn() as conn:
+            conn.executescript("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                );
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS query_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER,
-                query TEXT NOT NULL,
-                response TEXT NOT NULL,
-                category TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            )
-        """)
+                CREATE TABLE IF NOT EXISTS sessions (
+                    token TEXT PRIMARY KEY,
+                    user_id INTEGER NOT NULL,
+                    expires_at INTEGER NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+                );
 
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS bookmarks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                query_id INTEGER NOT NULL,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                UNIQUE(user_id, query_id),
-                FOREIGN KEY (user_id) REFERENCES users(id),
-                FOREIGN KEY (query_id) REFERENCES query_history(id)
-            )
-        """)
+                CREATE TABLE IF NOT EXISTS query_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER,
+                    query TEXT NOT NULL,
+                    response TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                );
 
-        conn.commit()
-        conn.close()
+                CREATE TABLE IF NOT EXISTS bookmarks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    query_id INTEGER NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, query_id),
+                    FOREIGN KEY (user_id) REFERENCES users(id),
+                    FOREIGN KEY (query_id) REFERENCES query_history(id)
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
+                CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
+                CREATE INDEX IF NOT EXISTS idx_history_user ON query_history(user_id);
+                CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id);
+            """)
         logger.info("Database initialized")
 
     def _hash_password(self, password: str) -> str:
@@ -61,133 +85,163 @@ class Database:
         return bcrypt.checkpw(password.encode(), hashed.encode())
 
     def register_user(self, username: str, password: str) -> bool:
-        conn = sqlite3.connect(self.db_path)
         try:
-            cursor = conn.cursor()
-            cursor.execute(
-                "INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                (username, self._hash_password(password))
-            )
-            conn.commit()
+            with self._conn() as conn:
+                conn.execute(
+                    "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                    (username, self._hash_password(password))
+                )
             return True
         except sqlite3.IntegrityError:
             return False
-        finally:
-            conn.close()
 
-    def login_user(self, username: str, password: str) -> Dict | None:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        try:
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT * FROM users WHERE username = ?",
-                (username,)
-            )
-            row = cursor.fetchone()
+    def login_user(self, username: str, password: str) -> Optional[Dict]:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM users WHERE username = ?", (username,)
+            ).fetchone()
             if row and self._check_password(password, dict(row)["password_hash"]):
                 return dict(row)
-            return None
-        finally:
-            conn.close()
+        return None
+
+    # ── Session management ────────────────────────────────────────────────
+
+    def create_session(self, user_id: int) -> str:
+        token = secrets.token_hex(32)
+        expires_at = int(time.time()) + SESSION_TTL
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT INTO sessions (token, user_id, expires_at) VALUES (?, ?, ?)",
+                (token, user_id, expires_at)
+            )
+        return token
+
+    def get_session_user(self, token: str) -> Optional[int]:
+        """Returns user_id if token is valid and not expired, else None."""
+        now = int(time.time())
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT user_id FROM sessions WHERE token = ? AND expires_at > ?",
+                (token, now)
+            ).fetchone()
+        return row["user_id"] if row else None
+
+    def delete_session(self, token: str):
+        with self._conn() as conn:
+            conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
+
+    def purge_expired_sessions(self):
+        with self._conn() as conn:
+            conn.execute("DELETE FROM sessions WHERE expires_at <= ?", (int(time.time()),))
+
+    # ── Query history ─────────────────────────────────────────────────────
 
     def save_query(self, query: str, response: str, category: str, user_id: int = None) -> int:
-        conn = sqlite3.connect(self.db_path)
-        try:
-            cursor = conn.cursor()
-            cursor.execute(
+        with self._conn() as conn:
+            cursor = conn.execute(
                 "INSERT INTO query_history (user_id, query, response, category) VALUES (?, ?, ?, ?)",
                 (user_id, query, response, category)
             )
-            query_id = cursor.lastrowid
-            conn.commit()
-            return query_id
-        finally:
-            conn.close()
+            return cursor.lastrowid
 
-    def get_history(self, limit: int = 10, offset: int = 0, user_id: int = None) -> List[Dict]:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
+    def get_history(self, limit: int = 10, offset: int = 0, user_id: int = None, search: str = None) -> List[Dict]:
+        with self._conn() as conn:
+            conditions = []
+            params = []
+            if user_id is not None:
+                conditions.append("user_id = ?")
+                params.append(int(user_id))
+            if search:
+                conditions.append("query LIKE ?")
+                params.append(f"%{search}%")
+            where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+            rows = conn.execute(
+                f"SELECT * FROM query_history {where} ORDER BY timestamp DESC LIMIT ? OFFSET ?",
+                (*params, limit, offset)
+            ).fetchall()
+        return [dict(r) for r in rows]
 
-        if user_id is not None:
-            cursor.execute(
-                "SELECT * FROM query_history WHERE user_id = ? ORDER BY timestamp DESC LIMIT ? OFFSET ?",
-                (int(user_id), limit, offset)
-            )
-        else:
-            cursor.execute(
-                "SELECT * FROM query_history ORDER BY timestamp DESC LIMIT ? OFFSET ?",
-                (limit, offset)
-            )
+    def get_history_count(self, user_id: int = None, search: str = None) -> int:
+        with self._conn() as conn:
+            conditions = []
+            params = []
+            if user_id is not None:
+                conditions.append("user_id = ?")
+                params.append(int(user_id))
+            if search:
+                conditions.append("query LIKE ?")
+                params.append(f"%{search}%")
+            where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+            row = conn.execute(
+                f"SELECT COUNT(*) FROM query_history {where}", params
+            ).fetchone()
+        return row[0]
 
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
-
-    def get_history_count(self, user_id: int = None) -> int:
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        if user_id is not None:
-            cursor.execute("SELECT COUNT(*) FROM query_history WHERE user_id = ?", (int(user_id),))
-        else:
-            cursor.execute("SELECT COUNT(*) FROM query_history")
-        count = cursor.fetchone()[0]
-        conn.close()
-        return count
+    # ── Bookmarks ─────────────────────────────────────────────────────────
 
     def toggle_bookmark(self, user_id: int, query_id: int) -> bool:
-        """Returns True if bookmarked, False if unbookmarked."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        try:
-            cursor.execute(
+        with self._conn() as conn:
+            existing = conn.execute(
                 "SELECT id FROM bookmarks WHERE user_id = ? AND query_id = ?",
                 (user_id, query_id)
-            )
-            existing = cursor.fetchone()
+            ).fetchone()
             if existing:
-                cursor.execute("DELETE FROM bookmarks WHERE user_id = ? AND query_id = ?", (user_id, query_id))
-                conn.commit()
+                conn.execute(
+                    "DELETE FROM bookmarks WHERE user_id = ? AND query_id = ?",
+                    (user_id, query_id)
+                )
                 return False
-            else:
-                cursor.execute("INSERT INTO bookmarks (user_id, query_id) VALUES (?, ?)", (user_id, query_id))
-                conn.commit()
-                return True
-        finally:
-            conn.close()
+            conn.execute(
+                "INSERT INTO bookmarks (user_id, query_id) VALUES (?, ?)",
+                (user_id, query_id)
+            )
+            return True
 
     def get_bookmarks(self, user_id: int) -> List[Dict]:
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT qh.*, 1 as bookmarked
-            FROM query_history qh
-            INNER JOIN bookmarks b ON b.query_id = qh.id
-            WHERE b.user_id = ?
-            ORDER BY b.created_at DESC
-        """, (user_id,))
-        rows = cursor.fetchall()
-        conn.close()
-        return [dict(row) for row in rows]
+        with self._conn() as conn:
+            rows = conn.execute("""
+                SELECT qh.*, 1 as bookmarked
+                FROM query_history qh
+                INNER JOIN bookmarks b ON b.query_id = qh.id
+                WHERE b.user_id = ?
+                ORDER BY b.created_at DESC
+            """, (user_id,)).fetchall()
+        return [dict(r) for r in rows]
+
+    def delete_history_entry(self, entry_id: int, user_id: int) -> bool:
+        with self._conn() as conn:
+            cursor = conn.execute(
+                "DELETE FROM query_history WHERE id = ? AND user_id = ?",
+                (entry_id, user_id)
+            )
+        return cursor.rowcount > 0
+
+    def change_password(self, user_id: int, old_password: str, new_password: str) -> bool:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT password_hash FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+            if not row or not self._check_password(old_password, row["password_hash"]):
+                return False
+            conn.execute(
+                "UPDATE users SET password_hash = ? WHERE id = ?",
+                (self._hash_password(new_password), user_id)
+            )
+        return True
 
     def get_bookmarked_ids(self, user_id: int) -> set:
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT query_id FROM bookmarks WHERE user_id = ?", (user_id,))
-        ids = {row[0] for row in cursor.fetchall()}
-        conn.close()
-        return ids
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT query_id FROM bookmarks WHERE user_id = ?", (user_id,)
+            ).fetchall()
+        return {r[0] for r in rows}
+
+    # ── Stats ─────────────────────────────────────────────────────────────
 
     def get_stats(self) -> Dict:
-        conn = sqlite3.connect(self.db_path)
-        try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM query_history")
-            total = cursor.fetchone()[0]
-            cursor.execute("SELECT category, COUNT(*) FROM query_history GROUP BY category")
-            by_category = dict(cursor.fetchall())
-            return {"total_queries": total, "by_category": by_category}
-        finally:
-            conn.close()
+        with self._conn() as conn:
+            total = conn.execute("SELECT COUNT(*) FROM query_history").fetchone()[0]
+            by_cat = dict(conn.execute(
+                "SELECT category, COUNT(*) FROM query_history GROUP BY category"
+            ).fetchall())
+        return {"total_queries": total, "by_category": by_cat}
