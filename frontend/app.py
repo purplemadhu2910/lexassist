@@ -31,6 +31,7 @@ for key, default in {
     "legal_draft": "", "tax_draft": "", "general_draft": "",
     "current_page": "Home",
     "profile_alert": None,
+    "chat_language": "English",
 }.items():
     if key not in st.session_state:
         st.session_state[key] = default
@@ -42,126 +43,297 @@ def toast(msg: str, icon: str = "ℹ️"):
     st.toast(msg, icon=icon)
 
 # ── Theme CSS ──────────────────────────────────────────────────────────────
-_DARK_CSS = """
-<style>
-    /* ── Full-page dark coverage ── */
-    html, body { background-color: #0e1117 !important; color: #fafafa !important; }
-    .stApp, .stApp > div, [data-testid="stAppViewContainer"],
-    [data-testid="stHeader"], [data-testid="stToolbar"],
-    [data-testid="stSidebar"], [data-testid="stSidebarContent"],
-    section[data-testid="stSidebar"] > div,
-    [data-testid="stBottom"], [data-testid="stChatInput"],
-    [data-testid="stChatInputContainer"],
-    .stChatFloatingInputContainer, .stChatInputContainer,
-    [data-testid="stDecoration"],
-    .block-container, .main, .css-1d391kg {
-        background-color: #0e1117 !important;
-        color: #fafafa !important;
-    }
-    /* Inputs, textareas, selects */
-    input, textarea, select,
-    [data-testid="stTextInput"] input,
-    [data-testid="stTextArea"] textarea,
-    .stTextInput input, .stSelectbox select {
-        background-color: #1e2a3a !important;
-        color: #fafafa !important;
-        border-color: #2e4a6a !important;
-    }
-    /* Chat input bar */
-    [data-testid="stChatInput"] textarea,
-    [data-testid="stChatInputContainer"] textarea {
-        background-color: #1e2a3a !important;
-        color: #fafafa !important;
-    }
-    /* Expanders */
-    [data-testid="stExpander"] { background-color: #161b22 !important; border-color: #2e4a6a !important; }
-    [data-testid="stExpander"] summary { color: #fafafa !important; }
-    /* Buttons */
-    .stButton > button { background-color: #1e2a3a !important; color: #fafafa !important; border-color: #2e4a6a !important; }
-    .stButton > button[kind="primary"] { background-color: #1f77b4 !important; border-color: #1f77b4 !important; }
-    /* Tabs */
-    [data-testid="stTabs"] [role="tab"] { color: #aaa !important; }
-    [data-testid="stTabs"] [role="tab"][aria-selected="true"] { color: #4da6ff !important; border-bottom-color: #4da6ff !important; }
-    /* Metrics */
-    [data-testid="stMetric"] { background-color: #161b22 !important; }
-    [data-testid="stMetricValue"], [data-testid="stMetricLabel"] { color: #fafafa !important; }
-    /* Info / warning boxes */
-    [data-testid="stAlert"] { background-color: #1e2a3a !important; color: #fafafa !important; }
-    /* Scrollbar */
-    ::-webkit-scrollbar { background: #0e1117; } ::-webkit-scrollbar-thumb { background: #2e4a6a; }
-    /* Custom classes */
-    .main-header { font-size: 2.5rem; font-weight: bold; color: #4da6ff; text-align: center; margin-bottom: 1rem; }
-    .sub-header { font-size: 1.2rem; color: #aaa; text-align: center; margin-bottom: 2rem; }
-    .disclaimer-box { background-color: #2a2200 !important; border-left: 5px solid #ffc107; padding: 1rem; margin: 1rem 0; border-radius: 5px; color: #ffe082 !important; }
-    .rag-badge { background-color: #1a3a2a; border: 1px solid #28a745; padding: 0.3rem 0.8rem; border-radius: 20px; color: #66bb6a; font-size: 0.85rem; display: inline-block; margin-bottom: 1rem; }
-    .auth-divider { text-align: center; color: #aaa; margin: 1rem 0; font-size: 0.85rem; }
-    .response-box { background-color: #1e2a3a !important; color: #e8f4ff !important; padding: 1.5rem; border-radius: 12px; border: 1px solid #2e4a6a; margin: 1rem 0; box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
-    .char-counter { font-size: 0.78rem; color: #888; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem; }
-    .char-counter.warn { color: #ffc107; }
-    .char-counter.over { color: #f44336; }
-</style>
-"""
-_LIGHT_CSS = """
-<style>
-    /* ── Full-page light coverage ── */
-    html, body { background-color: #f5f7fa !important; color: #111 !important; }
+def _build_theme_css(dark: bool) -> str:
+    if dark:
+        bg        = "#0e1117"
+        bg2       = "#161b22"
+        bg3       = "#1e2a3a"
+        border    = "#2e4a6a"
+        text      = "#fafafa"
+        text2     = "#aaa"
+        accent    = "#4da6ff"
+        btn_bg    = "#1e2a3a"
+        btn_text  = "#fafafa"
+        btn_bdr   = "#2e4a6a"
+        alert_bg  = "#1e2a3a"
+        sb_bg     = "#111827"
+        sb_bdr    = "#1f2d3d"
+        sb_text   = "#9ca3af"
+        sb_hover  = "#1e2a3a"
+        sb_active = "#1d4ed8"
+        sb_user   = "#6b7280"
+        hdr_color = "#4da6ff"
+        disc_bg   = "#2a2200"
+        disc_text = "#ffe082"
+        rag_bg    = "#1a3a2a"
+        rag_bdr   = "#28a745"
+        rag_text  = "#66bb6a"
+        resp_bg   = "#1e2a3a"
+        resp_text = "#e8f4ff"
+        resp_bdr  = "#2e4a6a"
+        resp_shad = "0 4px 16px rgba(0,0,0,0.4)"
+        scrl_bg   = "#0e1117"
+        scrl_thm  = "#2e4a6a"
+        tab_color = "#aaa"
+        warn_clr  = "#ffc107"
+        over_clr  = "#f44336"
+        file_bg   = "#1e2a3a"
+        chat_bg   = "#161b22"
+        chat_text = "#e5e7eb"
+    else:
+        bg        = "#f5f7fa"
+        bg2       = "#ffffff"
+        bg3       = "#eaf1fb"
+        border    = "#cce0ff"
+        text      = "#111111"
+        text2     = "#555555"
+        accent    = "#1f77b4"
+        btn_bg    = "#ffffff"
+        btn_text  = "#111111"
+        btn_bdr   = "#cce0ff"
+        alert_bg  = "#e8f4ff"
+        sb_bg     = "#1e293b"
+        sb_bdr    = "#334155"
+        sb_text   = "#94a3b8"
+        sb_hover  = "#273549"
+        sb_active = "#2563eb"
+        sb_user   = "#64748b"
+        hdr_color = "#1f77b4"
+        disc_bg   = "#fff3cd"
+        disc_text = "#7c4a00"
+        rag_bg    = "#d4edda"
+        rag_bdr   = "#28a745"
+        rag_text  = "#155724"
+        resp_bg   = "#ffffff"
+        resp_text = "#111111"
+        resp_bdr  = "#cce0ff"
+        resp_shad = "0 2px 8px rgba(0,0,0,0.08)"
+        scrl_bg   = "#f5f7fa"
+        scrl_thm  = "#cce0ff"
+        tab_color = "#555555"
+        warn_clr  = "#e65100"
+        over_clr  = "#c62828"
+        file_bg   = "#ffffff"
+        chat_bg   = "#f0f4f8"
+        chat_text = "#111111"
 
-    .stApp, .stApp > div, [data-testid="stAppViewContainer"],
-    [data-testid="stHeader"], [data-testid="stToolbar"],
-    [data-testid="stSidebar"], [data-testid="stSidebarContent"],
-    section[data-testid="stSidebar"] > div,
-    [data-testid="stBottom"], [data-testid="stChatInput"],
-    [data-testid="stChatInputContainer"],
-    .stChatFloatingInputContainer, .stChatInputContainer,
+    return f"""
+<style>
+    /* ── Hide Streamlit chrome ── */
+    header[data-testid="stHeader"]   {{ display: none !important; }}
+    [data-testid="collapsedControl"] {{ display: none !important; }}
+
+    /* ── Main background & text ── */
+    html, body {{ background-color: {bg} !important; color: {text} !important; }}
+    .stApp, .stApp > div,
+    [data-testid="stAppViewContainer"],
+    [data-testid="stToolbar"],
+    [data-testid="stBottom"],
     [data-testid="stDecoration"],
-    .block-container, .main, .css-1d391kg {
-        background-color: #f5f7fa !important;
-        color: #111 !important;
-    }
-    /* Inputs, textareas, selects */
+    [data-testid="stChatInput"],
+    [data-testid="stChatInputContainer"],
+    .stChatFloatingInputContainer,
+    .stChatInputContainer,
+    .block-container, .main {{
+        background-color: {bg} !important;
+        color: {text} !important;
+    }}
+
+    /* ── Sidebar ── */
+    [data-testid="stSidebar"],
+    [data-testid="stSidebarContent"],
+    section[data-testid="stSidebar"] > div {{
+        background-color: {sb_bg} !important;
+        border-right: 1px solid {sb_bdr} !important;
+    }}
+    [data-testid="stSidebar"] .stButton > button {{
+        width: 100% !important;
+        text-align: left !important;
+        background: transparent !important;
+        color: {sb_text} !important;
+        border: none !important;
+        border-radius: 6px !important;
+        padding: 10px 14px !important;
+        font-size: 0.88rem !important;
+        font-weight: 500 !important;
+        transition: background 0.15s, color 0.15s !important;
+        margin-bottom: 2px !important;
+        justify-content: flex-start !important;
+    }}
+    [data-testid="stSidebar"] .stButton > button:hover {{
+        background: {sb_hover} !important;
+        color: #e5e7eb !important;
+        border: none !important;
+    }}
+    [data-testid="stSidebar"] .stButton > button[kind="primary"] {{
+        background: {sb_active} !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
+        border: none !important;
+    }}
+    [data-testid="stSidebar"] .la-logout .stButton > button {{
+        color: #ef4444 !important;
+        border: 1px solid #7f1d1d !important;
+        background: transparent !important;
+    }}
+    [data-testid="stSidebar"] .la-logout .stButton > button:hover {{
+        background: #7f1d1d !important;
+        color: #fff !important;
+        border-color: #ef4444 !important;
+    }}
+    [data-testid="stSidebar"] p,
+    [data-testid="stSidebar"] span,
+    [data-testid="stSidebar"] div {{
+        color: {sb_text} !important;
+    }}
+
+    /* ── Inputs / textareas / selects ── */
     input, textarea, select,
     [data-testid="stTextInput"] input,
     [data-testid="stTextArea"] textarea,
-    .stTextInput input, .stSelectbox select {
-        background-color: #ffffff !important;
-        color: #111 !important;
-        border-color: #cce0ff !important;
-    }
-    /* Chat input bar */
+    .stTextInput input, .stSelectbox select,
+    [data-baseweb="input"] input,
+    [data-baseweb="textarea"] textarea,
+    [data-baseweb="select"] div {{
+        background-color: {bg3} !important;
+        color: {text} !important;
+        border-color: {border} !important;
+    }}
     [data-testid="stChatInput"] textarea,
-    [data-testid="stChatInputContainer"] textarea {
-        background-color: #ffffff !important;
-        color: #111 !important;
-    }
-    /* Expanders */
-    [data-testid="stExpander"] { background-color: #ffffff !important; border-color: #cce0ff !important; }
-    [data-testid="stExpander"] summary { color: #111 !important; }
-    /* Buttons */
-    .stButton > button { background-color: #ffffff !important; color: #111 !important; border-color: #cce0ff !important; }
-    .stButton > button[kind="primary"] { background-color: #1f77b4 !important; color: #fff !important; border-color: #1f77b4 !important; }
-    /* Tabs */
-    [data-testid="stTabs"] [role="tab"] { color: #555 !important; }
-    [data-testid="stTabs"] [role="tab"][aria-selected="true"] { color: #1f77b4 !important; border-bottom-color: #1f77b4 !important; }
-    /* Metrics */
-    [data-testid="stMetric"] { background-color: #ffffff !important; }
-    [data-testid="stMetricValue"], [data-testid="stMetricLabel"] { color: #111 !important; }
-    /* Info / warning boxes */
-    [data-testid="stAlert"] { background-color: #e8f4ff !important; color: #111 !important; }
-    /* Scrollbar */
-    ::-webkit-scrollbar { background: #f5f7fa; } ::-webkit-scrollbar-thumb { background: #cce0ff; }
-    /* Custom classes */
-    .main-header { font-size: 2.5rem; font-weight: bold; color: #1f77b4; text-align: center; margin-bottom: 1rem; }
-    .sub-header { font-size: 1.2rem; color: #555; text-align: center; margin-bottom: 2rem; }
-    .disclaimer-box { background-color: #fff3cd !important; border-left: 5px solid #ffc107; padding: 1rem; margin: 1rem 0; border-radius: 5px; color: #000 !important; }
-    .rag-badge { background-color: #d4edda; border: 1px solid #28a745; padding: 0.3rem 0.8rem; border-radius: 20px; color: #155724; font-size: 0.85rem; display: inline-block; margin-bottom: 1rem; }
-    .auth-divider { text-align: center; color: #aaa; margin: 1rem 0; font-size: 0.85rem; }
-    .response-box { background-color: #ffffff !important; color: #111 !important; padding: 1.5rem; border-radius: 12px; border: 1px solid #cce0ff; margin: 1rem 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .char-counter { font-size: 0.78rem; color: #888; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem; }
-    .char-counter.warn { color: #e65100; }
-    .char-counter.over { color: #c62828; }
+    [data-testid="stChatInputContainer"] textarea {{
+        background-color: {bg3} !important;
+        color: {text} !important;
+    }}
+
+    /* ── File uploader ── */
+    [data-testid="stFileUploader"] {{
+        background-color: {file_bg} !important;
+        border-color: {border} !important;
+        color: {text} !important;
+    }}
+    [data-testid="stFileUploader"] span,
+    [data-testid="stFileUploader"] p {{
+        color: {text} !important;
+    }}
+
+    /* ── Chat messages ── */
+    [data-testid="stChatMessage"] {{
+        background-color: {chat_bg} !important;
+        color: {chat_text} !important;
+    }}
+    [data-testid="stChatMessage"] p,
+    [data-testid="stChatMessage"] span,
+    [data-testid="stChatMessage"] div {{
+        color: {chat_text} !important;
+    }}
+
+    /* ── Markdown / general text ── */
+    p, span, li, td, th, label, div {{
+        color: {text};
+    }}
+    h1, h2, h3, h4, h5, h6 {{ color: {text} !important; }}
+    [data-testid="stMarkdownContainer"] p,
+    [data-testid="stMarkdownContainer"] li,
+    [data-testid="stMarkdownContainer"] span {{
+        color: {text} !important;
+    }}
+
+    /* ── Expanders ── */
+    [data-testid="stExpander"] {{
+        background-color: {bg2} !important;
+        border-color: {border} !important;
+    }}
+    [data-testid="stExpander"] summary,
+    [data-testid="stExpander"] summary span {{
+        color: {text} !important;
+    }}
+    [data-testid="stExpander"] p,
+    [data-testid="stExpander"] div {{
+        color: {text} !important;
+    }}
+
+    /* ── Buttons (main content) ── */
+    .block-container .stButton > button {{
+        background-color: {btn_bg} !important;
+        color: {btn_text} !important;
+        border-color: {btn_bdr} !important;
+    }}
+    .block-container .stButton > button[kind="primary"] {{
+        background-color: #1f77b4 !important;
+        color: #ffffff !important;
+        border-color: #1f77b4 !important;
+    }}
+
+    /* ── Tabs ── */
+    [data-testid="stTabs"] [role="tab"] {{ color: {tab_color} !important; }}
+    [data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
+        color: {accent} !important;
+        border-bottom-color: {accent} !important;
+    }}
+    [data-testid="stTabs"] {{ background-color: {bg} !important; }}
+
+    /* ── Metrics ── */
+    [data-testid="stMetric"] {{ background-color: {bg2} !important; }}
+    [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{ color: {text} !important; }}
+
+    /* ── Alerts / info boxes ── */
+    [data-testid="stAlert"] {{
+        background-color: {alert_bg} !important;
+        color: {text} !important;
+    }}
+    [data-testid="stAlert"] p {{ color: {text} !important; }}
+
+    /* ── Selectbox dropdown ── */
+    [data-baseweb="popover"] ul,
+    [data-baseweb="menu"] {{
+        background-color: {bg2} !important;
+        color: {text} !important;
+    }}
+    [data-baseweb="menu"] li {{ color: {text} !important; }}
+    [data-baseweb="menu"] li:hover {{ background-color: {bg3} !important; }}
+
+    /* ── Progress bar ── */
+    [data-testid="stProgress"] > div {{ background-color: {border} !important; }}
+    [data-testid="stProgress"] > div > div {{ background-color: {accent} !important; }}
+
+    /* ── Table ── */
+    table {{ background-color: {bg2} !important; color: {text} !important; }}
+    th {{ background-color: {bg3} !important; color: {text} !important; }}
+    td {{ color: {text} !important; border-color: {border} !important; }}
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar {{ background: {scrl_bg}; }}
+    ::-webkit-scrollbar-thumb {{ background: {scrl_thm}; border-radius: 4px; }}
+
+    /* ── Custom classes ── */
+    .main-header {{ font-size: 2.5rem; font-weight: bold; color: {hdr_color}; text-align: center; margin-bottom: 1rem; }}
+    .sub-header {{ font-size: 1.2rem; color: {text2}; text-align: center; margin-bottom: 2rem; }}
+    .disclaimer-box {{
+        background-color: {disc_bg} !important;
+        border-left: 5px solid #ffc107;
+        padding: 1rem; margin: 1rem 0; border-radius: 5px;
+        color: {disc_text} !important;
+    }}
+    .disclaimer-box strong {{ color: {disc_text} !important; }}
+    .rag-badge {{
+        background-color: {rag_bg}; border: 1px solid {rag_bdr};
+        padding: 0.3rem 0.8rem; border-radius: 20px;
+        color: {rag_text}; font-size: 0.85rem; display: inline-block; margin-bottom: 1rem;
+    }}
+    .auth-divider {{ text-align: center; color: {text2}; margin: 1rem 0; font-size: 0.85rem; }}
+    .response-box {{
+        background-color: {resp_bg} !important; color: {resp_text} !important;
+        padding: 1.5rem; border-radius: 12px; border: 1px solid {resp_bdr};
+        margin: 1rem 0; box-shadow: {resp_shad};
+    }}
+    .response-box h3 {{ color: {accent} !important; }}
+    .char-counter {{ font-size: 0.78rem; color: #888; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem; }}
+    .char-counter.warn {{ color: {warn_clr}; }}
+    .char-counter.over  {{ color: {over_clr}; }}
 </style>
 """
-st.markdown(_DARK_CSS if st.session_state.dark_mode else _LIGHT_CSS, unsafe_allow_html=True)
+
+st.markdown(_build_theme_css(st.session_state.dark_mode), unsafe_allow_html=True)
 
 # Back-to-top anchor
 st.markdown('<a name="top"></a>', unsafe_allow_html=True)
@@ -317,7 +489,73 @@ def show_chat_page(category: str, page_title: str):
     draft_key = f"{category}_draft"
 
     st.markdown(f'<div class="main-header">{page_title}</div>', unsafe_allow_html=True)
-    st.markdown('<div class="rag-badge">RAG-Enhanced answers from Indian legal documents</div>', unsafe_allow_html=True)
+
+    # ── Top controls: language selector + voice input ──
+    ctrl_col, lang_col = st.columns([3, 1])
+    with lang_col:
+        language = st.selectbox(
+            "🌐 Language",
+            ["English", "Hindi", "Tamil", "Telugu", "Kannada", "Malayalam", "Bengali", "Marathi", "Gujarati"],
+            index=["English", "Hindi", "Tamil", "Telugu", "Kannada", "Malayalam", "Bengali", "Marathi", "Gujarati"].index(
+                st.session_state.chat_language
+            ),
+            key=f"{category}_lang"
+        )
+        if language != st.session_state.chat_language:
+            st.session_state.chat_language = language
+            st.rerun()
+    with ctrl_col:
+        st.markdown('<div class="rag-badge">RAG-Enhanced answers from Indian legal documents</div>', unsafe_allow_html=True)
+
+    # ── Voice input ──
+    components.html(
+        f"""
+        <div style="margin:6px 0">
+          <button id="voiceBtn_{category}" onclick="startVoice_{category}()"
+            style="background:#1e2a3a;color:#9ca3af;border:1px solid #2e4a6a;padding:6px 14px;
+                   border-radius:8px;cursor:pointer;font-size:0.82rem">
+            🎤 Voice Input
+          </button>
+          <span id="voiceStatus_{category}" style="color:#6b7280;font-size:0.78rem;margin-left:8px"></span>
+          <input id="voiceResult_{category}" type="text" readonly
+            style="display:none;width:100%;margin-top:6px;padding:6px;background:#1e2a3a;
+                   color:#e5e7eb;border:1px solid #2e4a6a;border-radius:6px;font-size:0.85rem">
+        </div>
+        <script>
+        function startVoice_{category}() {{
+          if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {{
+            document.getElementById('voiceStatus_{category}').innerText = 'Not supported in this browser.';
+            return;
+          }}
+          var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+          var rec = new SR();
+          rec.lang = 'en-IN';
+          rec.interimResults = false;
+          document.getElementById('voiceStatus_{category}').innerText = '🔴 Listening...';
+          document.getElementById('voiceBtn_{category}').disabled = true;
+          rec.onresult = function(e) {{
+            var transcript = e.results[0][0].transcript;
+            var box = document.getElementById('voiceResult_{category}');
+            box.style.display = 'block';
+            box.value = transcript;
+            document.getElementById('voiceStatus_{category}').innerText = '✅ Captured! Copy the text below into the chat.';
+            document.getElementById('voiceBtn_{category}').disabled = false;
+          }};
+          rec.onerror = function(e) {{
+            document.getElementById('voiceStatus_{category}').innerText = 'Error: ' + e.error;
+            document.getElementById('voiceBtn_{category}').disabled = false;
+          }};
+          rec.onend = function() {{
+            if (document.getElementById('voiceStatus_{category}').innerText === '🔴 Listening...')
+              document.getElementById('voiceStatus_{category}').innerText = 'No speech detected.';
+            document.getElementById('voiceBtn_{category}').disabled = false;
+          }};
+          rec.start();
+        }}
+        </script>
+        """,
+        height=90,
+    )
 
     # Render existing conversation
     for idx, msg in enumerate(st.session_state[messages_key]):
@@ -360,7 +598,16 @@ def show_chat_page(category: str, page_title: str):
         st.session_state[messages_key].append({"role": "user", "content": query})
         with st.spinner("Generating answer..."):
             try:
-                resp = ask_api(query, category)
+                # Build history excluding the just-appended user message
+                history_to_send = st.session_state[messages_key][:-1]
+                resp = requests.post(
+                    f"{API_URL}/ask",
+                    json={"query": query, "category": category,
+                          "history": [{"role": m["role"], "content": m["content"]} for m in history_to_send],
+                          "language": st.session_state.chat_language},
+                    headers=auth_headers(),
+                    timeout=TIMEOUT_LONG
+                )
                 if resp.status_code == 200:
                     data = resp.json()
                     st.session_state[messages_key].append({
@@ -418,66 +665,10 @@ def show_chat_page(category: str, page_title: str):
             st.rerun()
 
 
-_SIDEBAR_CSS = """
-<style>
-    [data-testid="stSidebar"] {
-        background-color: #111827 !important;
-        border-right: 1px solid #1f2d3d !important;
-        padding-top: 0 !important;
-    }
-    [data-testid="stSidebarContent"] {
-        background-color: #111827 !important;
-    }
-    [data-testid="collapsedControl"] { display: none !important; }
-    [data-testid="stSidebar"] .stButton > button {
-        width: 100% !important;
-        text-align: left !important;
-        background: transparent !important;
-        color: #9ca3af !important;
-        border: none !important;
-        border-radius: 6px !important;
-        padding: 10px 14px !important;
-        font-size: 0.88rem !important;
-        font-weight: 500 !important;
-        transition: background 0.15s, color 0.15s !important;
-        margin-bottom: 2px !important;
-        justify-content: flex-start !important;
-    }
-    [data-testid="stSidebar"] .stButton > button:hover {
-        background: #1e2a3a !important;
-        color: #e5e7eb !important;
-        border: none !important;
-    }
-    [data-testid="stSidebar"] .stButton > button[kind="primary"] {
-        background: #1d4ed8 !important;
-        color: #ffffff !important;
-        font-weight: 600 !important;
-        border: none !important;
-    }
-    [data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
-        background: #1e40af !important;
-    }
-    [data-testid="stSidebar"] .la-logout .stButton > button {
-        color: #ef4444 !important;
-        border: 1px solid #3f1515 !important;
-        background: transparent !important;
-    }
-    [data-testid="stSidebar"] .la-logout .stButton > button:hover {
-        background: #7f1d1d !important;
-        color: #fff !important;
-        border-color: #ef4444 !important;
-    }
-    /* Hide default Streamlit header */
-    header[data-testid="stHeader"] { display: none !important; }
-</style>
-"""
-
 
 def show_main_app():
     page = st.session_state.current_page
     dark = st.session_state.dark_mode
-
-    st.markdown(_SIDEBAR_CSS, unsafe_allow_html=True)
 
     # ── Left Sidebar Navigation ──────────────────────────────────────────────
     with st.sidebar:
@@ -498,6 +689,7 @@ def show_main_app():
             ("💬  General Assistant",       "General Assistant"),
             ("📄  Document Explanation",    "Document Explanation"),
             ("⚠️  Contract Risk Analyzer",  "Contract Risk Analyzer"),
+            ("📊  Compare Contracts",       "Compare Contracts"),
             ("⭐  Bookmarks",               "Bookmarks"),
             ("📜  Query History",           "Query History"),
             ("👤  Profile",                 "Profile"),
@@ -623,6 +815,54 @@ def show_main_app():
                             toast("Could not analyze the contract. Please try again.", "❌")
                     except Exception:
                         toast("Could not reach the server. Please try again shortly.", "❌")
+
+    elif page == "Compare Contracts":
+        st.markdown('<div class="main-header">📊 Compare Contracts</div>', unsafe_allow_html=True)
+        st.write("Upload two contracts to compare them side by side — clauses, differences, and recommendations.")
+        col1, col2 = st.columns(2)
+        with col1:
+            file1 = st.file_uploader("Contract 1", type=["pdf", "txt", "docx"], key="compare_file1")
+        with col2:
+            file2 = st.file_uploader("Contract 2", type=["pdf", "txt", "docx"], key="compare_file2")
+        if file1 and file2:
+            if st.button("Compare Contracts", type="primary"):
+                with st.spinner("Comparing contracts..."):
+                    try:
+                        files = {
+                            "file1": (file1.name, file1.getvalue(), file1.type),
+                            "file2": (file2.name, file2.getvalue(), file2.type),
+                        }
+                        resp = requests.post(f"{API_URL}/compare-contracts", files=files, headers=auth_headers(), timeout=TIMEOUT_LONG)
+                        if resp.status_code == 200:
+                            data = resp.json()["comparison"]
+                            st.markdown(f"**Summary:** {data.get('summary', '')}")
+                            st.markdown(f"**Recommendation:** {data.get('recommendation', '')}")
+                            st.markdown("---")
+                            d1, d2, d3 = st.columns(3)
+                            with d1:
+                                st.markdown("### 🔄 Common Clauses")
+                                for c in data.get("common_clauses", []):
+                                    st.markdown(f"- {c}")
+                            with d2:
+                                st.markdown(f"### 📄 Only in {file1.name}")
+                                for c in data.get("unique_to_contract1", []):
+                                    st.markdown(f"- {c}")
+                            with d3:
+                                st.markdown(f"### 📄 Only in {file2.name}")
+                                for c in data.get("unique_to_contract2", []):
+                                    st.markdown(f"- {c}")
+                            diffs = data.get("key_differences", [])
+                            if diffs:
+                                st.markdown("---\n### ⚠️ Key Differences")
+                                diff_rows = [{"Aspect": d["aspect"], file1.name: d["contract1"], file2.name: d["contract2"]} for d in diffs]
+                                st.table(diff_rows)
+                            toast("Comparison complete!", "✅")
+                        else:
+                            toast("Could not compare contracts. Please try again.", "❌")
+                    except Exception:
+                        toast("Could not reach the server.", "❌")
+        elif file1 or file2:
+            st.info("Please upload both contracts to compare.")
 
     elif page == "Document Explanation":
         st.markdown('<div class="main-header">Document Explanation</div>', unsafe_allow_html=True)

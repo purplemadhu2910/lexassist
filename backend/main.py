@@ -84,6 +84,8 @@ def sanitize_query(query: str) -> str:
 class QueryRequest(BaseModel):
     query: str
     category: str = "general"
+    history: list = []
+    language: str = "English"
 
     @field_validator("category")
     @classmethod
@@ -91,6 +93,12 @@ class QueryRequest(BaseModel):
         if v not in ("legal", "tax", "general", "document"):
             return "general"
         return v
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, v):
+        allowed = {"English", "Hindi", "Tamil", "Telugu", "Kannada", "Malayalam", "Bengali", "Marathi", "Gujarati"}
+        return v if v in allowed else "English"
 
 class QueryResponse(BaseModel):
     response: str
@@ -182,7 +190,7 @@ async def ask_question(request: QueryRequest, user_id: int = Depends(get_current
     try:
         query = sanitize_query(request.query)
         logger.info(f"Processing query: {query[:50]}...")
-        response, sources = await ai_engine.process_query(query, request.category)
+        response, sources = await ai_engine.process_query(query, request.category, request.history, request.language)
         db.save_query(query, response, request.category, user_id)
         suggestions = ai_engine.generate_suggestions(query, request.category)
         return QueryResponse(
@@ -298,6 +306,32 @@ async def change_password(request: ChangePasswordRequest, user_id: int = Depends
     if not success:
         raise HTTPException(status_code=400, detail="Current password is incorrect")
     return {"message": "Password changed successfully"}
+
+@app.post("/compare-contracts")
+async def compare_contracts(
+    file1: UploadFile = File(...),
+    file2: UploadFile = File(...),
+    user_id: int = Depends(get_current_user)
+):
+    try:
+        texts = []
+        for f in (file1, file2):
+            if not f.filename:
+                raise HTTPException(status_code=400, detail="Both files are required")
+            ext = '.' + f.filename.split('.')[-1].lower()
+            if ext not in ['.pdf', '.txt', '.docx']:
+                raise HTTPException(status_code=400, detail=f"Unsupported file type: {f.filename}")
+            content = await f.read()
+            if len(content) > 5 * 1024 * 1024:
+                raise HTTPException(status_code=400, detail=f"{f.filename} exceeds 5MB limit")
+            texts.append(doc_parser.extract_text(content, ext))
+        result = await ai_engine.compare_contracts(texts[0], texts[1])
+        return {"file1": file1.filename, "file2": file2.filename, "comparison": result}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error comparing contracts: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error comparing contracts")
 
 @app.post("/analyze-contract")
 async def analyze_contract(file: UploadFile = File(...), user_id: int = Depends(get_current_user)):

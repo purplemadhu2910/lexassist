@@ -21,7 +21,7 @@ class AIEngine:
             self.client = Groq(api_key=api_key)
         self.model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
 
-    async def process_query(self, query: str, category: str = "general") -> tuple:
+    async def process_query(self, query: str, category: str = "general", history: list = None, language: str = "English") -> tuple:
         """Returns (answer, sources) tuple."""
         if not self.client:
             return self._mock_response(query, category), []
@@ -33,12 +33,14 @@ class AIEngine:
                     f"Relevant legal context from Indian law documents:\n\n{context}\n\n---\n\n"
                     f"User question: {query}"
                 )
+            messages = [{"role": "system", "content": self._get_system_prompt(category, language)}]
+            if history:
+                for h in history[-6:]:  # last 6 turns for context window
+                    messages.append({"role": h["role"], "content": h["content"]})
+            messages.append({"role": "user", "content": user_message})
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=[
-                    {"role": "system", "content": self._get_system_prompt(category)},
-                    {"role": "user", "content": user_message}
-                ],
+                messages=messages,
                 max_tokens=1024
             )
             answer = response.choices[0].message.content
@@ -48,6 +50,54 @@ class AIEngine:
         except Exception as e:
             logger.error(f"Error calling Groq API: {str(e)}")
             raise Exception(f"AI processing error: {str(e)}")
+
+    async def compare_contracts(self, text1: str, text2: str) -> dict:
+        if not self.client:
+            return {"error": "GROQ_API_KEY not configured"}
+        try:
+            t1 = text1[:MAX_DOC_CHARS]
+            t2 = text2[:MAX_DOC_CHARS]
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": (
+                        "You are a contract comparison expert specializing in Indian contract law. "
+                        "Compare two contracts and respond in this exact JSON structure:\n"
+                        "{\"summary\": \"brief overall comparison\", "
+                        "\"common_clauses\": [\"...\"], "
+                        "\"unique_to_contract1\": [\"...\"], "
+                        "\"unique_to_contract2\": [\"...\"], "
+                        "\"key_differences\": [{\"aspect\": \"...\", \"contract1\": \"...\", \"contract2\": \"...\"}], "
+                        "\"recommendation\": \"which contract is more favorable and why\"}"
+                    )},
+                    {"role": "user", "content": f"CONTRACT 1:\n{t1}\n\n---\n\nCONTRACT 2:\n{t2}"}
+                ],
+                max_tokens=1800
+            )
+            raw = response.choices[0].message.content.strip()
+            match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+            return {"summary": raw, "common_clauses": [], "unique_to_contract1": [], "unique_to_contract2": [], "key_differences": [], "recommendation": ""}
+        except Exception as e:
+            logger.error(f"Error comparing contracts: {str(e)}")
+            raise Exception(f"Contract comparison error: {str(e)}")
+
+    async def translate_response(self, text: str, language: str) -> str:
+        if not self.client or language == "English":
+            return text
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": f"Translate the following text to {language}. Preserve formatting, bullet points, and legal terminology accuracy."},
+                    {"role": "user", "content": text}
+                ],
+                max_tokens=1500
+            )
+            return response.choices[0].message.content or text
+        except Exception:
+            return text
 
     async def analyze_contract_risks(self, contract_text: str) -> dict:
         if not self.client:
@@ -108,7 +158,7 @@ class AIEngine:
             logger.error(f"Error explaining document: {str(e)}")
             raise Exception(f"Document explanation error: {str(e)}")
 
-    def _get_system_prompt(self, category: str) -> str:
+    def _get_system_prompt(self, category: str, language: str = "English") -> str:
         extras = {
             "legal": "Focus on Indian legal matters, IPC sections, Constitutional articles, and regulations.",
             "tax": "Focus on Indian tax laws, Income Tax Act sections, GST, deductions, and filing requirements.",
@@ -119,7 +169,8 @@ class AIEngine:
             "Provide clear simplified explanations, reference relevant Indian legal sections, "
             "and remind users this is not professional legal advice."
         )
-        return base + " " + extras.get(category, "")
+        lang_note = f" Always respond in {language}." if language != "English" else ""
+        return base + " " + extras.get(category, "") + lang_note
 
     def generate_suggestions(self, query: str, category: str) -> list:
         if not self.client:
