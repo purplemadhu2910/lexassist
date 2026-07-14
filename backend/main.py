@@ -128,6 +128,27 @@ class AuthRequest(BaseModel):
 class BookmarkRequest(BaseModel):
     query_id: int
 
+class CaseLawRequest(BaseModel):
+    query: str
+
+class DraftDocumentRequest(BaseModel):
+    doc_type: str
+    details: dict = {}
+
+class SectionLookupRequest(BaseModel):
+    act: str
+    section: str
+
+class TimelineRequest(BaseModel):
+    situation: str
+
+class PenaltyRequest(BaseModel):
+    section: str
+    circumstances: str = ""
+
+class GlossaryRequest(BaseModel):
+    term: str
+
 class BookmarkNoteRequest(BaseModel):
     note: str = ""
 
@@ -359,6 +380,67 @@ async def compare_contracts(
     except Exception as e:
         logger.error(f"Error comparing contracts: {str(e)}")
         raise HTTPException(status_code=500, detail="Error comparing contracts")
+
+@app.post("/case-law-search")
+async def case_law_search(request: CaseLawRequest, user_id: int = Depends(get_current_user)):
+    try:
+        query = sanitize_query(request.query)
+        result = await ai_engine.case_law_search(query)
+        db.save_query(f"[Case Law] {query}", str(result), "legal", user_id)
+        return result
+    except Exception as e:
+        logger.error(f"Case law search error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error searching case law")
+
+@app.post("/draft-document")
+async def draft_document(request: DraftDocumentRequest, user_id: int = Depends(get_current_user)):
+    try:
+        result = await ai_engine.draft_document(request.doc_type, request.details)
+        db.save_query(f"[Draft] {request.doc_type}", result, "document", user_id)
+        return {"draft": result, "doc_type": request.doc_type}
+    except Exception as e:
+        logger.error(f"Document drafting error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error drafting document")
+
+@app.post("/section-lookup")
+async def section_lookup(request: SectionLookupRequest, user_id: int = Depends(get_current_user)):
+    try:
+        result = await ai_engine.lookup_section(request.act, request.section)
+        db.save_query(f"[Section] {request.act} S.{request.section}", str(result), "legal", user_id)
+        return result
+    except Exception as e:
+        logger.error(f"Section lookup error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error looking up section")
+
+@app.post("/legal-timeline")
+async def legal_timeline(request: TimelineRequest, user_id: int = Depends(get_current_user)):
+    try:
+        situation = sanitize_query(request.situation)
+        result = await ai_engine.build_legal_timeline(situation)
+        db.save_query(f"[Timeline] {situation}", str(result), "legal", user_id)
+        return result
+    except Exception as e:
+        logger.error(f"Timeline error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error building timeline")
+
+@app.post("/penalty-calculator")
+async def penalty_calculator(request: PenaltyRequest, user_id: int = Depends(get_current_user)):
+    try:
+        result = await ai_engine.penalty_calculator(request.section, request.circumstances)
+        db.save_query(f"[Penalty] IPC/BNS {request.section}", str(result), "legal", user_id)
+        return result
+    except Exception as e:
+        logger.error(f"Penalty calculator error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error calculating penalty")
+
+@app.post("/glossary")
+async def glossary_lookup(request: GlossaryRequest, user_id: int = Depends(get_current_user)):
+    try:
+        result = await ai_engine.glossary_lookup(request.term)
+        return result
+    except Exception as e:
+        logger.error(f"Glossary error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error looking up term")
 
 @app.post("/analyze-contract")
 async def analyze_contract(file: UploadFile = File(...), user_id: int = Depends(get_current_user)):

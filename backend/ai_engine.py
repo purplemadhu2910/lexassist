@@ -131,6 +131,179 @@ class AIEngine:
             logger.error(f"Error analyzing contract: {str(e)}")
             raise Exception(f"Contract analysis error: {str(e)}")
 
+    async def case_law_search(self, query: str) -> dict:
+        if not self.client:
+            return {"results": []}
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": (
+                        "You are an Indian legal expert with knowledge of Supreme Court and High Court judgments. "
+                        "When given a legal query, provide relevant case law in this exact JSON structure:\n"
+                        "{\"results\": [{\"case_name\": \"...\", \"court\": \"Supreme Court|High Court\", "
+                        "\"year\": \"...\", \"citation\": \"...\", \"summary\": \"...\", "
+                        "\"relevance\": \"why this case is relevant to the query\"}]}"
+                        " Provide 3-5 real landmark Indian cases. Only return valid JSON."
+                    )},
+                    {"role": "user", "content": f"Find relevant Indian case law for: {query}"}
+                ],
+                max_tokens=1500
+            )
+            raw = response.choices[0].message.content.strip()
+            match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+            return {"results": []}
+        except Exception as e:
+            logger.error(f"Case law search error: {str(e)}")
+            raise Exception(f"Case law search error: {str(e)}")
+
+    async def draft_document(self, doc_type: str, details: dict) -> str:
+        if not self.client:
+            return "GROQ_API_KEY not configured."
+        details_str = "\n".join(f"- {k}: {v}" for k, v in details.items() if v)
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": (
+                        "You are an Indian legal document drafting expert. "
+                        "Draft professional, legally sound documents compliant with Indian law. "
+                        "Use proper legal language, include all standard clauses, and format clearly."
+                    )},
+                    {"role": "user", "content": f"Draft a {doc_type} with these details:\n{details_str}"}
+                ],
+                max_tokens=2000
+            )
+            return response.choices[0].message.content or ""
+        except Exception as e:
+            logger.error(f"Document drafting error: {str(e)}")
+            raise Exception(f"Document drafting error: {str(e)}")
+
+    async def lookup_section(self, act: str, section: str) -> dict:
+        if not self.client:
+            return {"error": "GROQ_API_KEY not configured"}
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": (
+                        "You are an Indian law expert. Given an act and section number, provide a detailed explanation. "
+                        "Respond in this exact JSON structure:\n"
+                        "{\"act\": \"...\", \"section\": \"...\", \"title\": \"...\", "
+                        "\"text\": \"exact or near-exact statutory text\", "
+                        "\"explanation\": \"plain language explanation\", "
+                        "\"punishment\": \"punishment/penalty if applicable or null\", "
+                        "\"related_sections\": [\"...\"], "
+                        "\"landmark_cases\": [\"...\"]}"
+                    )},
+                    {"role": "user", "content": f"Explain {act} Section {section}"}
+                ],
+                max_tokens=1000
+            )
+            raw = response.choices[0].message.content.strip()
+            match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+            return {"act": act, "section": section, "explanation": raw}
+        except Exception as e:
+            logger.error(f"Section lookup error: {str(e)}")
+            raise Exception(f"Section lookup error: {str(e)}")
+
+    async def build_legal_timeline(self, situation: str) -> dict:
+        if not self.client:
+            return {"steps": []}
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": (
+                        "You are an Indian legal procedure expert. Given a legal situation, "
+                        "provide a step-by-step legal process guide. "
+                        "Respond in this exact JSON structure:\n"
+                        "{\"title\": \"...\", \"overview\": \"...\", "
+                        "\"steps\": [{\"step\": 1, \"title\": \"...\", \"description\": \"...\", "
+                        "\"duration\": \"estimated time\", \"documents_needed\": [\"...\"]}], "
+                        "\"total_estimated_time\": \"...\", "
+                        "\"important_notes\": [\"...\"]}"
+                    )},
+                    {"role": "user", "content": f"Build a legal process timeline for: {situation}"}
+                ],
+                max_tokens=1500
+            )
+            raw = response.choices[0].message.content.strip()
+            match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+            return {"title": situation, "steps": [], "overview": raw}
+        except Exception as e:
+            logger.error(f"Timeline builder error: {str(e)}")
+            raise Exception(f"Timeline builder error: {str(e)}")
+
+    async def penalty_calculator(self, section: str, circumstances: str) -> dict:
+        if not self.client:
+            return {"error": "GROQ_API_KEY not configured"}
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": (
+                        "You are an Indian criminal law expert. Estimate penalties/sentences under IPC/BNS. "
+                        "Respond in this exact JSON structure:\n"
+                        "{\"section\": \"...\", \"offence\": \"...\", "
+                        "\"minimum_punishment\": \"...\", \"maximum_punishment\": \"...\", "
+                        "\"fine\": \"...\", \"is_bailable\": true|false, "
+                        "\"is_cognizable\": true|false, "
+                        "\"aggravating_factors\": [\"...\"], "
+                        "\"mitigating_factors\": [\"...\"], "
+                        "\"estimated_sentence\": \"based on circumstances provided\", "
+                        "\"disclaimer\": \"This is an estimate only. Actual sentence depends on court discretion.\"}"
+                    )},
+                    {"role": "user", "content": f"IPC/BNS Section: {section}\nCircumstances: {circumstances}"}
+                ],
+                max_tokens=800
+            )
+            raw = response.choices[0].message.content.strip()
+            match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+            return {"section": section, "estimated_sentence": raw}
+        except Exception as e:
+            logger.error(f"Penalty calculator error: {str(e)}")
+            raise Exception(f"Penalty calculator error: {str(e)}")
+
+    async def glossary_lookup(self, term: str) -> dict:
+        if not self.client:
+            return {"error": "GROQ_API_KEY not configured"}
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": (
+                        "You are an Indian legal dictionary. Define legal terms clearly. "
+                        "Respond in this exact JSON structure:\n"
+                        "{\"term\": \"...\", \"pronunciation\": \"...\", "
+                        "\"definition\": \"plain English definition\", "
+                        "\"legal_definition\": \"formal legal definition\", "
+                        "\"origin\": \"Latin/English/Hindi origin if applicable\", "
+                        "\"used_in\": [\"acts/contexts where this term appears\"], "
+                        "\"example\": \"example usage in Indian legal context\", "
+                        "\"related_terms\": [\"...\"]}"
+                    )},
+                    {"role": "user", "content": f"Define the legal term: {term}"}
+                ],
+                max_tokens=600
+            )
+            raw = response.choices[0].message.content.strip()
+            match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if match:
+                return json.loads(match.group())
+            return {"term": term, "definition": raw}
+        except Exception as e:
+            logger.error(f"Glossary lookup error: {str(e)}")
+            raise Exception(f"Glossary lookup error: {str(e)}")
+
     async def explain_document(self, document_text: str) -> str:
         if not self.client:
             return self._mock_document_explanation(document_text)

@@ -690,6 +690,12 @@ def show_main_app():
             ("📄  Document Explanation",    "Document Explanation"),
             ("⚠️  Contract Risk Analyzer",  "Contract Risk Analyzer"),
             ("📊  Compare Contracts",       "Compare Contracts"),
+            ("🔍  Case Law Search",         "Case Law Search"),
+            ("📝  Draft Document",          "Draft Document"),
+            ("📌  Section Lookup",          "Section Lookup"),
+            ("🗓️  Legal Timeline",         "Legal Timeline"),
+            ("⚖️  Penalty Calculator",     "Penalty Calculator"),
+            ("📖  Legal Glossary",          "Legal Glossary"),
             ("⭐  Bookmarks",               "Bookmarks"),
             ("📜  Query History",           "Query History"),
             ("📈  My Stats",                "My Stats"),
@@ -864,6 +870,293 @@ def show_main_app():
                         toast("Could not reach the server.", "❌")
         elif file1 or file2:
             st.info("Please upload both contracts to compare.")
+
+    elif page == "Case Law Search":
+        st.markdown('<div class="main-header">🔍 Case Law Search</div>', unsafe_allow_html=True)
+        st.write("Search relevant Supreme Court and High Court judgments on any Indian legal topic.")
+        query = st.text_input("Enter your legal query", placeholder="e.g. right to privacy, bail conditions, dowry harassment")
+        if st.button("Search Case Law", type="primary", disabled=not query.strip()):
+            with st.spinner("Searching case law..."):
+                try:
+                    resp = requests.post(f"{API_URL}/case-law-search", json={"query": query.strip()}, headers=auth_headers(), timeout=TIMEOUT_LONG)
+                    if resp.status_code == 200:
+                        results = resp.json().get("results", [])
+                        if results:
+                            st.success(f"Found {len(results)} relevant cases")
+                            for case in results:
+                                court_badge = "🔵" if "Supreme" in case.get("court", "") else "🟢"
+                                with st.expander(f"{court_badge} {case.get('case_name', 'Unknown')} ({case.get('year', '')})"):
+                                    c1, c2 = st.columns(2)
+                                    with c1:
+                                        st.markdown(f"**Court:** {case.get('court', 'N/A')}")
+                                        st.markdown(f"**Citation:** {case.get('citation', 'N/A')}")
+                                    with c2:
+                                        st.markdown(f"**Year:** {case.get('year', 'N/A')}")
+                                    st.markdown(f"**Summary:** {case.get('summary', '')}")
+                                    st.markdown(f"**Relevance:** {case.get('relevance', '')}")
+                        else:
+                            st.info("No cases found. Try a different query.")
+                    else:
+                        toast("Search failed. Please try again.", "❌")
+                except Exception:
+                    toast("Could not reach the server.", "❌")
+
+    elif page == "Draft Document":
+        st.markdown('<div class="main-header">📝 Draft Document</div>', unsafe_allow_html=True)
+        st.write("Generate professional legal document drafts based on your details.")
+        doc_type = st.selectbox("Document Type", [
+            "Rent Agreement", "Non-Disclosure Agreement (NDA)", "Employment Offer Letter",
+            "Legal Notice", "Affidavit", "Partnership Deed", "Sale Agreement",
+            "Power of Attorney", "Cease and Desist Letter", "Demand Notice"
+        ])
+        st.markdown("#### Fill in the details")
+        details = {}
+        if doc_type == "Rent Agreement":
+            c1, c2 = st.columns(2)
+            with c1:
+                details["Landlord Name"] = st.text_input("Landlord Name")
+                details["Tenant Name"] = st.text_input("Tenant Name")
+                details["Property Address"] = st.text_input("Property Address")
+            with c2:
+                details["Monthly Rent"] = st.text_input("Monthly Rent (₹)")
+                details["Security Deposit"] = st.text_input("Security Deposit (₹)")
+                details["Lease Duration"] = st.text_input("Lease Duration (months)")
+            details["Start Date"] = st.text_input("Start Date")
+        elif doc_type == "Non-Disclosure Agreement (NDA)":
+            c1, c2 = st.columns(2)
+            with c1:
+                details["Disclosing Party"] = st.text_input("Disclosing Party")
+                details["Receiving Party"] = st.text_input("Receiving Party")
+            with c2:
+                details["Purpose"] = st.text_input("Purpose of Disclosure")
+                details["Duration"] = st.text_input("Confidentiality Duration")
+        elif doc_type == "Legal Notice":
+            c1, c2 = st.columns(2)
+            with c1:
+                details["Sender Name"] = st.text_input("Sender Name")
+                details["Recipient Name"] = st.text_input("Recipient Name")
+            with c2:
+                details["Subject"] = st.text_input("Subject of Notice")
+                details["Relief Sought"] = st.text_input("Relief Sought")
+            details["Facts"] = st.text_area("Brief Facts", height=80)
+        elif doc_type == "Affidavit":
+            details["Deponent Name"] = st.text_input("Deponent Name")
+            details["Purpose"] = st.text_input("Purpose of Affidavit")
+            details["Facts"] = st.text_area("Facts to be stated", height=80)
+            details["Place"] = st.text_input("Place")
+        else:
+            c1, c2 = st.columns(2)
+            with c1:
+                details["Party 1"] = st.text_input("Party 1 Name")
+                details["Party 2"] = st.text_input("Party 2 Name")
+            with c2:
+                details["Date"] = st.text_input("Date")
+                details["Jurisdiction"] = st.text_input("Jurisdiction/City")
+            details["Additional Details"] = st.text_area("Additional Details", height=80)
+
+        if st.button("Generate Draft", type="primary"):
+            if not any(v.strip() for v in details.values() if isinstance(v, str)):
+                toast("Please fill in at least some details.", "⚠️")
+            else:
+                with st.spinner("Drafting document..."):
+                    try:
+                        resp = requests.post(f"{API_URL}/draft-document",
+                            json={"doc_type": doc_type, "details": details},
+                            headers=auth_headers(), timeout=TIMEOUT_LONG)
+                        if resp.status_code == 200:
+                            draft = resp.json().get("draft", "")
+                            st.markdown("---")
+                            st.markdown(f"### 📄 {doc_type} Draft")
+                            st.text_area("Generated Draft", value=draft, height=400)
+                            st.download_button("⬇ Download as TXT", data=draft,
+                                file_name=f"{doc_type.replace(' ', '_')}_draft.txt",
+                                mime="text/plain")
+                            toast("Draft generated!", "✅")
+                        else:
+                            toast("Could not generate draft. Please try again.", "❌")
+                    except Exception:
+                        toast("Could not reach the server.", "❌")
+
+    elif page == "Section Lookup":
+        st.markdown('<div class="main-header">📌 Section Lookup</div>', unsafe_allow_html=True)
+        st.write("Look up any section of IPC, CrPC, Constitution, or other Indian acts instantly.")
+        c1, c2 = st.columns([2, 1])
+        with c1:
+            act = st.selectbox("Select Act", [
+                "Indian Penal Code (IPC)", "Bharatiya Nyaya Sanhita (BNS)",
+                "Code of Criminal Procedure (CrPC)", "Bharatiya Nagarik Suraksha Sanhita (BNSS)",
+                "Constitution of India", "Income Tax Act", "GST Act",
+                "Indian Evidence Act", "Civil Procedure Code (CPC)",
+                "Protection of Women from Domestic Violence Act",
+                "Information Technology Act", "Consumer Protection Act"
+            ])
+        with c2:
+            section = st.text_input("Section Number", placeholder="e.g. 302, 420, 21")
+        if st.button("Look Up Section", type="primary", disabled=not section.strip()):
+            with st.spinner("Looking up section..."):
+                try:
+                    resp = requests.post(f"{API_URL}/section-lookup",
+                        json={"act": act, "section": section.strip()},
+                        headers=auth_headers(), timeout=TIMEOUT_MEDIUM)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        st.markdown(f"### {data.get('act', act)} — Section {data.get('section', section)}")
+                        if data.get('title'):
+                            st.markdown(f"**{data['title']}**")
+                        st.markdown("---")
+                        if data.get('text'):
+                            with st.expander("📜 Statutory Text", expanded=True):
+                                st.markdown(data['text'])
+                        st.markdown(f"**Plain Language Explanation:**\n\n{data.get('explanation', '')}")
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            if data.get('punishment'):
+                                st.error(f"🔒 **Punishment:** {data['punishment']}")
+                            if data.get('is_bailable') is not None:
+                                bail = "✅ Bailable" if data['is_bailable'] else "❌ Non-Bailable"
+                                st.markdown(f"**Bail:** {bail}")
+                        with c2:
+                            if data.get('related_sections'):
+                                st.markdown("**Related Sections:** " + ", ".join(data['related_sections']))
+                        if data.get('landmark_cases'):
+                            st.markdown("**Landmark Cases:**")
+                            for c in data['landmark_cases']:
+                                st.markdown(f"- {c}")
+                    else:
+                        toast("Section not found. Please check the act and section number.", "❌")
+                except Exception:
+                    toast("Could not reach the server.", "❌")
+
+    elif page == "Legal Timeline":
+        st.markdown('<div class="main-header">🗓️ Legal Timeline Builder</div>', unsafe_allow_html=True)
+        st.write("Describe your legal situation and get a step-by-step guide of the legal process.")
+        situation = st.text_area("Describe your situation",
+            placeholder="e.g. I want to file an FIR for theft, I want to file for divorce, I want to challenge a property dispute...",
+            height=100)
+        if st.button("Build Timeline", type="primary", disabled=not situation.strip()):
+            with st.spinner("Building your legal timeline..."):
+                try:
+                    resp = requests.post(f"{API_URL}/legal-timeline",
+                        json={"situation": situation.strip()},
+                        headers=auth_headers(), timeout=TIMEOUT_LONG)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        st.markdown(f"### {data.get('title', 'Legal Process')}")
+                        st.info(data.get('overview', ''))
+                        if data.get('total_estimated_time'):
+                            st.markdown(f"⏱️ **Total Estimated Time:** {data['total_estimated_time']}")
+                        st.markdown("---")
+                        for step in data.get('steps', []):
+                            with st.expander(f"Step {step.get('step', '')} — {step.get('title', '')}", expanded=True):
+                                st.markdown(step.get('description', ''))
+                                if step.get('duration'):
+                                    st.markdown(f"⏳ **Duration:** {step['duration']}")
+                                if step.get('documents_needed'):
+                                    st.markdown("**Documents Needed:**")
+                                    for doc in step['documents_needed']:
+                                        st.markdown(f"- {doc}")
+                        if data.get('important_notes'):
+                            st.markdown("---\n### ⚠️ Important Notes")
+                            for note in data['important_notes']:
+                                st.warning(note)
+                        toast("Timeline built!", "✅")
+                    else:
+                        toast("Could not build timeline. Please try again.", "❌")
+                except Exception:
+                    toast("Could not reach the server.", "❌")
+
+    elif page == "Penalty Calculator":
+        st.markdown('<div class="main-header">⚖️ Penalty Calculator</div>', unsafe_allow_html=True)
+        st.write("Estimate the punishment or fine for an IPC/BNS section based on the circumstances.")
+        st.warning("⚠️ This is an AI estimate only. Actual sentencing is at the court's discretion.")
+        c1, c2 = st.columns([1, 2])
+        with c1:
+            section = st.text_input("IPC / BNS Section", placeholder="e.g. 302, 420, 376")
+        with c2:
+            circumstances = st.text_area("Describe the circumstances",
+                placeholder="e.g. first-time offender, victim was a minor, offence committed under provocation...",
+                height=80)
+        if st.button("Calculate Penalty", type="primary", disabled=not section.strip()):
+            with st.spinner("Calculating..."):
+                try:
+                    resp = requests.post(f"{API_URL}/penalty-calculator",
+                        json={"section": section.strip(), "circumstances": circumstances.strip()},
+                        headers=auth_headers(), timeout=TIMEOUT_MEDIUM)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        st.markdown(f"### Section {data.get('section', section)} — {data.get('offence', '')}")
+                        st.markdown("---")
+                        m1, m2, m3 = st.columns(3)
+                        with m1:
+                            st.metric("Minimum Punishment", data.get('minimum_punishment', 'N/A'))
+                        with m2:
+                            st.metric("Maximum Punishment", data.get('maximum_punishment', 'N/A'))
+                        with m3:
+                            st.metric("Fine", data.get('fine', 'N/A'))
+                        b1, b2 = st.columns(2)
+                        with b1:
+                            bail = "✅ Bailable" if data.get('is_bailable') else "❌ Non-Bailable"
+                            st.markdown(f"**Bail Status:** {bail}")
+                        with b2:
+                            cog = "✅ Cognizable" if data.get('is_cognizable') else "❌ Non-Cognizable"
+                            st.markdown(f"**Cognizability:** {cog}")
+                        if data.get('estimated_sentence'):
+                            st.info(f"🔎 **Estimated Sentence based on circumstances:** {data['estimated_sentence']}")
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            if data.get('aggravating_factors'):
+                                st.markdown("**🔺 Aggravating Factors:**")
+                                for f in data['aggravating_factors']:
+                                    st.markdown(f"- {f}")
+                        with c2:
+                            if data.get('mitigating_factors'):
+                                st.markdown("**🔻 Mitigating Factors:**")
+                                for f in data['mitigating_factors']:
+                                    st.markdown(f"- {f}")
+                        st.markdown(f'<div class="disclaimer-box">{data.get("disclaimer", "")}</div>', unsafe_allow_html=True)
+                    else:
+                        toast("Could not calculate penalty. Please try again.", "❌")
+                except Exception:
+                    toast("Could not reach the server.", "❌")
+
+    elif page == "Legal Glossary":
+        st.markdown('<div class="main-header">📖 Legal Glossary</div>', unsafe_allow_html=True)
+        st.write("Search for definitions of Indian legal terms, Latin phrases, and legal jargon.")
+        term = st.text_input("Enter a legal term", placeholder="e.g. habeas corpus, mens rea, injunction, cognizable offence")
+        if st.button("Look Up", type="primary", disabled=not term.strip()):
+            with st.spinner("Looking up term..."):
+                try:
+                    resp = requests.post(f"{API_URL}/glossary",
+                        json={"term": term.strip()},
+                        headers=auth_headers(), timeout=TIMEOUT_MEDIUM)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        st.markdown(f"## {data.get('term', term)}")
+                        if data.get('pronunciation'):
+                            st.markdown(f"*{data['pronunciation']}*")
+                        if data.get('origin'):
+                            st.markdown(f"🌍 **Origin:** {data['origin']}")
+                        st.markdown("---")
+                        st.markdown(f"**Plain Definition:** {data.get('definition', '')}")
+                        if data.get('legal_definition'):
+                            st.markdown(f"**Legal Definition:** {data['legal_definition']}")
+                        if data.get('example'):
+                            st.info(f"📌 **Example:** {data['example']}")
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            if data.get('used_in'):
+                                st.markdown("**Used In:**")
+                                for u in data['used_in']:
+                                    st.markdown(f"- {u}")
+                        with c2:
+                            if data.get('related_terms'):
+                                st.markdown("**Related Terms:**")
+                                for r in data['related_terms']:
+                                    st.markdown(f"- {r}")
+                    else:
+                        toast("Term not found. Please try another.", "❌")
+                except Exception:
+                    toast("Could not reach the server.", "❌")
 
     elif page == "Document Explanation":
         st.markdown('<div class="main-header">Document Explanation</div>', unsafe_allow_html=True)
