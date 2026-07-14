@@ -692,6 +692,7 @@ def show_main_app():
             ("📊  Compare Contracts",       "Compare Contracts"),
             ("⭐  Bookmarks",               "Bookmarks"),
             ("📜  Query History",           "Query History"),
+            ("📈  My Stats",                "My Stats"),
             ("👤  Profile",                 "Profile"),
             ("ℹ️  About",                   "About"),
         ]
@@ -877,11 +878,15 @@ def show_main_app():
                         response = requests.post(f"{API_URL}/explain-document", files=files, headers=auth_headers(), timeout=TIMEOUT_LONG)
                         if response.status_code == 200:
                             data = response.json()
-                            col1, col2 = st.columns(2)
-                            with col1:
+                            c1, c2, c3, c4 = st.columns(4)
+                            with c1:
                                 st.metric("Filename", data["filename"])
-                            with col2:
-                                st.metric("Text Length", f"{data['text_length']} characters")
+                            with c2:
+                                st.metric("Characters", f"{data['text_length']:,}")
+                            with c3:
+                                st.metric("Word Count", f"{data.get('word_count', 0):,}")
+                            with c4:
+                                st.metric("Reading Time", f"{data.get('reading_time_minutes', 1)} min")
                             with st.expander("Extracted Text (Preview)"):
                                 st.text(data["extracted_text"])
                             st.markdown(f'<div class="response-box"><h3>AI Explanation</h3>{data["explanation"]}</div>', unsafe_allow_html=True)
@@ -1024,7 +1029,11 @@ def show_main_app():
                 if bookmarks:
                     st.info(f"You have {data['count']} bookmarked queries.")
                     for item in bookmarks:
-                        with st.expander(f"⭐ {item['timestamp']} - {item['category'].upper()}"):
+                        note = item.get("bookmark_note", "") or ""
+                        label = f"⭐ {item['timestamp']} - {item['category'].upper()}"
+                        if note:
+                            label += f" — {note[:40]}"
+                        with st.expander(label):
                             col_q, col_rm = st.columns([5, 1])
                             with col_q:
                                 st.markdown(f"**Query:** {item['query']}")
@@ -1038,6 +1047,21 @@ def show_main_app():
                                     if toggle_resp.status_code == 200:
                                         toast("Bookmark removed.", "🗑️")
                                         st.rerun()
+                            # Note editor
+                            new_note = st.text_input(
+                                "📝 Note", value=note,
+                                placeholder="Add a label or note for this bookmark...",
+                                key=f"note_input_{item['id']}"
+                            )
+                            if st.button("Save Note", key=f"save_note_{item['id']}"):
+                                nr = requests.patch(
+                                    f"{API_URL}/bookmarks/{item['id']}/note",
+                                    json={"note": new_note},
+                                    headers=auth_headers(), timeout=TIMEOUT_SHORT
+                                )
+                                if nr.status_code == 200:
+                                    toast("Note saved!", "✅")
+                                    st.rerun()
                             st.markdown("---")
                             st.write(item["response"])
                 else:
@@ -1046,6 +1070,44 @@ def show_main_app():
                 toast("Failed to load bookmarks.", "❌")
         except Exception:
             toast("Could not reach the server. Please try again shortly.", "❌")
+
+    elif page == "My Stats":
+        st.markdown('<div class="main-header">📈 My Stats</div>', unsafe_allow_html=True)
+        try:
+            resp = requests.get(f"{API_URL}/stats", headers=auth_headers(), timeout=TIMEOUT_SHORT)
+            if resp.status_code == 200:
+                s = resp.json()
+                c1, c2, c3 = st.columns(3)
+                with c1:
+                    st.metric("Total Queries", s.get("total_queries", 0))
+                with c2:
+                    st.metric("Bookmarks", s.get("bookmarks_count", 0))
+                with c3:
+                    most = s.get("most_active_day", "—") or "—"
+                    st.metric("Most Active Day", most)
+
+                st.markdown("---")
+                by_cat = s.get("by_category", {})
+                if by_cat:
+                    st.markdown("### Queries by Category")
+                    cat_cols = st.columns(len(by_cat))
+                    for col, (cat, count) in zip(cat_cols, by_cat.items()):
+                        with col:
+                            st.metric(cat.capitalize(), count)
+
+                by_day = s.get("by_day", {})
+                if by_day:
+                    st.markdown("---")
+                    st.markdown("### Activity — Last 30 Days")
+                    import pandas as pd
+                    df = pd.DataFrame(list(by_day.items()), columns=["Date", "Queries"])
+                    df["Date"] = pd.to_datetime(df["Date"])
+                    df = df.sort_values("Date")
+                    st.bar_chart(df.set_index("Date")["Queries"])
+            else:
+                toast("Failed to load stats.", "❌")
+        except Exception:
+            toast("Could not reach the server.", "❌")
 
     elif page == "Profile":
         st.markdown('<div class="main-header">👤 Profile</div>', unsafe_allow_html=True)

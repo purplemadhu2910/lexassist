@@ -65,11 +65,15 @@ class Database:
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER NOT NULL,
                     query_id INTEGER NOT NULL,
+                    note TEXT DEFAULT '',
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                     UNIQUE(user_id, query_id),
                     FOREIGN KEY (user_id) REFERENCES users(id),
                     FOREIGN KEY (query_id) REFERENCES query_history(id)
                 );
+                -- migrate: add note column if missing
+                CREATE TEMPORARY TABLE IF NOT EXISTS _dummy_bookmarks_note AS
+                    SELECT 1 WHERE 0;
 
                 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
                 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
@@ -77,6 +81,7 @@ class Database:
                 CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id);
             """)
         logger.info("Database initialized")
+        self._migrate()
 
     def _hash_password(self, password: str) -> str:
         return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
@@ -179,6 +184,13 @@ class Database:
 
     # ── Bookmarks ─────────────────────────────────────────────────────────
 
+    def _migrate(self):
+        """Add columns introduced after initial schema creation."""
+        with self._conn() as conn:
+            cols = [r[1] for r in conn.execute("PRAGMA table_info(bookmarks)").fetchall()]
+            if "note" not in cols:
+                conn.execute("ALTER TABLE bookmarks ADD COLUMN note TEXT DEFAULT ''")
+
     def toggle_bookmark(self, user_id: int, query_id: int) -> bool:
         with self._conn() as conn:
             existing = conn.execute(
@@ -197,10 +209,18 @@ class Database:
             )
             return True
 
+    def update_bookmark_note(self, user_id: int, query_id: int, note: str) -> bool:
+        with self._conn() as conn:
+            cursor = conn.execute(
+                "UPDATE bookmarks SET note = ? WHERE user_id = ? AND query_id = ?",
+                (note[:500], user_id, query_id)
+            )
+        return cursor.rowcount > 0
+
     def get_bookmarks(self, user_id: int) -> List[Dict]:
         with self._conn() as conn:
             rows = conn.execute("""
-                SELECT qh.*, 1 as bookmarked
+                SELECT qh.*, 1 as bookmarked, b.note as bookmark_note
                 FROM query_history qh
                 INNER JOIN bookmarks b ON b.query_id = qh.id
                 WHERE b.user_id = ?
@@ -245,3 +265,28 @@ class Database:
                 "SELECT category, COUNT(*) FROM query_history GROUP BY category"
             ).fetchall())
         return {"total_queries": total, "by_category": by_cat}
+
+    def get_user_stats(self, user_id: int) -> Dict:
+        with self._conn() as conn:
+            total = conn.execute(
+                "SELECT COUNT(*) FROM query_history WHERE user_id = ?", (user_id,)
+            ).fetchone()[0]
+            by_cat = dict(conn.execute(
+                "SELECT category, COUNT(*) FROM query_history WHERE user_id = ? GROUP BY category",
+                (user_id,)
+            ).fetchall())
+            by_day = dict(conn.execute(
+                "SELECT DATE(timestamp) as day, COUNT(*) FROM query_history WHERE user_id = ? GROUP BY day ORDER BY day DESC LIMIT 30",
+                (user_id,)
+            ).fetchall())
+            most_active = max(by_day, key=by_day.get) if by_day else None
+            bookmarks_count = conn.execute(
+                "SELECT COUNT(*) FROM bookmarks WHERE user_id = ?", (user_id,)
+            ).fetchone()[0]
+        return {
+            "total_queries": total,
+            "by_category": by_cat,
+            "by_day": by_day,
+            "most_active_day": most_active,
+            "bookmarks_count": bookmarks_count,
+        }

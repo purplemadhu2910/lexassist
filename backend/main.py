@@ -32,7 +32,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
-    allow_methods=["GET", "POST"],
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["*"],
 )
 
@@ -127,6 +127,14 @@ class AuthRequest(BaseModel):
 
 class BookmarkRequest(BaseModel):
     query_id: int
+
+class BookmarkNoteRequest(BaseModel):
+    note: str = ""
+
+    @field_validator("note")
+    @classmethod
+    def trim_note(cls, v):
+        return v.strip()[:500]
 
 class ChangePasswordRequest(BaseModel):
     old_password: str
@@ -224,12 +232,16 @@ async def explain_document(file: UploadFile = File(...), user_id: int = Depends(
         if not extracted_text.strip():
             raise HTTPException(status_code=400, detail="Could not extract text from document")
 
+        word_count = len(extracted_text.split())
+        reading_time = max(1, round(word_count / 200))  # avg 200 wpm
         explanation = await ai_engine.explain_document(extracted_text)
         return {
             "filename": file.filename,
             "extracted_text": extracted_text[:1000] + "..." if len(extracted_text) > 1000 else extracted_text,
             "explanation": explanation,
-            "text_length": len(extracted_text)
+            "text_length": len(extracted_text),
+            "word_count": word_count,
+            "reading_time_minutes": reading_time,
         }
     except HTTPException:
         raise
@@ -292,6 +304,21 @@ async def get_bookmarks(user_id: int = Depends(get_current_user)):
     except Exception as e:
         logger.error(f"Error fetching bookmarks: {str(e)}")
         raise HTTPException(status_code=500, detail="Error fetching bookmarks")
+
+@app.patch("/bookmarks/{query_id}/note")
+async def update_bookmark_note(query_id: int, request: BookmarkNoteRequest, user_id: int = Depends(get_current_user)):
+    updated = db.update_bookmark_note(user_id, query_id, request.note)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Bookmark not found")
+    return {"message": "Note updated"}
+
+@app.get("/stats")
+async def get_user_stats(user_id: int = Depends(get_current_user)):
+    try:
+        return db.get_user_stats(user_id)
+    except Exception as e:
+        logger.error(f"Error fetching stats: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching stats")
 
 @app.delete("/history/{entry_id}")
 async def delete_history_entry(entry_id: int, user_id: int = Depends(get_current_user)):
