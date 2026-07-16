@@ -335,8 +335,8 @@ def _build_theme_css(dark: bool) -> str:
 
 st.markdown(_build_theme_css(st.session_state.dark_mode), unsafe_allow_html=True)
 
-# Back-to-top anchor
-st.markdown('<a name="top"></a>', unsafe_allow_html=True)
+# Back-to-top anchor (hidden)
+st.markdown('<a name="top" style="display:none"></a>', unsafe_allow_html=True)
 
 
 def _char_counter_html(text: str) -> str:
@@ -368,11 +368,79 @@ def _copy_button(text: str, key: str):
     )
 
 def show_login_page():
+    dark = st.session_state.dark_mode
+    card_bg     = "#161b22" if dark else "#ffffff"
+    card_bdr    = "#2e4a6a" if dark else "#dde6f0"
+    card_shadow = "0 8px 32px rgba(0,0,0,0.45)" if dark else "0 4px 24px rgba(0,0,0,0.10)"
+    feat_bg     = "#1e2a3a" if dark else "#f0f6ff"
+    feat_bdr    = "#2e4a6a" if dark else "#cce0ff"
+    feat_text   = "#e5e7eb" if dark else "#1a2a3a"
+    feat_sub    = "#9ca3af" if dark else "#4a6080"
+    page_bg     = "#0e1117" if dark else "#f0f4f8"
+
+    st.markdown(f"""
+    <style>
+    /* hide sidebar on login page */
+    [data-testid="stSidebar"] {{ display: none !important; }}
+    [data-testid="collapsedControl"] {{ display: none !important; }}
+
+    /* remove all top padding/margin so card sits at the top */
+    .block-container {{
+        padding-top: 1.5rem !important;
+        padding-bottom: 1rem !important;
+        max-width: 100% !important;
+    }}
+    .stApp, [data-testid="stAppViewContainer"], .main {{
+        background: {page_bg} !important;
+    }}
+    .la-login-wrap {{
+        background: {card_bg};
+        border: 1px solid {card_bdr};
+        border-radius: 18px;
+        box-shadow: {card_shadow};
+        padding: 2.2rem 2rem 1.8rem;
+        margin-top: 0;
+    }}
+    .la-brand-icon {{ text-align: center; display: flex; justify-content: center; margin-bottom: 0.4rem; }}
+    .la-brand-name {{
+        text-align: center; font-size: 1.9rem; font-weight: 800;
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        margin-bottom: 0.1rem;
+    }}
+    .la-brand-sub {{
+        text-align: center; color: {feat_sub}; font-size: 0.88rem; margin-bottom: 1.4rem;
+    }}
+    .la-feat-card {{
+        background: {feat_bg}; border: 1px solid {feat_bdr};
+        border-radius: 14px; padding: 1.1rem 1rem;
+        text-align: center; height: 100%;
+        transition: transform 0.15s;
+    }}
+    .la-feat-card:hover {{ transform: translateY(-3px); }}
+    .la-feat-title {{ font-size: 0.95rem; font-weight: 700; color: {feat_text}; margin-bottom: 0.25rem; }}
+    .la-feat-desc  {{ font-size: 0.8rem; color: {feat_sub}; line-height: 1.5; }}
+    .la-trust {{
+        text-align: center; color: {feat_sub}; font-size: 0.78rem;
+        margin-top: 1rem; padding-top: 0.9rem;
+        border-top: 1px solid {card_bdr};
+    }}
+    .la-trust span {{ margin: 0 0.5rem; }}
+    </style>
+    """, unsafe_allow_html=True)
+
     _, center, _ = st.columns([1, 2, 1])
     with center:
-        st.markdown('<div style="text-align:center;font-size:3rem">⚖</div>', unsafe_allow_html=True)
-        st.markdown('<div style="text-align:center;font-size:1.8rem;font-weight:700;color:#1f77b4">LexAssist</div>', unsafe_allow_html=True)
-        st.markdown('<div style="text-align:center;color:#888;margin-bottom:1.5rem">Your personal legal and tax assistant for Indian law</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="la-login-wrap">'
+            '<div class="la-brand-icon">'
+            '<svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'
+            '<path d="M12 3L3 7l9 4 9-4-9-4z"/><path d="M3 12l9 4 9-4"/><path d="M3 17l9 4 9-4"/>'
+            '</svg></div>'
+            '<div class="la-brand-name">LexAssist</div>'
+            '<div class="la-brand-sub">AI-powered legal &amp; tax assistant for Indian law</div>',
+            unsafe_allow_html=True
+        )
 
         tab1, tab2 = st.tabs(["Sign In", "Create Account"])
 
@@ -380,7 +448,7 @@ def show_login_page():
             with st.form("login_form"):
                 username = st.text_input("Username", placeholder="Enter your username")
                 password = st.text_input("Password", type="password", placeholder="Enter your password")
-                submit = st.form_submit_button("Sign In", type="primary", use_container_width=True)
+                submit = st.form_submit_button("Sign In →", type="primary", use_container_width=True)
 
             if submit:
                 if username.strip() and password.strip():
@@ -412,12 +480,11 @@ def show_login_page():
                     st.rerun()
 
         with tab2:
-
             with st.form("register_form"):
                 new_username = st.text_input("Choose a username", placeholder="Pick something you'll remember")
                 new_password = st.text_input("Choose a password", type="password", placeholder="At least 6 characters")
                 confirm_password = st.text_input("Confirm your password", type="password", placeholder="Type it again")
-                submit_reg = st.form_submit_button("Create Account", type="primary", use_container_width=True)
+                submit_reg = st.form_submit_button("Create Account →", type="primary", use_container_width=True)
 
             if submit_reg:
                 if new_username.strip() and new_password.strip() and confirm_password.strip():
@@ -436,7 +503,6 @@ def show_login_page():
                                     timeout=TIMEOUT_SHORT
                                 )
                                 if response.status_code == 200:
-                                    # Auto sign-in after registration
                                     login_resp = requests.post(
                                         f"{API_URL}/login",
                                         json={"username": new_username.strip(), "password": new_password},
@@ -462,16 +528,30 @@ def show_login_page():
                     st.session_state.auth_alert = ("warning", "Please fill in all three fields to create your account.")
                     st.rerun()
 
-        st.markdown('<div class="auth-divider">Trusted by law students, professionals, and everyday citizens</div>', unsafe_allow_html=True)
+        st.markdown(
+            '<div class="la-trust">'
+            '<span>Secure</span><span>Indian Law</span><span>AI-Powered</span><span>Document Analysis</span>'
+            '</div></div>',
+            unsafe_allow_html=True
+        )
 
-    st.markdown("---")
-    _, c1, c2, c3, _ = st.columns([1, 1, 1, 1, 1])
-    with c1:
-        st.markdown("**Legal Questions**\n\nAsk anything about IPC, Constitution, or CRPC in plain language.")
-    with c2:
-        st.markdown("**Tax Guidance**\n\nUnderstand Income Tax, GST, and deductions without the jargon.")
-    with c3:
-        st.markdown("**Document Analysis**\n\nUpload any legal document and get a simple explanation.")
+    st.markdown("<br>", unsafe_allow_html=True)
+    _, c1, c2, c3, c4, _ = st.columns([0.5, 1, 1, 1, 1, 0.5])
+    features = [
+        (c1, "Legal Questions", "Ask anything about IPC, Constitution, or CrPC in plain language."),
+        (c2, "Tax Guidance", "Understand Income Tax, GST, and deductions without the jargon."),
+        (c3, "Document Analysis", "Upload any legal document and get a simple explanation."),
+        (c4, "Contract Risks", "Detect risky clauses and missing terms in any contract."),
+    ]
+    for col, title, desc in features:
+        with col:
+            st.markdown(
+                f'<div class="la-feat-card">'
+                f'<div class="la-feat-title">{title}</div>'
+                f'<div class="la-feat-desc">{desc}</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
 
 
 def ask_api(query, category):
