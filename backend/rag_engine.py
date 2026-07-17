@@ -1,9 +1,12 @@
 import os
 import pickle
 import threading
+import logging
 import faiss
 from fastembed import TextEmbedding
 from typing import List
+
+logger = logging.getLogger(__name__)
 
 _BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 INDEX_PATH = os.path.join(_BASE, "data", "vector_store", "index.faiss")
@@ -13,6 +16,15 @@ _model = None
 _index = None
 _chunks = None
 _init_lock = threading.Lock()
+
+
+def preload_resources():
+    """Eagerly load the FAISS index and embedding model at startup."""
+    loaded = _load_resources()
+    if loaded:
+        logger.info("RAG resources pre-loaded successfully.")
+    else:
+        logger.warning("RAG vector store not found — RAG will be disabled until index is built.")
 
 
 def _load_resources() -> bool:

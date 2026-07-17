@@ -1,10 +1,12 @@
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from contextlib import asynccontextmanager
 from pydantic import BaseModel, field_validator
 from ai_engine import AIEngine
 from document_parser import DocumentParser
 from database import Database
+from rag_engine import preload_resources
 import csv
 import io
 import logging
@@ -18,10 +20,19 @@ load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Starting up — pre-loading RAG resources...")
+    preload_resources()
+    yield
+
+
 app = FastAPI(
     title="LexAssist API",
     description="AI-powered legal and tax assistant backend",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 _frontend_url = os.getenv("FRONTEND_URL", "")
@@ -42,7 +53,9 @@ db = Database()
 
 # ── Rate limiter ──────────────────────────────────────────────────────────
 _login_attempts: dict = defaultdict(list)
+_ask_attempts: dict = defaultdict(list)
 MAX_LOGIN_ATTEMPTS = 5
+MAX_ASK_ATTEMPTS = 20
 RATE_LIMIT_WINDOW = 60  # seconds
 
 def check_rate_limit(ip: str):
@@ -51,6 +64,13 @@ def check_rate_limit(ip: str):
     if len(_login_attempts[ip]) >= MAX_LOGIN_ATTEMPTS:
         raise HTTPException(status_code=429, detail="Too many login attempts. Try again in a minute.")
     _login_attempts[ip].append(now)
+
+def check_ask_rate_limit(user_id: int):
+    now = time.time()
+    _ask_attempts[user_id] = [t for t in _ask_attempts[user_id] if now - t < RATE_LIMIT_WINDOW]
+    if len(_ask_attempts[user_id]) >= MAX_ASK_ATTEMPTS:
+        raise HTTPException(status_code=429, detail="Too many requests. Please wait a minute before asking again.")
+    _ask_attempts[user_id].append(now)
 
 # ── Auth ──────────────────────────────────────────────────────────────────
 
@@ -61,6 +81,7 @@ def get_current_user(request: Request) -> int:
     user_id = db.get_session_user(token)
     if user_id is None:
         raise HTTPException(status_code=401, detail="Session expired or invalid. Please log in again.")
+    db.refresh_session(token)
     return user_id
 
 def get_token(request: Request) -> str:
@@ -70,7 +91,14 @@ def get_token(request: Request) -> str:
     return token
 
 # ── Input sanitization ────────────────────────────────────────────────────
-BLOCKED_PATTERNS = ["ignore previous", "disregard", "you are now", "new instructions", "system prompt"]
+BLOCKED_PATTERNS = [
+    "ignore previous", "ignore prior", "ignore all", "disregard",
+    "you are now", "you are a", "act as", "pretend to be", "pretend you are",
+    "new instructions", "system prompt", "forget everything", "forget your",
+    "override", "jailbreak", "do anything now", "dan mode",
+    "bypass", "ignore your instructions", "ignore the above",
+    "from now on", "your new role", "your true self",
+]
 
 def sanitize_query(query: str) -> str:
     lower = query.lower()
@@ -121,8 +149,10 @@ class AuthRequest(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, v):
-        if not v or len(v) > 128:
-            raise ValueError("Invalid password")
+        if not v or len(v) < 6 or len(v) > 128:
+            raise ValueError("Password must be 6–128 characters")
+        if not any(c.isdigit() or not c.isalpha() for c in v):
+            raise ValueError("Password must contain at least one number or special character")
         return v
 
 class BookmarkRequest(BaseModel):
@@ -215,7 +245,8 @@ async def logout(token: str = Depends(get_token)):
     return {"message": "Logged out successfully"}
 
 @app.post("/ask", response_model=QueryResponse)
-async def ask_question(request: QueryRequest, user_id: int = Depends(get_current_user)):
+async def ask_question(request: QueryRequest, req: Request, user_id: int = Depends(get_current_user)):
+    check_ask_rate_limit(user_id)
     try:
         query = sanitize_query(request.query)
         logger.info(f"Processing query: {query[:50]}...")

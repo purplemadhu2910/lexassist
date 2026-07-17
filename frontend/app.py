@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 import streamlit as st
 import requests
 import html as html_lib
@@ -745,6 +746,25 @@ def show_chat_page(category: str, page_title: str):
             st.rerun()
 
 
+def show_home_page():
+    st.markdown('<div class="main-header">Welcome to LexAssist</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-header">Your AI-Powered Legal and Tax Assistant for Indian Law</div>', unsafe_allow_html=True)
+    st.markdown('<div class="rag-badge">RAG-Enhanced: Answers grounded in real Indian legal documents</div>', unsafe_allow_html=True)
+    col1, col2, col3, col4, col5 = st.columns(5)
+    features = [
+        (col1, "Legal Assistance", "Get simplified explanations of IPC sections, Constitutional articles, and your rights under Indian law."),
+        (col2, "Tax Guidance", "Understand Income Tax Act sections, GST, deductions, and filing requirements."),
+        (col3, "General Assistant", "Ask any general legal or civic question about Indian law and governance."),
+        (col4, "Document Analysis", "Upload PDF, TXT, or DOCX legal documents and get easy-to-understand explanations."),
+        (col5, "⚠️ Contract Risks", "Upload any contract to detect risks, missing clauses, and get actionable recommendations.")
+    ]
+    for col, title, desc in features:
+        with col:
+            st.markdown(f"### {title}")
+            st.write(desc)
+    st.markdown("---")
+    st.markdown('<div class="disclaimer-box"><strong>Disclaimer:</strong> LexAssist provides general information only and is not a substitute for professional legal or tax advice.</div>', unsafe_allow_html=True)
+
 
 def show_main_app():
     page = st.session_state.current_page
@@ -851,6 +871,7 @@ def show_main_app():
         show_chat_page("general", "General Assistant")
 
     elif page == "Contract Risk Analyzer":
+    def show_contract_risk_analyzer():
         st.markdown('<div class="main-header">⚠️ Contract Risk Analyzer</div>', unsafe_allow_html=True)
         st.write("Upload a contract (PDF, TXT, or DOCX) to identify risks, missing clauses, and get recommendations under Indian contract law.")
         uploaded_file = st.file_uploader("Choose a contract document", type=["pdf", "txt", "docx"], key="contract_upload")
@@ -904,6 +925,7 @@ def show_main_app():
                         toast("Could not reach the server. Please try again shortly.", "❌")
 
     elif page == "Compare Contracts":
+    def show_compare_contracts():
         st.markdown('<div class="main-header">📊 Compare Contracts</div>', unsafe_allow_html=True)
         st.write("Upload two contracts to compare them side by side — clauses, differences, and recommendations.")
         col1, col2 = st.columns(2)
@@ -952,6 +974,7 @@ def show_main_app():
             st.info("Please upload both contracts to compare.")
 
     elif page == "Case Law Search":
+    def show_case_law_search():
         st.markdown('<div class="main-header">🔍 Case Law Search</div>', unsafe_allow_html=True)
         st.write("Search relevant Supreme Court and High Court judgments on any Indian legal topic.")
         query = st.text_input("Enter your legal query", placeholder="e.g. right to privacy, bail conditions, dowry harassment")
@@ -982,6 +1005,7 @@ def show_main_app():
                     toast("Could not reach the server.", "❌")
 
     elif page == "Draft Document":
+    def show_draft_document():
         st.markdown('<div class="main-header">📝 Draft Document</div>', unsafe_allow_html=True)
         st.write("Generate professional legal document drafts based on your details.")
         doc_type = st.selectbox("Document Type", [
@@ -1058,6 +1082,7 @@ def show_main_app():
                         toast("Could not reach the server.", "❌")
 
     elif page == "Section Lookup":
+    def show_section_lookup():
         st.markdown('<div class="main-header">📌 Section Lookup</div>', unsafe_allow_html=True)
         st.write("Look up any section of IPC, CrPC, Constitution, or other Indian acts instantly.")
         c1, c2 = st.columns([2, 1])
@@ -1108,6 +1133,7 @@ def show_main_app():
                     toast("Could not reach the server.", "❌")
 
     elif page == "Legal Timeline":
+    def show_legal_timeline():
         st.markdown('<div class="main-header">🗓️ Legal Timeline Builder</div>', unsafe_allow_html=True)
         st.write("Describe your legal situation and get a step-by-step guide of the legal process.")
         situation = st.text_area("Describe your situation",
@@ -1146,6 +1172,7 @@ def show_main_app():
                     toast("Could not reach the server.", "❌")
 
     elif page == "Penalty Calculator":
+    def show_penalty_calculator():
         st.markdown('<div class="main-header">⚖️ Penalty Calculator</div>', unsafe_allow_html=True)
         st.write("Estimate the punishment or fine for an IPC/BNS section based on the circumstances.")
         st.warning("⚠️ This is an AI estimate only. Actual sentencing is at the court's discretion.")
@@ -1200,6 +1227,7 @@ def show_main_app():
                     toast("Could not reach the server.", "❌")
 
     elif page == "Legal Glossary":
+    def show_legal_glossary():
         st.markdown('<div class="main-header">📖 Legal Glossary</div>', unsafe_allow_html=True)
         st.write("Search for definitions of Indian legal terms, Latin phrases, and legal jargon.")
         term = st.text_input("Enter a legal term", placeholder="e.g. habeas corpus, mens rea, injunction, cognizable offence")
@@ -1239,6 +1267,7 @@ def show_main_app():
                     toast("Could not reach the server.", "❌")
 
     elif page == "Document Explanation":
+    def show_document_explanation():
         st.markdown('<div class="main-header">Document Explanation</div>', unsafe_allow_html=True)
         st.write("Upload a legal or tax document (PDF, TXT, or DOCX) and get a simplified explanation.")
         uploaded_file = st.file_uploader("Choose a document", type=["pdf", "txt", "docx"])
@@ -1270,6 +1299,7 @@ def show_main_app():
                         toast("Could not reach the server. Please try again shortly.", "❌")
 
     elif page == "Query History":
+    def show_query_history():
         st.markdown('<div class="main-header">Query History</div>', unsafe_allow_html=True)
         try:
             # ── Search + filter controls ──────────────────────────────────
@@ -1393,6 +1423,7 @@ def show_main_app():
             toast("Could not reach the server. Please try again shortly.", "❌")
 
     elif page == "Bookmarks":
+    def show_bookmarks():
         st.markdown('<div class="main-header">Bookmarks</div>', unsafe_allow_html=True)
         try:
             resp = requests.get(f"{API_URL}/bookmarks", headers=auth_headers(), timeout=TIMEOUT_SHORT)
@@ -1445,6 +1476,7 @@ def show_main_app():
             toast("Could not reach the server. Please try again shortly.", "❌")
 
     elif page == "My Stats":
+    def show_my_stats():
         st.markdown('<div class="main-header">📈 My Stats</div>', unsafe_allow_html=True)
         try:
             resp = requests.get(f"{API_URL}/stats", headers=auth_headers(), timeout=TIMEOUT_SHORT)
@@ -1472,7 +1504,6 @@ def show_main_app():
                 if by_day:
                     st.markdown("---")
                     st.markdown("### Activity — Last 30 Days")
-                    import pandas as pd
                     df = pd.DataFrame(list(by_day.items()), columns=["Date", "Queries"])
                     df["Date"] = pd.to_datetime(df["Date"])
                     df = df.sort_values("Date")
@@ -1483,6 +1514,7 @@ def show_main_app():
             toast("Could not reach the server.", "❌")
 
     elif page == "Profile":
+    def show_profile():
         st.markdown('<div class="main-header">👤 Profile</div>', unsafe_allow_html=True)
         st.markdown(f"**Username:** {st.session_state.get('username', '')}")
         st.markdown("---")
@@ -1514,6 +1546,7 @@ def show_main_app():
                     toast("Could not reach the server.", "❌")
 
     elif page == "About":
+    def show_about():
         st.markdown('<div class="main-header">About LexAssist</div>', unsafe_allow_html=True)
         st.markdown("""
         ### What is LexAssist?
@@ -1538,6 +1571,29 @@ def show_main_app():
         LexAssist is an informational tool only. Always consult a qualified attorney or tax professional.
         """)
 
+    # Page router using a dictionary
+    PAGES = {
+        "Home": show_home_page,
+        "Ask Legal Question": lambda: show_chat_page("legal", "Ask Legal Question"),
+        "Tax Assistant": lambda: show_chat_page("tax", "Tax Assistant"),
+        "General Assistant": lambda: show_chat_page("general", "General Assistant"),
+        "Document Explanation": show_document_explanation,
+        "Contract Risk Analyzer": show_contract_risk_analyzer,
+        "Compare Contracts": show_compare_contracts,
+        "Case Law Search": show_case_law_search,
+        "Draft Document": show_draft_document,
+        "Section Lookup": show_section_lookup,
+        "Legal Timeline": show_legal_timeline,
+        "Penalty Calculator": show_penalty_calculator,
+        "Legal Glossary": show_legal_glossary,
+        "Bookmarks": show_bookmarks,
+        "Query History": show_query_history,
+        "My Stats": show_my_stats,
+        "Profile": show_profile,
+        "About": show_about,
+    }
+    page_function = PAGES.get(page, show_home_page)
+    page_function()
 
 if not st.session_state.logged_in:
     if st.session_state.auth_alert:

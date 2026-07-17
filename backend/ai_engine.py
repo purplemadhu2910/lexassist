@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 MAX_DOC_CHARS = int(os.getenv("MAX_DOC_CHARS", "4000"))
 
 
+GROQ_TIMEOUT = 30  # seconds
+
+
 class AIEngine:
     def __init__(self):
         api_key = os.getenv("GROQ_API_KEY")
@@ -41,7 +44,8 @@ class AIEngine:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                max_tokens=1024
+                max_tokens=1024,
+                timeout=GROQ_TIMEOUT
             )
             answer = response.choices[0].message.content
             if not answer:
@@ -72,7 +76,8 @@ class AIEngine:
                     )},
                     {"role": "user", "content": f"CONTRACT 1:\n{t1}\n\n---\n\nCONTRACT 2:\n{t2}"}
                 ],
-                max_tokens=1800
+                max_tokens=1800,
+                timeout=GROQ_TIMEOUT
             )
             raw = response.choices[0].message.content.strip()
             match = re.search(r'\{.*\}', raw, re.DOTALL)
@@ -93,7 +98,8 @@ class AIEngine:
                     {"role": "system", "content": f"Translate the following text to {language}. Preserve formatting, bullet points, and legal terminology accuracy."},
                     {"role": "user", "content": text}
                 ],
-                max_tokens=1500
+                max_tokens=1500,
+                timeout=GROQ_TIMEOUT
             )
             return response.choices[0].message.content or text
         except Exception:
@@ -120,7 +126,8 @@ class AIEngine:
                     )},
                     {"role": "user", "content": f"Analyze this contract for risks:\n\n{contract_text}"}
                 ],
-                max_tokens=1500
+                max_tokens=1500,
+                timeout=GROQ_TIMEOUT
             )
             raw = response.choices[0].message.content.strip()
             match = re.search(r'\{.*\}', raw, re.DOTALL)
@@ -148,7 +155,8 @@ class AIEngine:
                     )},
                     {"role": "user", "content": f"Find relevant Indian case law for: {query}"}
                 ],
-                max_tokens=1500
+                max_tokens=1500,
+                timeout=GROQ_TIMEOUT
             )
             raw = response.choices[0].message.content.strip()
             match = re.search(r'\{.*\}', raw, re.DOTALL)
@@ -174,7 +182,8 @@ class AIEngine:
                     )},
                     {"role": "user", "content": f"Draft a {doc_type} with these details:\n{details_str}"}
                 ],
-                max_tokens=2000
+                max_tokens=2000,
+                timeout=GROQ_TIMEOUT
             )
             return response.choices[0].message.content or ""
         except Exception as e:
@@ -200,7 +209,8 @@ class AIEngine:
                     )},
                     {"role": "user", "content": f"Explain {act} Section {section}"}
                 ],
-                max_tokens=1000
+                max_tokens=1000,
+                timeout=GROQ_TIMEOUT
             )
             raw = response.choices[0].message.content.strip()
             match = re.search(r'\{.*\}', raw, re.DOTALL)
@@ -230,7 +240,8 @@ class AIEngine:
                     )},
                     {"role": "user", "content": f"Build a legal process timeline for: {situation}"}
                 ],
-                max_tokens=1500
+                max_tokens=1500,
+                timeout=GROQ_TIMEOUT
             )
             raw = response.choices[0].message.content.strip()
             match = re.search(r'\{.*\}', raw, re.DOTALL)
@@ -262,7 +273,8 @@ class AIEngine:
                     )},
                     {"role": "user", "content": f"IPC/BNS Section: {section}\nCircumstances: {circumstances}"}
                 ],
-                max_tokens=800
+                max_tokens=800,
+                timeout=GROQ_TIMEOUT
             )
             raw = response.choices[0].message.content.strip()
             match = re.search(r'\{.*\}', raw, re.DOTALL)
@@ -293,7 +305,8 @@ class AIEngine:
                     )},
                     {"role": "user", "content": f"Define the legal term: {term}"}
                 ],
-                max_tokens=600
+                max_tokens=600,
+                timeout=GROQ_TIMEOUT
             )
             raw = response.choices[0].message.content.strip()
             match = re.search(r'\{.*\}', raw, re.DOTALL)
@@ -321,7 +334,8 @@ class AIEngine:
                     )},
                     {"role": "user", "content": f"Please explain this document:\n\n{document_text}"}
                 ],
-                max_tokens=1024
+                max_tokens=1024,
+                timeout=GROQ_TIMEOUT
             )
             answer = response.choices[0].message.content
             if not answer:
@@ -359,7 +373,8 @@ class AIEngine:
                         "Return only the 3 questions as a plain numbered list, no explanations."
                     )}
                 ],
-                max_tokens=150
+                max_tokens=150,
+                timeout=GROQ_TIMEOUT
             )
             raw = response.choices[0].message.content.strip()
             suggestions = []

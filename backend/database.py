@@ -131,6 +131,15 @@ class Database:
             ).fetchone()
         return row["user_id"] if row else None
 
+    def refresh_session(self, token: str):
+        """Slide the session expiry forward on each valid request."""
+        new_expires = int(time.time()) + SESSION_TTL
+        with self._conn() as conn:
+            conn.execute(
+                "UPDATE sessions SET expires_at = ? WHERE token = ?",
+                (new_expires, token)
+            )
+
     def delete_session(self, token: str):
         with self._conn() as conn:
             conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
@@ -149,17 +158,22 @@ class Database:
             )
             return cursor.lastrowid
 
+    def _history_where(self, user_id: int = None, search: str = None):
+        """Returns (where_clause, params) with only safe, fixed column names."""
+        conditions = []
+        params = []
+        if user_id is not None:
+            conditions.append("user_id = ?")
+            params.append(int(user_id))
+        if search:
+            conditions.append("query LIKE ?")
+            params.append(f"%{search}%")
+        where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
+        return where, params
+
     def get_history(self, limit: int = 10, offset: int = 0, user_id: int = None, search: str = None) -> List[Dict]:
+        where, params = self._history_where(user_id, search)
         with self._conn() as conn:
-            conditions = []
-            params = []
-            if user_id is not None:
-                conditions.append("user_id = ?")
-                params.append(int(user_id))
-            if search:
-                conditions.append("query LIKE ?")
-                params.append(f"%{search}%")
-            where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
             rows = conn.execute(
                 f"SELECT * FROM query_history {where} ORDER BY timestamp DESC LIMIT ? OFFSET ?",
                 (*params, limit, offset)
@@ -167,16 +181,8 @@ class Database:
         return [dict(r) for r in rows]
 
     def get_history_count(self, user_id: int = None, search: str = None) -> int:
+        where, params = self._history_where(user_id, search)
         with self._conn() as conn:
-            conditions = []
-            params = []
-            if user_id is not None:
-                conditions.append("user_id = ?")
-                params.append(int(user_id))
-            if search:
-                conditions.append("query LIKE ?")
-                params.append(f"%{search}%")
-            where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
             row = conn.execute(
                 f"SELECT COUNT(*) FROM query_history {where}", params
             ).fetchone()
