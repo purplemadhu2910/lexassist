@@ -1,5 +1,6 @@
 import os
 import pickle
+import tempfile
 import faiss
 import numpy as np
 from fastembed import TextEmbedding
@@ -44,11 +45,31 @@ def build_index():
     index = faiss.IndexFlatL2(embeddings.shape[1])
     index.add(embeddings)
 
-    os.makedirs(os.path.dirname(os.path.abspath(INDEX_PATH)), exist_ok=True)
-    faiss.write_index(index, os.path.abspath(INDEX_PATH))
+    vector_store_dir = os.path.dirname(os.path.abspath(INDEX_PATH))
+    os.makedirs(vector_store_dir, exist_ok=True)
 
-    with open(os.path.abspath(CHUNKS_META_PATH), "wb") as f:
-        pickle.dump(texts, f)
+    # Write FAISS index atomically via a temp file
+    index_abs = os.path.abspath(INDEX_PATH)
+    fd, tmp_index = tempfile.mkstemp(dir=vector_store_dir, suffix=".faiss")
+    os.close(fd)
+    try:
+        faiss.write_index(index, tmp_index)
+        os.replace(tmp_index, index_abs)
+    except Exception:
+        os.remove(tmp_index)
+        raise
+
+    # Write chunks metadata atomically via a temp file
+    meta_abs = os.path.abspath(CHUNKS_META_PATH)
+    fd, tmp_meta = tempfile.mkstemp(dir=vector_store_dir, suffix=".pkl")
+    os.close(fd)
+    try:
+        with open(tmp_meta, "wb") as f:
+            pickle.dump(texts, f)
+        os.replace(tmp_meta, meta_abs)
+    except Exception:
+        os.remove(tmp_meta)
+        raise
 
     print(f"Done. {len(texts)} unique texts indexed and saved.")
 

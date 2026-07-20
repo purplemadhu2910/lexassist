@@ -302,13 +302,14 @@ async def explain_document(file: UploadFile = File(...), user_id: int = Depends(
         raise HTTPException(status_code=500, detail="Error processing document")
 
 @app.get("/history")
-async def get_history(limit: int = 10, offset: int = 0, search: str = "", user_id: int = Depends(get_current_user)):
+async def get_history(limit: int = 10, offset: int = 0, search: str = "", category: str = "", user_id: int = Depends(get_current_user)):
     limit = min(max(1, limit), 100)
     offset = max(0, offset)
     search_term = search.strip()[:200] if search else None
+    category_filter = category.strip() if category and category != "All" else None
     try:
-        history = db.get_history(limit, offset, user_id, search_term)
-        total = db.get_history_count(user_id, search_term)
+        history = db.get_history(limit, offset, user_id, search_term, category_filter)
+        total = db.get_history_count(user_id, search_term, category_filter)
         return {"history": history, "count": len(history), "total": total}
     except Exception as e:
         logger.error(f"Error fetching history: {str(e)}")

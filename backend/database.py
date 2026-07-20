@@ -158,7 +158,9 @@ class Database:
             )
             return cursor.lastrowid
 
-    def _history_where(self, user_id: int = None, search: str = None):
+    _VALID_CATEGORIES = {"legal", "tax", "general", "document"}
+
+    def _history_where(self, user_id: int = None, search: str = None, category: str = None):
         """Returns (where_clause, params) with only safe, fixed column names."""
         conditions = []
         params = []
@@ -168,11 +170,14 @@ class Database:
         if search:
             conditions.append("query LIKE ?")
             params.append(f"%{search}%")
+        if category and category in self._VALID_CATEGORIES:
+            conditions.append("category = ?")
+            params.append(category)
         where = ("WHERE " + " AND ".join(conditions)) if conditions else ""
         return where, params
 
-    def get_history(self, limit: int = 10, offset: int = 0, user_id: int = None, search: str = None) -> List[Dict]:
-        where, params = self._history_where(user_id, search)
+    def get_history(self, limit: int = 10, offset: int = 0, user_id: int = None, search: str = None, category: str = None) -> List[Dict]:
+        where, params = self._history_where(user_id, search, category)
         with self._conn() as conn:
             rows = conn.execute(
                 f"SELECT * FROM query_history {where} ORDER BY timestamp DESC LIMIT ? OFFSET ?",
@@ -180,8 +185,8 @@ class Database:
             ).fetchall()
         return [dict(r) for r in rows]
 
-    def get_history_count(self, user_id: int = None, search: str = None) -> int:
-        where, params = self._history_where(user_id, search)
+    def get_history_count(self, user_id: int = None, search: str = None, category: str = None) -> int:
+        where, params = self._history_where(user_id, search, category)
         with self._conn() as conn:
             row = conn.execute(
                 f"SELECT COUNT(*) FROM query_history {where}", params

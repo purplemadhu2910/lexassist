@@ -59,6 +59,8 @@ class AIEngine:
         if not self.client:
             return {"error": "GROQ_API_KEY not configured"}
         try:
+            t1_truncated = len(text1) > MAX_DOC_CHARS
+            t2_truncated = len(text2) > MAX_DOC_CHARS
             t1 = text1[:MAX_DOC_CHARS]
             t2 = text2[:MAX_DOC_CHARS]
             response = self.client.chat.completions.create(
@@ -81,9 +83,18 @@ class AIEngine:
             )
             raw = response.choices[0].message.content.strip()
             match = re.search(r'\{.*\}', raw, re.DOTALL)
-            if match:
-                return json.loads(match.group())
-            return {"summary": raw, "common_clauses": [], "unique_to_contract1": [], "unique_to_contract2": [], "key_differences": [], "recommendation": ""}
+            result = json.loads(match.group()) if match else {
+                "summary": raw, "common_clauses": [], "unique_to_contract1": [],
+                "unique_to_contract2": [], "key_differences": [], "recommendation": ""
+            }
+            warnings = []
+            if t1_truncated:
+                warnings.append(f"Contract 1 was truncated to {MAX_DOC_CHARS} characters. Clauses beyond this limit were not analysed.")
+            if t2_truncated:
+                warnings.append(f"Contract 2 was truncated to {MAX_DOC_CHARS} characters. Clauses beyond this limit were not analysed.")
+            if warnings:
+                result["truncation_warnings"] = warnings
+            return result
         except Exception as e:
             logger.error(f"Error comparing contracts: {str(e)}")
             raise Exception(f"Contract comparison error: {str(e)}")
