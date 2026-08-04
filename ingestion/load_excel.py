@@ -7,6 +7,8 @@ OUTPUT_FOLDER = os.path.join(BASE, "..", "data", "processed", "cleaned_text")
 
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
+os.makedirs(INPUT_FOLDER, exist_ok=True)
+
 for file in os.listdir(INPUT_FOLDER):
     if not (file.endswith(".xlsx") or file.endswith(".xls") or file.endswith(".csv")):
         continue

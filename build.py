@@ -24,10 +24,11 @@ print("\n[1/6] Copying raw text files...")
 raw_txt_dir = os.path.join(ROOT, "data", "raw")
 cleaned_dir = os.path.join(ROOT, "data", "processed", "cleaned_text")
 os.makedirs(cleaned_dir, exist_ok=True)
-for f in os.listdir(raw_txt_dir):
-    if f.endswith(".txt"):
-        shutil.copy(os.path.join(raw_txt_dir, f), os.path.join(cleaned_dir, f))
-        print(f"  Copied: {f}")
+if os.path.exists(raw_txt_dir):
+    for f in os.listdir(raw_txt_dir):
+        if f.endswith(".txt"):
+            shutil.copy(os.path.join(raw_txt_dir, f), os.path.join(cleaned_dir, f))
+            print(f"  Copied: {f}")
 
 run("[2/6] Processing PDFs...",    os.path.join(ROOT, "ingestion", "load_pdfs.py"))
 run("[3/6] Processing JSONs...",   os.path.join(ROOT, "ingestion", "load_json.py"))

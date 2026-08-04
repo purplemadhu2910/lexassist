@@ -26,14 +26,18 @@ def build_index():
             texts.append(text)
 
     print("Loading processed chunks...")
-    for filename in sorted(os.listdir(os.path.abspath(CHUNKS_FOLDER))):
-        if filename.endswith(".txt"):
-            add(_load_txt(os.path.join(os.path.abspath(CHUNKS_FOLDER), filename)))
+    chunks_dir = os.path.abspath(CHUNKS_FOLDER)
+    if os.path.exists(chunks_dir):
+        for filename in sorted(os.listdir(chunks_dir)):
+            if filename.endswith(".txt"):
+                add(_load_txt(os.path.join(chunks_dir, filename)))
 
     print("Loading extra raw text files...")
-    for filename in sorted(os.listdir(os.path.abspath(RAW_FOLDER))):
-        if filename.endswith(".txt"):
-            add(_load_txt(os.path.join(os.path.abspath(RAW_FOLDER), filename)))
+    raw_dir = os.path.abspath(RAW_FOLDER)
+    if os.path.exists(raw_dir):
+        for filename in sorted(os.listdir(raw_dir)):
+            if filename.endswith(".txt"):
+                add(_load_txt(os.path.join(raw_dir, filename)))
 
     print(f"Total unique texts to index: {len(texts)}")
     print("Generating embeddings...")

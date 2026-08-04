@@ -62,7 +62,7 @@ LexAssist is an AI-powered legal and tax assistant that helps users understand c
 | Component | Technology |
 |---|---|
 | Vector Store | FAISS (faiss-cpu) |
-| Text Embeddings | Sentence-Transformers (all-MiniLM-L6-v2) |
+| Text Embeddings | FastEmbed (BAAI/bge-small-en-v1.5) |
 | Embedding Framework | PyTorch |
 | Tokenizers | Hugging Face Transformers |
 | Similarity Search | L2 distance, top-3 chunk retrieval |

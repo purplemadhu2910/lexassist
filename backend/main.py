@@ -198,6 +198,15 @@ class ChangePasswordRequest(BaseModel):
             raise ValueError("New password must be 6–128 characters")
         return v
 
+class FeedbackRequest(BaseModel):
+    query_id: int
+    rating: int  # 1 (thumbs up) or -1 (thumbs down)
+    comment: str = ""
+
+class ExportRequest(BaseModel):
+    title: str = "LexAssist Document"
+    content: str
+
 # ── Routes ────────────────────────────────────────────────────────────────
 
 @app.get("/")
@@ -496,6 +505,71 @@ async def analyze_contract(file: UploadFile = File(...), user_id: int = Depends(
     except Exception as e:
         logger.error(f"Error analyzing contract: {str(e)}")
         raise HTTPException(status_code=500, detail="Error analyzing contract")
+
+@app.post("/ask-stream")
+async def ask_question_stream(request: QueryRequest, req: Request, user_id: int = Depends(get_current_user)):
+    check_ask_rate_limit(user_id)
+    try:
+        query = sanitize_query(request.query)
+        generator = ai_engine.process_query_stream(query, request.category, request.history, request.language)
+        return StreamingResponse(generator, media_type="text/plain")
+    except Exception as e:
+        logger.error(f"Error streaming query: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error streaming query")
+
+@app.post("/feedback")
+async def submit_feedback(request: FeedbackRequest, user_id: int = Depends(get_current_user)):
+    try:
+        db.save_feedback(user_id, request.query_id, request.rating, request.comment)
+        return {"message": "Feedback submitted successfully"}
+    except Exception as e:
+        logger.error(f"Error saving feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error saving feedback")
+
+@app.get("/admin/analytics")
+async def get_admin_analytics(user_id: int = Depends(get_current_user)):
+    try:
+        return db.get_admin_analytics()
+    except Exception as e:
+        logger.error(f"Error fetching admin analytics: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error fetching admin analytics")
+
+@app.post("/export/docx")
+async def export_docx(request: ExportRequest, user_id: int = Depends(get_current_user)):
+    try:
+        from docx import Document
+        from docx.shared import Pt, RGBColor
+        doc = Document()
+        
+        # Add title
+        heading = doc.add_heading(request.title, level=1)
+        
+        # Add body content
+        for line in request.content.split("\n"):
+            if line.startswith("# "):
+                doc.add_heading(line[2:], level=1)
+            elif line.startswith("## "):
+                doc.add_heading(line[3:], level=2)
+            elif line.startswith("### "):
+                doc.add_heading(line[4:], level=3)
+            elif line.strip():
+                doc.add_paragraph(line)
+                
+        file_stream = io.BytesIO()
+        doc.save(file_stream)
+        file_stream.seek(0)
+        
+        safe_title = "".join([c if c.isalnum() else "_" for c in request.title[:30]])
+        filename = f"{safe_title}.docx"
+        
+        return StreamingResponse(
+            file_stream,
+            media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        logger.error(f"Error exporting DOCX: {str(e)}")
+        raise HTTPException(status_code=500, detail="Error generating DOCX")
 
 
 if __name__ == "__main__":

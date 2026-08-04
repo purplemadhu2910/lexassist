@@ -15,11 +15,12 @@ CHUNKS_META_PATH = os.path.join(_BASE, "data", "vector_store", "chunks_meta.pkl"
 _model = None
 _index = None
 _chunks = None
+_bm25 = None
 _init_lock = threading.Lock()
 
 
 def preload_resources():
-    """Eagerly load the FAISS index and embedding model at startup."""
+    """Eagerly load the FAISS index, BM25 index, and embedding model at startup."""
     loaded = _load_resources()
     if loaded:
         logger.info("RAG resources pre-loaded successfully.")
@@ -28,7 +29,7 @@ def preload_resources():
 
 
 def _load_resources() -> bool:
-    global _model, _index, _chunks
+    global _model, _index, _chunks, _bm25
 
     index_path = os.path.abspath(INDEX_PATH)
     meta_path = os.path.abspath(CHUNKS_META_PATH)
@@ -50,30 +51,56 @@ def _load_resources() -> bool:
             with open(meta_path, "rb") as f:
                 data = pickle.load(f)
                 _chunks = data if isinstance(data, list) else data["texts"]
+        if _bm25 is None and _chunks:
+            try:
+                from rank_bm25 import BM25Okapi
+                tokenized_corpus = [c.lower().split() for c in _chunks]
+                _bm25 = BM25Okapi(tokenized_corpus)
+            except Exception as e:
+                logger.warning(f"BM25 initialization skipped: {str(e)}")
 
     return True
 
 
 def search_chunks(query: str, top_k: int = 3) -> List[str]:
-    if not _load_resources():
-        return []
-    query_embedding = list(_model.embed([query]))[0].reshape(1, -1).astype("float32")
-    distances, indices = _index.search(query_embedding, top_k)
-    return [_chunks[idx] for idx in indices[0] if idx != -1 and idx < len(_chunks)]
+    pairs = search_chunks_with_sources(query, top_k=top_k)
+    return [p[0] for p in pairs]
 
 
 def search_chunks_with_sources(query: str, top_k: int = 3):
-    """Returns list of (chunk_text, source_label) tuples."""
+    """Returns list of (chunk_text, source_label) tuples using Hybrid FAISS + BM25 search."""
     if not _load_resources():
         return []
-    query_embedding = list(_model.embed([query]))[0].reshape(1, -1).astype("float32")
-    distances, indices = _index.search(query_embedding, top_k)
+    
+    selected_indices = []
+    
+    # 1. FAISS Vector Search
+    try:
+        query_embedding = list(_model.embed([query]))[0].reshape(1, -1).astype("float32")
+        distances, indices = _index.search(query_embedding, top_k)
+        for idx in indices[0]:
+            if idx != -1 and idx < len(_chunks):
+                selected_indices.append(idx)
+    except Exception as e:
+        logger.error(f"FAISS search error: {e}")
+
+    # 2. BM25 Keyword Search
+    if _bm25 is not None:
+        try:
+            tokenized_query = query.lower().split()
+            bm25_scores = _bm25.get_scores(tokenized_query)
+            top_bm25_idx = sorted(range(len(bm25_scores)), key=lambda i: bm25_scores[i], reverse=True)[:top_k]
+            for idx in top_bm25_idx:
+                if idx not in selected_indices and bm25_scores[idx] > 0:
+                    selected_indices.append(idx)
+        except Exception as e:
+            logger.error(f"BM25 search error: {e}")
+
     results = []
-    for idx in indices[0]:
-        if idx != -1 and idx < len(_chunks):
-            chunk = _chunks[idx]
-            label = chunk.strip().replace("\n", " ")[:80].rstrip() + "…"
-            results.append((chunk, label))
+    for idx in selected_indices[:top_k]:
+        chunk = _chunks[idx]
+        label = chunk.strip().replace("\n", " ")[:80].rstrip() + "…"
+        results.append((chunk, label))
     return results
 
 

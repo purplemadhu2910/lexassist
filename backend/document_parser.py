@@ -1,6 +1,9 @@
 import io
 import logging
-from PyPDF2 import PdfReader
+try:
+    from pypdf import PdfReader
+except ImportError:
+    from PyPDF2 import PdfReader
 from docx import Document
 
 logger = logging.getLogger(__name__)

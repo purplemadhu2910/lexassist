@@ -18,6 +18,8 @@ def extract_pdf_text(file_path: str) -> str:
     return "\n".join(pages_text) + "\n" if pages_text else ""
 
 
+os.makedirs(INPUT_FOLDER, exist_ok=True)
+
 for file in os.listdir(INPUT_FOLDER):
     if not file.endswith(".pdf"):
         continue

@@ -71,14 +71,23 @@ class Database:
                     FOREIGN KEY (user_id) REFERENCES users(id),
                     FOREIGN KEY (query_id) REFERENCES query_history(id)
                 );
-                -- migrate: add note column if missing
-                CREATE TEMPORARY TABLE IF NOT EXISTS _dummy_bookmarks_note AS
-                    SELECT 1 WHERE 0;
+
+                CREATE TABLE IF NOT EXISTS feedback (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    query_id INTEGER NOT NULL,
+                    rating INTEGER NOT NULL, -- 1 for thumbs up, -1 for thumbs down
+                    comment TEXT DEFAULT '',
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (user_id) REFERENCES users(id),
+                    FOREIGN KEY (query_id) REFERENCES query_history(id)
+                );
 
                 CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token);
                 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires_at);
                 CREATE INDEX IF NOT EXISTS idx_history_user ON query_history(user_id);
                 CREATE INDEX IF NOT EXISTS idx_bookmarks_user ON bookmarks(user_id);
+                CREATE INDEX IF NOT EXISTS idx_feedback_query ON feedback(query_id);
             """)
         logger.info("Database initialized")
         self._migrate()
@@ -301,3 +310,52 @@ class Database:
             "most_active_day": most_active,
             "bookmarks_count": bookmarks_count,
         }
+
+    # ── Feedback & Analytics ──────────────────────────────────────────────
+
+    def save_feedback(self, user_id: int, query_id: int, rating: int, comment: str = "") -> bool:
+        with self._conn() as conn:
+            conn.execute("""
+                INSERT INTO feedback (user_id, query_id, rating, comment)
+                VALUES (?, ?, ?, ?)
+            """, (user_id, query_id, rating, comment[:500]))
+        return True
+
+    def get_admin_analytics(self) -> Dict:
+        with self._conn() as conn:
+            total_users = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+            total_queries = conn.execute("SELECT COUNT(*) FROM query_history").fetchone()[0]
+            total_bookmarks = conn.execute("SELECT COUNT(*) FROM bookmarks").fetchone()[0]
+            by_category = dict(conn.execute(
+                "SELECT category, COUNT(*) FROM query_history GROUP BY category"
+            ).fetchall())
+            positive_feedback = conn.execute(
+                "SELECT COUNT(*) FROM feedback WHERE rating > 0"
+            ).fetchone()[0]
+            negative_feedback = conn.execute(
+                "SELECT COUNT(*) FROM feedback WHERE rating < 0"
+            ).fetchone()[0]
+            recent_feedback = [dict(r) for r in conn.execute("""
+                SELECT f.*, u.username, qh.query
+                FROM feedback f
+                JOIN users u ON u.id = f.user_id
+                JOIN query_history qh ON qh.id = f.query_id
+                ORDER BY f.created_at DESC LIMIT 10
+            """).fetchall()]
+            daily_activity = dict(conn.execute("""
+                SELECT DATE(timestamp) as day, COUNT(*)
+                FROM query_history
+                GROUP BY day ORDER BY day DESC LIMIT 14
+            """).fetchall())
+
+        return {
+            "total_users": total_users,
+            "total_queries": total_queries,
+            "total_bookmarks": total_bookmarks,
+            "by_category": by_category,
+            "positive_feedback": positive_feedback,
+            "negative_feedback": negative_feedback,
+            "recent_feedback": recent_feedback,
+            "daily_activity": daily_activity
+        }
+

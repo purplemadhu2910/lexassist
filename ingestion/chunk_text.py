@@ -21,6 +21,8 @@ def chunk_text(text: str) -> list[str]:
     return chunks
 
 
+os.makedirs(INPUT_FOLDER, exist_ok=True)
+
 for file in os.listdir(INPUT_FOLDER):
     if not file.endswith(".txt"):
         continue

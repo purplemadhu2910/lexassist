@@ -55,6 +55,41 @@ class AIEngine:
             logger.error(f"Error calling Groq API: {str(e)}")
             raise Exception(f"AI processing error: {str(e)}")
 
+    def process_query_stream(self, query: str, category: str = "general", history: list = None, language: str = "English"):
+        """Yields text chunks for real-time streaming."""
+        if not self.client:
+            mock = self._mock_response(query, category)
+            for word in mock.split(" "):
+                yield word + " "
+            return
+        try:
+            context, _ = build_context_with_sources(query)
+            user_message = query
+            if context:
+                user_message = (
+                    f"Relevant legal context from Indian law documents:\n\n{context}\n\n---\n\n"
+                    f"User question: {query}"
+                )
+            messages = [{"role": "system", "content": self._get_system_prompt(category, language)}]
+            if history:
+                for h in history[-6:]:
+                    messages.append({"role": h["role"], "content": h["content"]})
+            messages.append({"role": "user", "content": user_message})
+
+            completion = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                max_tokens=1024,
+                stream=True,
+                timeout=GROQ_TIMEOUT
+            )
+            for chunk in completion:
+                if chunk.choices and chunk.choices[0].delta and chunk.choices[0].delta.content:
+                    yield chunk.choices[0].delta.content
+        except Exception as e:
+            logger.error(f"Error in streaming Groq API: {str(e)}")
+            yield f" [Error processing stream: {str(e)}]"
+
     async def compare_contracts(self, text1: str, text2: str) -> dict:
         if not self.client:
             return {"error": "GROQ_API_KEY not configured"}
