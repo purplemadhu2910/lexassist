@@ -617,53 +617,92 @@ def show_chat_page(category: str, page_title: str):
     with ctrl_col:
         st.markdown('<div class="rag-badge">RAG-Enhanced answers from Indian legal documents</div>', unsafe_allow_html=True)
 
+    # Auto-execute captured voice query if passed via query params
+    if "voice_query" in st.query_params:
+        vq = st.query_params.get("voice_query", "")
+        try:
+            st.query_params.clear()
+        except Exception:
+            pass
+        if vq and vq.strip():
+            st.session_state[prefill_key] = vq.strip()
+            st.rerun()
+
     components.html(
         f"""
-        <div style="margin:6px 0">
+        <style>
+        @keyframes pulse-ring_{category} {{
+          0% {{ box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }}
+          70% {{ box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }}
+          100% {{ box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }}
+        }}
+        .mic-active_{category} {{
+          animation: pulse-ring_{category} 1.5s infinite !important;
+          background: linear-gradient(135deg, #b91c1c, #ef4444) !important;
+          border-color: #f87171 !important;
+          color: #ffffff !important;
+        }}
+        </style>
+        <div style="margin:4px 0; display:flex; align-items:center; gap:12px;">
           <button id="voiceBtn_{category}" onclick="startVoice_{category}()"
-            style="background:#1e2a3a;color:#9ca3af;border:1px solid #2e4a6a;padding:6px 14px;
-                   border-radius:8px;cursor:pointer;font-size:0.82rem">
-            🎤 Voice Input
+            style="background:linear-gradient(135deg, #1e293b, #0f172a); color:#60a5fa;
+                   border:1px solid rgba(96,165,250,0.4); padding:8px 18px; border-radius:24px;
+                   cursor:pointer; font-size:0.88rem; font-weight:600; font-family:sans-serif;
+                   display:inline-flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(0,0,0,0.3); transition:all 0.2s ease;">
+            <span id="micIcon_{category}" style="font-size:1.1rem">🎙️</span>
+            <span id="btnText_{category}">Ask with Voice</span>
           </button>
-          <span id="voiceStatus_{category}" style="color:#6b7280;font-size:0.78rem;margin-left:8px"></span>
-          <input id="voiceResult_{category}" type="text" readonly
-            style="display:none;width:100%;margin-top:6px;padding:6px;background:#1e2a3a;
-                   color:#e5e7eb;border:1px solid #2e4a6a;border-radius:6px;font-size:0.85rem">
+          <span id="voiceStatus_{category}" style="color:#9ca3af; font-size:0.82rem; font-family:sans-serif;"></span>
         </div>
         <script>
         function startVoice_{category}() {{
           if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {{
-            document.getElementById('voiceStatus_{category}').innerText = 'Not supported in this browser.';
+            document.getElementById('voiceStatus_{category}').innerText = '⚠️ Speech recognition not supported in this browser.';
             return;
           }}
           var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
           var rec = new SR();
           rec.lang = 'en-IN';
           rec.interimResults = false;
-          document.getElementById('voiceStatus_{category}').innerText = '🔴 Listening...';
-          document.getElementById('voiceBtn_{category}').disabled = true;
+          
+          var btn = document.getElementById('voiceBtn_{category}');
+          btn.classList.add('mic-active_{category}');
+          document.getElementById('micIcon_{category}').innerText = '🔴';
+          document.getElementById('btnText_{category}').innerText = 'Listening...';
+          document.getElementById('voiceStatus_{category}').innerText = 'Speak your legal or tax question clearly...';
+          btn.disabled = true;
+
           rec.onresult = function(e) {{
             var transcript = e.results[0][0].transcript;
-            var box = document.getElementById('voiceResult_{category}');
-            box.style.display = 'block';
-            box.value = transcript;
-            document.getElementById('voiceStatus_{category}').innerText = '✅ Captured! Copy the text below into the chat.';
-            document.getElementById('voiceBtn_{category}').disabled = false;
+            document.getElementById('btnText_{category}').innerText = 'Processing...';
+            document.getElementById('voiceStatus_{category}').innerHTML = '⚡ <b>Answering:</b> "' + transcript + '"';
+            
+            // Auto-submit speech query directly to Streamlit session state
+            var url = new URL(window.parent.location.href);
+            url.searchParams.set('voice_query', transcript);
+            window.parent.location.href = url.toString();
           }};
           rec.onerror = function(e) {{
             document.getElementById('voiceStatus_{category}').innerText = 'Error: ' + e.error;
-            document.getElementById('voiceBtn_{category}').disabled = false;
+            btn.classList.remove('mic-active_{category}');
+            document.getElementById('micIcon_{category}').innerText = '🎙️';
+            document.getElementById('btnText_{category}').innerText = 'Ask with Voice';
+            btn.disabled = false;
           }};
           rec.onend = function() {{
-            if (document.getElementById('voiceStatus_{category}').innerText === '🔴 Listening...')
-              document.getElementById('voiceStatus_{category}').innerText = 'No speech detected.';
-            document.getElementById('voiceBtn_{category}').disabled = false;
+            if (document.getElementById('btnText_{category}').innerText === 'Listening...') {{
+              document.getElementById('voiceStatus_{category}').innerText = 'No speech detected. Click to try again.';
+              btn.classList.remove('mic-active_{category}');
+              document.getElementById('micIcon_{category}').innerText = '🎙️';
+              document.getElementById('btnText_{category}').innerText = 'Ask with Voice';
+              btn.disabled = false;
+            }}
           }};
           rec.start();
         }}
         </script>
         """,
-        height=90,
+        height=65,
     )
 
     for idx, msg in enumerate(st.session_state[messages_key]):
