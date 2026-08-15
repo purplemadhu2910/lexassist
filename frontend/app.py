@@ -119,8 +119,19 @@ def _build_theme_css(dark: bool) -> str:
 
     return f"""
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
     header[data-testid="stHeader"]   {{ display: none !important; }}
     [data-testid="collapsedControl"] {{ display: none !important; }}
+
+    html, body, [data-testid="stAppViewContainer"], .block-container, p, span, li, td, th, label, input, textarea, select {{
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    }}
+
+    h1, h2, h3, h4, h5, h6, .main-header, .la-brand-name, .la-feat-title {{
+        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        letter-spacing: -0.02em;
+    }}
 
     html, body {{ background-color: {bg} !important; color: {text} !important; }}
     .stApp, .stApp > div,
@@ -248,14 +259,38 @@ def _build_theme_css(dark: bool) -> str:
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
         border-color: {btn_bdr} !important;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
+        border-radius: 8px !important;
+    }}
+    .block-container .stButton > button:hover {{
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(96, 165, 250, 0.3) !important;
     }}
     .block-container .stButton > button[kind="primary"] {{
-        background-color: #1f77b4 !important;
+        background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
         color: #ffffff !important;
-        border-color: #1f77b4 !important;
+        border: none !important;
+        font-weight: 600 !important;
+    }}
+    .block-container .stButton > button[kind="primary"]:hover {{
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.45) !important;
     }}
 
-    [data-testid="stTabs"] [role="tab"] {{ color: {tab_color} !important; }}
+    [data-testid="stSidebar"] .stButton > button {{
+        transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease !important;
+    }}
+    [data-testid="stSidebar"] .stButton > button:hover {{
+        transform: translateX(4px) !important;
+    }}
+
+    [data-testid="stTabs"] [role="tab"] {{
+        color: {tab_color} !important;
+        transition: color 0.2s ease, border-bottom-color 0.2s ease !important;
+    }}
+    [data-testid="stTabs"] [role="tab"]:hover {{
+        color: {accent} !important;
+    }}
     [data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
         color: {accent} !important;
         border-bottom-color: {accent} !important;
@@ -289,27 +324,57 @@ def _build_theme_css(dark: bool) -> str:
     ::-webkit-scrollbar {{ background: {scrl_bg}; }}
     ::-webkit-scrollbar-thumb {{ background: {scrl_thm}; border-radius: 4px; }}
 
-    .main-header {{ font-size: 2.5rem; font-weight: bold; color: {hdr_color}; text-align: center; margin-bottom: 1rem; }}
+    .main-header {{
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #60a5fa 0%, #c084fc 50%, #f472b6 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        text-align: center;
+        margin-bottom: 1.2rem;
+        font-family: 'Outfit', sans-serif !important;
+        letter-spacing: -0.02em;
+    }}
     .sub-header {{ font-size: 1.2rem; color: {text2}; text-align: center; margin-bottom: 2rem; }}
     .disclaimer-box {{
-        background-color: {disc_bg} !important;
+        background: rgba(42, 34, 0, 0.7) !important;
         border-left: 5px solid #ffc107;
-        padding: 1rem; margin: 1rem 0; border-radius: 5px;
+        padding: 1rem; margin: 1rem 0; border-radius: 8px;
         color: {disc_text} !important;
+        backdrop-filter: blur(10px);
     }}
     .disclaimer-box strong {{ color: {disc_text} !important; }}
     .rag-badge {{
-        background-color: {rag_bg}; border: 1px solid {rag_bdr};
-        padding: 0.3rem 0.8rem; border-radius: 20px;
-        color: {rag_text}; font-size: 0.85rem; display: inline-block; margin-bottom: 1rem;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(59, 130, 246, 0.18));
+        border: 1px solid rgba(52, 211, 153, 0.4);
+        padding: 0.35rem 0.9rem; border-radius: 20px;
+        color: #34d399; font-size: 0.85rem; display: inline-block; margin-bottom: 1rem;
+        font-weight: 600;
+        backdrop-filter: blur(8px);
     }}
     .auth-divider {{ text-align: center; color: {text2}; margin: 1rem 0; font-size: 0.85rem; }}
     .response-box {{
-        background-color: {resp_bg} !important; color: {resp_text} !important;
-        padding: 1.5rem; border-radius: 12px; border: 1px solid {resp_bdr};
-        margin: 1rem 0; box-shadow: {resp_shad};
+        background: rgba(30, 42, 58, 0.75) !important;
+        color: {resp_text} !important;
+        padding: 1.5rem; border-radius: 14px;
+        border: 1px solid rgba(96, 165, 250, 0.25);
+        margin: 1rem 0; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        backdrop-filter: blur(12px);
     }}
-    .response-box h3 {{ color: {accent} !important; }}
+    [data-testid="stMetric"] {{
+        background: rgba(22, 27, 34, 0.75) !important;
+        border: 1px solid rgba(96, 165, 250, 0.2) !important;
+        border-radius: 14px !important;
+        padding: 0.8rem 1rem !important;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    }}
+    [data-testid="stExpander"] {{
+        background: rgba(22, 27, 34, 0.7) !important;
+        border: 1px solid rgba(96, 165, 250, 0.2) !important;
+        border-radius: 12px !important;
+        backdrop-filter: blur(10px);
+    }}
     .char-counter {{ font-size: 0.78rem; color: #888; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem; }}
     .char-counter.warn {{ color: {warn_clr}; }}
     .char-counter.over  {{ color: {over_clr}; }}
@@ -703,29 +768,57 @@ def show_home_page():
     st.markdown('<div class="main-header">Welcome to LexAssist</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Your AI-Powered Legal and Tax Assistant for Indian Law</div>', unsafe_allow_html=True)
     st.markdown('<div class="rag-badge">RAG-Enhanced: Answers grounded in real Indian legal documents</div>', unsafe_allow_html=True)
+    
     col1, col2, col3, col4, col5 = st.columns(5)
     features = [
-        (col1, "Legal Assistance", "Get simplified explanations of IPC sections, Constitutional articles, and your rights under Indian law."),
-        (col2, "Tax Guidance", "Understand Income Tax Act sections, GST, deductions, and filing requirements."),
-        (col3, "General Assistant", "Ask any general legal or civic question about Indian law and governance."),
-        (col4, "Document Analysis", "Upload PDF, TXT, or DOCX legal documents and get easy-to-understand explanations."),
-        (col5, "⚠️ Contract Risks", "Upload any contract to detect risks, missing clauses, and get actionable recommendations.")
+        (col1, "Legal Assistance", "IPC sections, Constitutional articles, and legal rights.", "Ask Legal Question"),
+        (col2, "Tax Guidance", "Income Tax Act, GST, deductions, and filing rules.", "Tax Assistant"),
+        (col3, "General Assistant", "Ask any civic or legal query about Indian governance.", "General Assistant"),
+        (col4, "Doc Analysis", "Upload legal documents for plain-language explanations.", "Document Explanation"),
+        (col5, "Contract Risks", "Detect risky clauses & missing terms in agreements.", "Contract Risk Analyzer")
     ]
-    for col, title, desc in features:
+    for col, title, desc, page_target in features:
         with col:
             st.markdown(f"### {title}")
             st.write(desc)
+            if st.button(f"Open →", key=f"hp_nav_{page_target}", use_container_width=True):
+                st.session_state.current_page = page_target
+                st.rerun()
+
+    st.markdown("---")
+    st.markdown("### 💡 Quick Sample Questions — Click to Ask")
+    q_col1, q_col2, q_col3 = st.columns(3)
+    sample_queries = [
+        (q_col1, "What are the legal rights of an arrested person under CrPC?", "legal", "Ask Legal Question"),
+        (q_col2, "How is Section 80C deduction calculated under Income Tax?", "tax", "Tax Assistant"),
+        (q_col3, "What is the legal procedure for filing a Consumer Complaint in India?", "general", "General Assistant")
+    ]
+    for q_col, query_text, cat, target_page in sample_queries:
+        with q_col:
+            if st.button(f"❓ {query_text}", key=f"sq_{cat}", use_container_width=True):
+                st.session_state[f"{cat}_prefill"] = query_text
+                st.session_state.current_page = target_page
+                st.rerun()
+
     st.markdown("---")
     st.markdown('<div class="disclaimer-box"><strong>Disclaimer:</strong> LexAssist provides general information only and is not a substitute for professional legal or tax advice.</div>', unsafe_allow_html=True)
 
 def show_contract_risk_analyzer():
     st.markdown('<div class="main-header">⚠️ Contract Risk Analyzer</div>', unsafe_allow_html=True)
-    st.write("Upload a contract (PDF, TXT, or DOCX) to identify risks, missing clauses, and get recommendations under Indian contract law.")
+    st.markdown("""
+    <div style="background:rgba(30,42,58,0.6);border:1px solid rgba(96,165,250,0.25);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem;backdrop-filter:blur(10px)">
+        <h4 style="margin:0 0 0.4rem 0;color:#60a5fa">🛡️ Automated Legal Clause Risk Audit</h4>
+        <p style="margin:0;font-size:0.88rem;color:#9ca3af">
+            Upload any agreement, NDA, vendor contract, or lease (PDF, TXT, or DOCX). Our RAG engine scans the document under the <b>Indian Contract Act 1872</b> to detect risky clauses, hidden liabilities, missing terms, and generate actionable risk mitigation recommendations.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
     uploaded_file = st.file_uploader("Choose a contract document", type=["pdf", "txt", "docx"], key="contract_upload")
     if uploaded_file:
-        st.info(f"File: {uploaded_file.name} ({uploaded_file.size} bytes)")
-        if st.button("Analyze Contract Risks", type="primary"):
-            with st.spinner("Analyzing contract for risks..."):
+        st.info(f"📄 **File Selected:** `{uploaded_file.name}` ({uploaded_file.size:,} bytes)")
+        if st.button("🔍 Analyze Contract Risks", type="primary", use_container_width=True):
+            with st.spinner("Analyzing contract clauses under Indian Contract Act..."):
                 try:
                     files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
                     response = requests.post(f"{API_URL}/analyze-contract", files=files, headers=auth_headers(), timeout=TIMEOUT_LONG)
@@ -733,34 +826,40 @@ def show_contract_risk_analyzer():
                         data = response.json()["analysis"]
 
                         score = data.get("risk_score", 0)
-                        color = "🟢" if score <= 3 else "🟡" if score <= 6 else "🔴"
-                        st.markdown(f"### {color} Overall Risk Score: **{score}/10**")
-                        st.progress(score / 10)
-
-                        st.markdown(f"**Summary:** {data.get('summary', 'N/A')}")
+                        color = "🟢 Low Risk" if score <= 3 else "🟡 Moderate Risk" if score <= 6 else "🔴 High Risk"
+                        
+                        st.markdown("---")
+                        c_score, c_summary = st.columns([1, 2])
+                        with c_score:
+                            st.markdown(f"### {color}")
+                            st.markdown(f"<h2 style='color:#60a5fa;margin:0'>Score: {score}/10</h2>", unsafe_allow_html=True)
+                            st.progress(score / 10)
+                        with c_summary:
+                            st.markdown("### 📋 Executive Audit Summary")
+                            st.write(data.get('summary', 'N/A'))
 
                         risks = data.get("risks", [])
                         if risks:
-                            st.markdown("---\n### 🚨 Identified Risks")
+                            st.markdown("---\n### 🚨 Identified Clause Risks")
                             for r in risks:
                                 sev = r.get("severity", "Medium")
-                                badge = "🔴" if sev == "High" else "🟡" if sev == "Medium" else "🟢"
-                                with st.expander(f"{badge} {sev} — {r.get('clause', 'Clause')}"):
-                                    st.write(r.get("risk", ""))
+                                badge = "🔴 High Severity" if sev == "High" else "🟡 Medium Severity" if sev == "Medium" else "🟢 Low Severity"
+                                with st.expander(f"{badge} — {r.get('clause', 'Clause')}", expanded=True):
+                                    st.markdown(f"**Risk Analysis:** {r.get('risk', '')}")
 
                         missing = data.get("missing_clauses", [])
                         if missing:
-                            st.markdown("---\n### 📋 Missing Clauses")
+                            st.markdown("---\n### 📋 Essential Missing Clauses")
                             for m in missing:
-                                st.markdown(f"- {m}")
+                                st.markdown(f"- 🔴 **Missing:** {m}")
 
                         recs = data.get("recommendations", [])
                         if recs:
-                            st.markdown("---\n### ✅ Recommendations")
+                            st.markdown("---\n### ✅ Actionable Recommendations")
                             for rec in recs:
-                                st.markdown(f"- {rec}")
+                                st.markdown(f"- 💡 {rec}")
 
-                        st.markdown('<div class="disclaimer-box"><strong>Disclaimer:</strong> This analysis is AI-generated and not a substitute for professional legal advice.</div>', unsafe_allow_html=True)
+                        st.markdown('<div class="disclaimer-box"><strong>Disclaimer:</strong> This contract analysis is AI-assisted and provided for informational review only. Always consult a licensed advocate before signing.</div>', unsafe_allow_html=True)
                         toast("Contract analysis complete!", "✅")
                     else:
                         toast("Could not analyze the contract. Please try again.", "❌")
@@ -1157,8 +1256,12 @@ def show_main_app():
         st.markdown(
             "<div style='text-align:center;padding:1.2rem 0 0.5rem'>"
             "<span style='font-size:2rem'>⚖️</span><br>"
-            "<span style='color:#60a5fa;font-size:1.3rem;font-weight:700;letter-spacing:0.5px'>LexAssist</span><br>"
+            "<span style='color:#60a5fa;font-size:1.3rem;font-weight:700;letter-spacing:0.5px;font-family:Outfit,sans-serif'>LexAssist</span><br>"
             "<span style='color:#6b7280;font-size:0.75rem'>AI Legal & Tax Assistant</span>"
+            "<div style='display:flex;justify-content:center;gap:6px;margin-top:0.6rem;flex-wrap:wrap;'>"
+            "<span style='background:rgba(16,185,129,0.15);border:1px solid rgba(52,211,153,0.4);color:#34d399;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:600;'>🟢 FAISS RAG Active</span>"
+            "<span style='background:rgba(59,130,246,0.15);border:1px solid rgba(96,165,250,0.4);color:#60a5fa;padding:2px 8px;border-radius:12px;font-size:0.7rem;font-weight:600;'>⚡ Groq LLaMA 3.1</span>"
+            "</div>"
             "</div>",
             unsafe_allow_html=True
         )

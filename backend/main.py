@@ -538,7 +538,6 @@ async def get_admin_analytics(user_id: int = Depends(get_current_user)):
 async def export_docx(request: ExportRequest, user_id: int = Depends(get_current_user)):
     try:
         from docx import Document
-        from docx.shared import Pt, RGBColor
         doc = Document()
         
         # Add title
