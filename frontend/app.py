@@ -599,6 +599,58 @@ def show_chat_page(category: str, page_title: str):
     prefill_key = f"{category}_prefill"
     draft_key = f"{category}_draft"
 
+    def _do_ask(query: str):
+        st.session_state[messages_key].append({"role": "user", "content": query})
+        with st.spinner("Generating answer..."):
+            try:
+                history_to_send = st.session_state[messages_key][:-1]
+                resp = requests.post(
+                    f"{API_URL}/ask",
+                    json={"query": query, "category": category,
+                          "history": [{"role": m["role"], "content": m["content"]} for m in history_to_send],
+                          "language": st.session_state.chat_language},
+                    headers=auth_headers(),
+                    timeout=TIMEOUT_LONG
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    st.session_state[messages_key].append({
+                        "role": "assistant",
+                        "content": data["response"],
+                        "suggestions": data.get("suggested_questions", []),
+                        "sources": data.get("sources", []),
+                    })
+                    st.session_state.query_history.append({
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "query": query, "category": category
+                    })
+                    toast("Answer ready!", "✅")
+                elif resp.status_code == 400:
+                    toast("Invalid query — please rephrase.", "⚠️")
+                    st.session_state[messages_key].append({"role": "assistant", "content": "Invalid query. Please rephrase your question."})
+                else:
+                    toast("Something went wrong. Please try again.", "❌")
+                    st.session_state[messages_key].append({"role": "assistant", "content": "Something went wrong. Please try again."})
+            except Exception:
+                toast("Could not reach the server.", "❌")
+                st.session_state[messages_key].append({"role": "assistant", "content": "Could not reach the server. Please try again shortly."})
+
+    # Auto-execute captured voice query if passed via query params or prefill
+    vq_param = st.query_params.get("voice_query", "")
+    if vq_param and vq_param.strip():
+        try:
+            del st.query_params["voice_query"]
+        except Exception:
+            pass
+        _do_ask(vq_param.strip())
+        st.rerun()
+
+    prefill_query = st.session_state.get(prefill_key, "")
+    if prefill_query:
+        st.session_state[prefill_key] = ""
+        _do_ask(prefill_query)
+        st.rerun()
+
     st.markdown(f'<div class="main-header">{page_title}</div>', unsafe_allow_html=True)
 
     ctrl_col, lang_col = st.columns([3, 1])
@@ -616,17 +668,6 @@ def show_chat_page(category: str, page_title: str):
             st.rerun()
     with ctrl_col:
         st.markdown('<div class="rag-badge">RAG-Enhanced answers from Indian legal documents</div>', unsafe_allow_html=True)
-
-    # Auto-execute captured voice query if passed via query params
-    if "voice_query" in st.query_params:
-        vq = st.query_params.get("voice_query", "")
-        try:
-            st.query_params.clear()
-        except Exception:
-            pass
-        if vq and vq.strip():
-            st.session_state[prefill_key] = vq.strip()
-            st.rerun()
 
     components.html(
         f"""
@@ -655,6 +696,24 @@ def show_chat_page(category: str, page_title: str):
           <span id="voiceStatus_{category}" style="color:#9ca3af; font-size:0.82rem; font-family:sans-serif;"></span>
         </div>
         <script>
+        function fixSpokenNumbers(text) {{
+          if (!text) return text;
+          var t = text.trim();
+          t = t.replace(/\\b(section|sec|u\\/s|under section)\\s+(\\d+)\\s+([a-z])\\b/gi, function(m, p1, p2, p3) {{
+            return 'Section ' + p2 + p3.toUpperCase();
+          }});
+          t = t.replace(/\\beighty\\s*c\\b/gi, '80C');
+          t = t.replace(/\\b80\\s*c\\b/gi, '80C');
+          t = t.replace(/\\b80\\s*d\\b/gi, '80D');
+          t = t.replace(/\\bfour\\s*hundred\\s*twenty\\b/gi, '420');
+          t = t.replace(/\\bfour\\s*twenty\\b/gi, '420');
+          t = t.replace(/\\bthree\\s*hundred\\s*two\\b/gi, '302');
+          t = t.replace(/\\bthree\\s*zero\\s*two\\b/gi, '302');
+          t = t.replace(/\\bthree\\s*hundred\\s*seventy\\b/gi, '370');
+          t = t.replace(/\\bthree\\s*seventy\\b/gi, '370');
+          return t;
+        }}
+
         function startVoice_{category}() {{
           if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {{
             document.getElementById('voiceStatus_{category}').innerText = '⚠️ Speech recognition not supported in this browser.';
@@ -663,7 +722,9 @@ def show_chat_page(category: str, page_title: str):
           var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
           var rec = new SR();
           rec.lang = 'en-IN';
+          rec.continuous = false;
           rec.interimResults = false;
+          rec.maxAlternatives = 3;
           
           var btn = document.getElementById('voiceBtn_{category}');
           btn.classList.add('mic-active_{category}');
@@ -673,15 +734,18 @@ def show_chat_page(category: str, page_title: str):
           btn.disabled = true;
 
           rec.onresult = function(e) {{
-            var transcript = e.results[0][0].transcript;
-            document.getElementById('btnText_{category}').innerText = 'Processing...';
-            document.getElementById('voiceStatus_{category}').innerHTML = '⚡ <b>Answering:</b> "' + transcript + '"';
+            var rawTranscript = e.results[0][0].transcript;
+            var cleanTranscript = fixSpokenNumbers(rawTranscript);
             
-            // Auto-submit speech query directly to Streamlit session state
+            document.getElementById('btnText_{category}').innerText = 'Answering...';
+            document.getElementById('voiceStatus_{category}').innerHTML = '⚡ <b>Answering:</b> "' + cleanTranscript + '"';
+            
+            // Auto-submit speech query directly to Streamlit app
             var url = new URL(window.parent.location.href);
-            url.searchParams.set('voice_query', transcript);
+            url.searchParams.set('voice_query', cleanTranscript);
             window.parent.location.href = url.toString();
           }};
+
           rec.onerror = function(e) {{
             document.getElementById('voiceStatus_{category}').innerText = 'Error: ' + e.error;
             btn.classList.remove('mic-active_{category}');
@@ -689,6 +753,7 @@ def show_chat_page(category: str, page_title: str):
             document.getElementById('btnText_{category}').innerText = 'Ask with Voice';
             btn.disabled = false;
           }};
+
           rec.onend = function() {{
             if (document.getElementById('btnText_{category}').innerText === 'Listening...') {{
               document.getElementById('voiceStatus_{category}').innerText = 'No speech detected. Click to try again.';
@@ -698,6 +763,7 @@ def show_chat_page(category: str, page_title: str):
               btn.disabled = false;
             }}
           }};
+
           rec.start();
         }}
         </script>
@@ -736,48 +802,6 @@ def show_chat_page(category: str, page_title: str):
                         if st.button(s, key=f"{category}_sugg_{idx}_{i}", use_container_width=True):
                             st.session_state[prefill_key] = s
                             st.rerun()
-
-    def _do_ask(query: str):
-        st.session_state[messages_key].append({"role": "user", "content": query})
-        with st.spinner("Generating answer..."):
-            try:
-                history_to_send = st.session_state[messages_key][:-1]
-                resp = requests.post(
-                    f"{API_URL}/ask",
-                    json={"query": query, "category": category,
-                          "history": [{"role": m["role"], "content": m["content"]} for m in history_to_send],
-                          "language": st.session_state.chat_language},
-                    headers=auth_headers(),
-                    timeout=TIMEOUT_LONG
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    st.session_state[messages_key].append({
-                        "role": "assistant",
-                        "content": data["response"],
-                        "suggestions": data.get("suggested_questions", []),
-                        "sources": data.get("sources", []),
-                    })
-                    st.session_state.query_history.append({
-                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "query": query, "category": category
-                    })
-                    toast("Answer ready!", "✅")
-                elif resp.status_code == 400:
-                    toast("Invalid query — please rephrase.", "⚠️")
-                    st.session_state[messages_key].append({"role": "assistant", "content": "Invalid query. Please rephrase your question."})
-                else:
-                    toast("Something went wrong. Please try again.", "❌")
-                    st.session_state[messages_key].append({"role": "assistant", "content": "Something went wrong. Please try again."})
-            except Exception:
-                toast("Could not reach the server.", "❌")
-                st.session_state[messages_key].append({"role": "assistant", "content": "Could not reach the server. Please try again shortly."})
-
-    prefill_query = st.session_state.get(prefill_key, "")
-    if prefill_query:
-        st.session_state[prefill_key] = ""
-        _do_ask(prefill_query)
-        st.rerun()
 
     last_draft = st.session_state.get(draft_key, "")
     if last_draft:
