@@ -17,6 +17,43 @@ load_dotenv()
 MAX_DOC_CHARS = int(os.getenv("MAX_DOC_CHARS", "4000"))
 GROQ_TIMEOUT = 30  # seconds
 
+def clean_ai_response(text: str) -> str:
+    if not text or not isinstance(text, str):
+        return ""
+
+    # 1. Strip internal reasoning tags (<think>...</think>)
+    cleaned = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+    if not cleaned and text:
+        cleaned = text.strip()
+
+    # 2. Decode raw literal unicode escape sequences (\uXXXX)
+    def _u_replace(m):
+        try:
+            return chr(int(m.group(1), 16))
+        except Exception:
+            return m.group(0)
+
+    cleaned = re.sub(r'\\u([0-9a-fA-F]{4})', _u_replace, cleaned)
+
+    # 3. Replace escaped characters
+    cleaned = cleaned.replace('\\"', '"').replace("\\'", "'").replace('\\n', '\n').replace('\\t', '\t')
+
+    # 4. Convert HTML <br>, <br/>, <br /> to newlines
+    cleaned = re.sub(r'<br\s*/?>', '\n', cleaned, flags=re.IGNORECASE)
+
+    # 5. Convert basic HTML formatting tags to Markdown
+    cleaned = re.sub(r'</?(?:strong|b)\b[^>]*>', '**', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'</?(?:em|i)\b[^>]*>', '*', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'</?p\b[^>]*>', '\n\n', cleaned, flags=re.IGNORECASE)
+
+    # 6. Remove remaining raw HTML tags
+    cleaned = re.sub(r'<(?!http|https)[^>]+>', '', cleaned)
+
+    # 7. Normalize multiple blank lines
+    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
+
+    return cleaned.strip()
+
 class AIEngine:
     def __init__(self):
         api_key = os.getenv("GROQ_API_KEY")
@@ -25,7 +62,10 @@ class AIEngine:
             self.client = None
         else:
             self.client = Groq(api_key=api_key)
-        self.model = os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b")
+        self.model = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
+
+    def _clean_llm_response(self, text: str) -> str:
+        return clean_ai_response(text)
 
     async def process_query(self, query: str, category: str = "general", history: list = None, language: str = "English") -> tuple:
         """Returns (answer, sources) tuple."""
@@ -47,15 +87,16 @@ class AIEngine:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                max_tokens=1024,
+                max_tokens=3000,
                 timeout=GROQ_TIMEOUT
             )
-            answer = response.choices[0].message.content
-            if not answer:
+            raw_answer = response.choices[0].message.content
+            if not raw_answer:
                 raise Exception("Empty response from Groq API")
+            answer = clean_ai_response(raw_answer)
             return answer, sources
         except Exception as e:
-            logger.error(f"Error calling Groq API: {str(e)}")
+            logger.exception(f"Error calling Groq API: {str(e)}")
             raise Exception(f"AI processing error: {str(e)}")
 
     def process_query_stream(self, query: str, category: str = "general", history: list = None, language: str = "English"):
@@ -402,8 +443,10 @@ class AIEngine:
         }
         base = (
             "You are LexAssist, an AI legal and tax assistant specializing in Indian law. "
-            "Provide clear simplified explanations, reference relevant Indian legal sections, "
-            "and remind users this is not professional legal advice."
+            "Provide clear simplified explanations, reference relevant Indian legal sections accurately. "
+            "Preserve exact legal terminology from sources (e.g., IPC, CrPC, BNS, BSA, Income Tax Act, Indian Contract Act). "
+            "Never invent or substitute non-existent statute abbreviations (such as 'APC'). "
+            "Remind users this is not professional legal advice."
         )
         lang_note = f" Always respond in {language}." if language != "English" else ""
         return base + " " + extras.get(category, "") + lang_note

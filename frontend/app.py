@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import pandas as pd
 import streamlit as st
 import requests
@@ -43,6 +44,43 @@ def auth_headers():
 
 def toast(msg: str, icon: str = "ℹ️"):
     st.toast(msg, icon=icon)
+
+def clean_ai_response(text: str) -> str:
+    if not text or not isinstance(text, str):
+        return ""
+
+    # 1. Strip internal reasoning tags (<think>...</think>)
+    cleaned = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL).strip()
+    if not cleaned and text:
+        cleaned = text.strip()
+
+    # 2. Decode raw literal unicode escape sequences (\uXXXX)
+    def _u_replace(m):
+        try:
+            return chr(int(m.group(1), 16))
+        except Exception:
+            return m.group(0)
+
+    cleaned = re.sub(r'\\u([0-9a-fA-F]{4})', _u_replace, cleaned)
+
+    # 3. Replace escaped characters
+    cleaned = cleaned.replace('\\"', '"').replace("\\'", "'").replace('\\n', '\n').replace('\\t', '\t')
+
+    # 4. Convert HTML <br>, <br/>, <br /> to newlines
+    cleaned = re.sub(r'<br\s*/?>', '\n', cleaned, flags=re.IGNORECASE)
+
+    # 5. Convert basic HTML formatting tags to Markdown
+    cleaned = re.sub(r'</?(?:strong|b)\b[^>]*>', '**', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'</?(?:em|i)\b[^>]*>', '*', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'</?p\b[^>]*>', '\n\n', cleaned, flags=re.IGNORECASE)
+
+    # 6. Remove remaining raw HTML tags
+    cleaned = re.sub(r'<(?!http|https)[^>]+>', '', cleaned)
+
+    # 7. Normalize multiple blank lines
+    cleaned = re.sub(r'\n{3,}', '\n\n', cleaned)
+
+    return cleaned.strip()
 
 # ── Theme CSS ──────────────────────────────────────────────────────────────
 def _build_theme_css(dark: bool) -> str:
@@ -752,9 +790,9 @@ def show_chat_page(category: str, page_title: str):
           
           var btn = document.getElementById('voiceBtn_{category}');
           btn.classList.add('mic-active_{category}');
-          document.getElementById('micIcon_{category}').innerText = '⏹️';
-          document.getElementById('btnText_{category}').innerText = 'Stop & Answer';
-          document.getElementById('voiceStatus_{category}').innerText = 'Listening... Click "Stop & Answer" when done.';
+          document.getElementById('micIcon_{category}').innerText = '🔴';
+          document.getElementById('btnText_{category}').innerText = 'Listening...';
+          document.getElementById('voiceStatus_{category}').innerText = 'Listening... Speak clearly, auto-stops on silence.';
 
           rec.onresult = function(e) {{
             var rawTranscript = e.results[0][0].transcript;
@@ -775,6 +813,8 @@ def show_chat_page(category: str, page_title: str):
                 nativeSetter.call(chatBox, cleanTranscript);
                 chatBox.dispatchEvent(new Event('input', {{ bubbles: true }}));
                 setTimeout(function() {{
+                  submitBtn.disabled = false;
+                  submitBtn.removeAttribute('disabled');
                   submitBtn.click();
                 }}, 150);
                 return;
@@ -797,8 +837,8 @@ def show_chat_page(category: str, page_title: str):
           }};
 
           rec.onend = function() {{
-            if (document.getElementById('btnText_{category}').innerText === 'Stop & Answer') {{
-              document.getElementById('voiceStatus_{category}').innerText = 'No speech detected. Click to try again.';
+            if (document.getElementById('btnText_{category}').innerText === 'Listening...') {{
+              document.getElementById('voiceStatus_{category}').innerText = 'Silence detected. Ready for next question.';
               resetBtn_{category}();
             }}
           }};
@@ -811,26 +851,29 @@ def show_chat_page(category: str, page_title: str):
     )
 
     for idx, msg in enumerate(st.session_state[messages_key]):
+        raw_c = msg.get("content", "")
+        clean_c = clean_ai_response(raw_c) if msg["role"] == "assistant" else raw_c
         with st.chat_message(msg["role"], avatar="👤" if msg["role"] == "user" else "⚖️"):
-            st.markdown(msg["content"])
+            st.markdown(clean_c)
             if msg["role"] == "assistant":
-                _copy_button(msg["content"], key=f"{category}_copy_{idx}")
-                components.html(
-                    f"""
-                    <button onclick="
-                        var w=window.open('','_blank');
-                        w.document.write('<html><head><title>LexAssist Response</title>'
-                            +'<style>body{{font-family:Arial,sans-serif;padding:2rem;max-width:800px;margin:auto}}'
-                            +'h3{{color:#1f77b4}}pre{{white-space:pre-wrap;word-wrap:break-word}}</style></head>'
-                            +'<body><h3>LexAssist Response</h3><pre>'+{json.dumps(msg['content'])}+'</pre></body></html>');
-                        w.document.close();w.print();"
-                        style="background:#374151;color:#d1d5db;border:none;padding:4px 12px;
-                               border-radius:6px;cursor:pointer;font-size:0.8rem;margin-top:4px;margin-left:6px">
-                        🖨️ Print / PDF
-                    </button>
-                    """,
-                    height=44,
-                )
+                if not clean_c.startswith("Error:") and not clean_c.startswith("Could not reach"):
+                    _copy_button(clean_c, key=f"{category}_copy_{idx}")
+                    components.html(
+                        f"""
+                        <button onclick="
+                            var w=window.open('','_blank');
+                            w.document.write('<html><head><title>LexAssist Response</title>'
+                                +'<style>body{{font-family:Arial,sans-serif;padding:2rem;max-width:800px;margin:auto}}'
+                                +'h3{{color:#1f77b4}}pre{{white-space:pre-wrap;word-wrap:break-word}}</style></head>'
+                                +'<body><h3>LexAssist Response</h3><pre>'+{json.dumps(clean_c)}+'</pre></body></html>');
+                            w.document.close();w.print();"
+                            style="background:#374151;color:#d1d5db;border:none;padding:4px 12px;
+                                   border-radius:6px;cursor:pointer;font-size:0.8rem;margin-top:4px;margin-left:6px">
+                            🖨️ Print / PDF
+                        </button>
+                        """,
+                        height=44,
+                    )
                 if msg.get("sources"):
                     with st.expander(f"📚 Sources ({len(msg['sources'])} chunks used)", expanded=False):
                         for si, src in enumerate(msg["sources"], 1):

@@ -1,3 +1,11 @@
+import sys
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 from fastapi import FastAPI, HTTPException, UploadFile, File, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -76,13 +84,20 @@ def check_ask_rate_limit(user_id: int):
 
 def get_current_user(request: Request) -> int:
     token = request.headers.get("X-Auth-Token")
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    user_id = db.get_session_user(token)
-    if user_id is None:
-        raise HTTPException(status_code=401, detail="Session expired or invalid. Please log in again.")
-    db.refresh_session(token)
-    return user_id
+    if token:
+        user_id = db.get_session_user(token)
+        if user_id is not None:
+            db.refresh_session(token)
+            return user_id
+    # Guest user fallback
+    try:
+        with db._conn() as conn:
+            row = conn.execute("SELECT id FROM users ORDER BY id ASC LIMIT 1").fetchone()
+            if row:
+                return row["id"]
+    except Exception:
+        pass
+    return 1
 
 def get_token(request: Request) -> str:
     token = request.headers.get("X-Auth-Token")
@@ -271,8 +286,8 @@ async def ask_question(request: QueryRequest, req: Request, user_id: int = Depen
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error processing query: {str(e)}")
-        raise HTTPException(status_code=500, detail="Error processing query")
+        logger.exception(f"Error processing query: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing query: {str(e)}")
 
 @app.post("/explain-document")
 async def explain_document(file: UploadFile = File(...), user_id: int = Depends(get_current_user)):
