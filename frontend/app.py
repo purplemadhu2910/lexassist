@@ -685,7 +685,7 @@ def show_chat_page(category: str, page_title: str):
         }}
         </style>
         <div style="margin:4px 0; display:flex; align-items:center; gap:12px;">
-          <button id="voiceBtn_{category}" onclick="startVoice_{category}()"
+          <button id="voiceBtn_{category}" onclick="toggleVoice_{category}()"
             style="background:linear-gradient(135deg, #1e293b, #0f172a); color:#60a5fa;
                    border:1px solid rgba(96,165,250,0.4); padding:8px 18px; border-radius:24px;
                    cursor:pointer; font-size:0.88rem; font-weight:600; font-family:sans-serif;
@@ -696,6 +696,8 @@ def show_chat_page(category: str, page_title: str):
           <span id="voiceStatus_{category}" style="color:#9ca3af; font-size:0.82rem; font-family:sans-serif;"></span>
         </div>
         <script>
+        var activeRec_{category} = null;
+
         function fixSpokenNumbers(text) {{
           if (!text) return text;
           var t = text.trim();
@@ -714,6 +716,23 @@ def show_chat_page(category: str, page_title: str):
           return t;
         }}
 
+        function resetBtn_{category}() {{
+          var btn = document.getElementById('voiceBtn_{category}');
+          btn.classList.remove('mic-active_{category}');
+          document.getElementById('micIcon_{category}').innerText = '🎙️';
+          document.getElementById('btnText_{category}').innerText = 'Ask with Voice';
+          activeRec_{category} = null;
+        }}
+
+        function toggleVoice_{category}() {{
+          if (activeRec_{category}) {{
+            document.getElementById('voiceStatus_{category}').innerText = 'Stopping & generating answer...';
+            try {{ activeRec_{category}.stop(); }} catch(e) {{}}
+          }} else {{
+            startVoice_{category}();
+          }}
+        }}
+
         function startVoice_{category}() {{
           if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {{
             document.getElementById('voiceStatus_{category}').innerText = '⚠️ Speech recognition not supported in this browser.';
@@ -725,20 +744,22 @@ def show_chat_page(category: str, page_title: str):
           rec.continuous = false;
           rec.interimResults = false;
           rec.maxAlternatives = 3;
+          activeRec_{category} = rec;
           
           var btn = document.getElementById('voiceBtn_{category}');
           btn.classList.add('mic-active_{category}');
-          document.getElementById('micIcon_{category}').innerText = '🔴';
-          document.getElementById('btnText_{category}').innerText = 'Listening...';
-          document.getElementById('voiceStatus_{category}').innerText = 'Speak your legal or tax question clearly...';
-          btn.disabled = true;
+          document.getElementById('micIcon_{category}').innerText = '⏹️';
+          document.getElementById('btnText_{category}').innerText = 'Stop & Answer';
+          document.getElementById('voiceStatus_{category}').innerText = 'Listening... Click "Stop & Answer" when done.';
 
           rec.onresult = function(e) {{
             var rawTranscript = e.results[0][0].transcript;
             var cleanTranscript = fixSpokenNumbers(rawTranscript);
             
+            document.getElementById('micIcon_{category}').innerText = '⚡';
             document.getElementById('btnText_{category}').innerText = 'Answering...';
             document.getElementById('voiceStatus_{category}').innerHTML = '⚡ <b>Answering:</b> "' + cleanTranscript + '"';
+            resetBtn_{category}();
             
             // Auto-submit speech query directly to Streamlit app
             var url = new URL(window.parent.location.href);
@@ -748,19 +769,13 @@ def show_chat_page(category: str, page_title: str):
 
           rec.onerror = function(e) {{
             document.getElementById('voiceStatus_{category}').innerText = 'Error: ' + e.error;
-            btn.classList.remove('mic-active_{category}');
-            document.getElementById('micIcon_{category}').innerText = '🎙️';
-            document.getElementById('btnText_{category}').innerText = 'Ask with Voice';
-            btn.disabled = false;
+            resetBtn_{category}();
           }};
 
           rec.onend = function() {{
-            if (document.getElementById('btnText_{category}').innerText === 'Listening...') {{
+            if (document.getElementById('btnText_{category}').innerText === 'Stop & Answer') {{
               document.getElementById('voiceStatus_{category}').innerText = 'No speech detected. Click to try again.';
-              btn.classList.remove('mic-active_{category}');
-              document.getElementById('micIcon_{category}').innerText = '🎙️';
-              document.getElementById('btnText_{category}').innerText = 'Ask with Voice';
-              btn.disabled = false;
+              resetBtn_{category}();
             }}
           }};
 
