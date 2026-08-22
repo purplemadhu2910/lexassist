@@ -413,6 +413,15 @@ def _build_theme_css(dark: bool) -> str:
         border-radius: 12px !important;
         backdrop-filter: blur(10px);
     }}
+    iframe[data-testid="stCustomComponentV1"],
+    iframe {{
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+    }}
     .char-counter {{ font-size: 0.78rem; color: #888; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem; }}
     .char-counter.warn {{ color: {warn_clr}; }}
     .char-counter.over  {{ color: {over_clr}; }}
@@ -427,27 +436,95 @@ def _char_counter_html(text: str) -> str:
     cls = "over" if n > MAX_QUERY_CHARS else "warn" if n > int(MAX_QUERY_CHARS * 0.85) else ""
     return f'<div class="char-counter {cls}">{n} / {MAX_QUERY_CHARS}</div>'
 
-def _copy_button(text: str, key: str):
-    escaped = html_lib.escape(text, quote=True)
+def _response_actions_bar(text: str, key: str):
+    escaped_text = html_lib.escape(text, quote=True)
+    json_text = json.dumps(text)
     components.html(
         f"""
-        <textarea id="cb_{key}" style="position:absolute;left:-9999px;">{escaped}</textarea>
-        <button onclick="
-            var t=document.getElementById('cb_{key}');t.select();t.setSelectionRange(0,99999);
-            navigator.clipboard.writeText(t.value).then(function(){{
-                this.innerText='\u2705 Copied!';var b=this;
-                setTimeout(function(){{b.innerText='\U0001f4cb Copy';}},1500);
-            }}.bind(this)).catch(function(){{
-                document.execCommand('copy');
-                this.innerText='\u2705 Copied!';var b=this;
-                setTimeout(function(){{b.innerText='\U0001f4cb Copy';}},1500);
-            }}.bind(this));"
-                style="background:#1f77b4;color:#fff;border:none;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:0.8rem;margin-top:4px">
-            \U0001f4cb Copy
-        </button>
+        <style>
+          * {{
+            box-sizing: border-box !important;
+            margin: 0;
+            padding: 0;
+          }}
+          html, body {{
+            margin: 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            overflow: hidden !important;
+            font-family: system-ui, -apple-system, sans-serif;
+            height: 100% !important;
+            width: 100% !important;
+          }}
+          .actions-wrap {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 1px 0;
+            height: 100%;
+          }}
+          .btn-action {{
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            color: #ffffff;
+            border: 1px solid rgba(147, 197, 253, 0.4);
+            padding: 4px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            line-height: 1.2;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            transition: all 0.15s ease;
+            outline: none !important;
+          }}
+          .btn-action:hover {{
+            background: linear-gradient(135deg, #1d4ed8, #2563eb);
+            transform: translateY(-1px);
+          }}
+          .btn-print {{
+            background: linear-gradient(135deg, #374151, #1f2937);
+            color: #e5e7eb;
+            border: 1px solid rgba(156, 163, 175, 0.4);
+          }}
+          .btn-print:hover {{
+            background: linear-gradient(135deg, #4b5563, #374151);
+            color: #ffffff;
+            transform: translateY(-1px);
+          }}
+        </style>
+        <div class="actions-wrap">
+          <textarea id="cb_{key}" style="position:fixed; top:-1000px; left:-1000px; opacity:0; width:1px; height:1px; pointer-events:none;">{escaped_text}</textarea>
+          <button class="btn-action" onclick="
+              var t=document.getElementById('cb_{key}'); t.select(); t.setSelectionRange(0, 99999);
+              navigator.clipboard.writeText(t.value).then(function(){{
+                  this.innerText='✅ Copied!'; var b=this;
+                  setTimeout(function(){{ b.innerText='📋 Copy'; }}, 1500);
+              }}.bind(this)).catch(function(){{
+                  document.execCommand('copy');
+                  this.innerText='✅ Copied!'; var b=this;
+                  setTimeout(function(){{ b.innerText='📋 Copy'; }}, 1500);
+              }}.bind(this));">
+              📋 Copy
+          </button>
+          <button class="btn-action btn-print" onclick="
+              var w=window.open('','_blank');
+              w.document.write('<html><head><title>LexAssist Response</title>'
+                  +'<style>body{{font-family:Arial,sans-serif;padding:2rem;max-width:800px;margin:auto}}'
+                  +'h3{{color:#1f77b4}}pre{{white-space:pre-wrap;word-wrap:break-word}}</style></head>'
+                  +'<body><h3>LexAssist Response</h3><pre>'+{json_text}+'</pre></body></html>');
+              w.document.close(); w.print();">
+              🖨️ Print / PDF
+          </button>
+        </div>
         """,
-        height=44,
+        height=30,
     )
+
+def _copy_button(text: str, key: str):
+    _response_actions_bar(text, key)
 
 def show_login_page():
     dark = st.session_state.dark_mode
@@ -857,23 +934,7 @@ def show_chat_page(category: str, page_title: str):
             st.markdown(clean_c)
             if msg["role"] == "assistant":
                 if not clean_c.startswith("Error:") and not clean_c.startswith("Could not reach"):
-                    _copy_button(clean_c, key=f"{category}_copy_{idx}")
-                    components.html(
-                        f"""
-                        <button onclick="
-                            var w=window.open('','_blank');
-                            w.document.write('<html><head><title>LexAssist Response</title>'
-                                +'<style>body{{font-family:Arial,sans-serif;padding:2rem;max-width:800px;margin:auto}}'
-                                +'h3{{color:#1f77b4}}pre{{white-space:pre-wrap;word-wrap:break-word}}</style></head>'
-                                +'<body><h3>LexAssist Response</h3><pre>'+{json.dumps(clean_c)}+'</pre></body></html>');
-                            w.document.close();w.print();"
-                            style="background:#374151;color:#d1d5db;border:none;padding:4px 12px;
-                                   border-radius:6px;cursor:pointer;font-size:0.8rem;margin-top:4px;margin-left:6px">
-                            🖨️ Print / PDF
-                        </button>
-                        """,
-                        height=44,
-                    )
+                    _response_actions_bar(clean_c, key=f"{category}_resp_{idx}")
                 if msg.get("sources"):
                     with st.expander(f"📚 Sources ({len(msg['sources'])} chunks used)", expanded=False):
                         for si, src in enumerate(msg["sources"], 1):
