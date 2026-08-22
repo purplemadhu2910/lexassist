@@ -5,14 +5,17 @@ import logging
 from groq import Groq
 from rag_engine import build_context_with_sources
 
+from dotenv import load_dotenv
+
 logger = logging.getLogger(__name__)
+
+# Load environment variables explicitly
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env"))
+load_dotenv()
 
 # Configurable via environment variable; default 4000 chars
 MAX_DOC_CHARS = int(os.getenv("MAX_DOC_CHARS", "4000"))
-
-
 GROQ_TIMEOUT = 30  # seconds
-
 
 class AIEngine:
     def __init__(self):
@@ -22,7 +25,7 @@ class AIEngine:
             self.client = None
         else:
             self.client = Groq(api_key=api_key)
-        self.model = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant")
+        self.model = os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b")
 
     async def process_query(self, query: str, category: str = "general", history: list = None, language: str = "English") -> tuple:
         """Returns (answer, sources) tuple."""

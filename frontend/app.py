@@ -628,12 +628,16 @@ def show_chat_page(category: str, page_title: str):
                 elif resp.status_code == 400:
                     toast("Invalid query — please rephrase.", "⚠️")
                     st.session_state[messages_key].append({"role": "assistant", "content": "Invalid query. Please rephrase your question."})
+                elif resp.status_code == 401:
+                    toast("Session expired — please log in again.", "🔑")
+                    st.session_state[messages_key].append({"role": "assistant", "content": "Session expired. Please log in again."})
                 else:
-                    toast("Something went wrong. Please try again.", "❌")
-                    st.session_state[messages_key].append({"role": "assistant", "content": "Something went wrong. Please try again."})
-            except Exception:
+                    err_msg = resp.json().get("detail", "Error processing request") if resp.headers.get("content-type") == "application/json" else "Server error"
+                    toast(f"Error: {err_msg}", "❌")
+                    st.session_state[messages_key].append({"role": "assistant", "content": f"Error: {err_msg}"})
+            except Exception as e:
                 toast("Could not reach the server.", "❌")
-                st.session_state[messages_key].append({"role": "assistant", "content": "Could not reach the server. Please try again shortly."})
+                st.session_state[messages_key].append({"role": "assistant", "content": f"Could not reach server: {str(e)}"})
 
     # Auto-execute captured voice query if passed via query params or prefill
     vq_param = st.query_params.get("voice_query", "")
@@ -761,10 +765,30 @@ def show_chat_page(category: str, page_title: str):
             document.getElementById('voiceStatus_{category}').innerHTML = '⚡ <b>Answering:</b> "' + cleanTranscript + '"';
             resetBtn_{category}();
             
-            // Auto-submit speech query directly to Streamlit app
-            var url = new URL(window.parent.location.href);
-            url.searchParams.set('voice_query', cleanTranscript);
-            window.parent.location.href = url.toString();
+            // Inject query directly into Streamlit chat input using React nativeSetter
+            try {{
+              var parentDoc = window.parent.document;
+              var chatBox = parentDoc.querySelector('textarea[data-testid="stChatInputTextArea"]');
+              var submitBtn = parentDoc.querySelector('button[data-testid="stChatInputSubmitButton"]');
+              if (chatBox && submitBtn) {{
+                var nativeSetter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, "value").set;
+                nativeSetter.call(chatBox, cleanTranscript);
+                chatBox.dispatchEvent(new Event('input', {{ bubbles: true }}));
+                setTimeout(function() {{
+                  submitBtn.click();
+                }}, 150);
+                return;
+              }}
+            }} catch(err) {{
+              console.log('DOM injection error:', err);
+            }}
+
+            // Fallback for query param
+            try {{
+              var url = new URL(window.parent.location.href);
+              url.searchParams.set('voice_query', cleanTranscript);
+              window.parent.location.href = url.toString();
+            }} catch(e) {{}}
           }};
 
           rec.onerror = function(e) {{
