@@ -1007,26 +1007,6 @@ def show_home_page():
         unsafe_allow_html=True
     )
 
-    # Primary Hero Input Form
-    _, mid_col, _ = st.columns([0.2, 5.6, 0.2])
-    with mid_col:
-        with st.form("home_hero_search_form"):
-            h_col1, h_col2 = st.columns([4.2, 1.2])
-            with h_col1:
-                home_q = st.text_input(
-                    "Search Indian Law",
-                    placeholder="Ask anything about Indian law (e.g. Section 420 IPC, tenant rights, GST filing)...",
-                    label_visibility="collapsed",
-                    key="home_hero_input"
-                )
-            with h_col2:
-                home_sub = st.form_submit_button("Ask LexAssist", type="primary", use_container_width=True)
-
-        if home_sub and home_q.strip():
-            st.session_state["legal_prefill"] = home_q.strip()
-            st.session_state.current_page = "Ask Legal Question"
-            st.rerun()
-
     # Try Asking Chips
     st.markdown('<div style="font-size: 0.78rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em; margin: 1.4rem 0 0.7rem; text-align: center;">Try asking</div>', unsafe_allow_html=True)
     
