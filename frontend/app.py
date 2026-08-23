@@ -948,14 +948,28 @@ def show_chat_page(category: str, page_title: str):
     if not st.session_state[messages_key]:
         st.markdown(
             """
-            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 3rem 1rem 1.5rem; text-align:center;">
-                <h2 style="font-family:'Inter',sans-serif; font-size: 2.1rem; font-weight: 600; color: #ececec; margin-bottom: 1.8rem; letter-spacing:-0.02em;">
+            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 2.5rem 1rem 1rem; text-align:center;">
+                <h2 style="font-family:'Outfit',sans-serif; font-size: 2.2rem; font-weight: 700; color: #ececec; margin-bottom: 1.2rem; letter-spacing:-0.02em;">
                     What legal or tax question can I help with today?
                 </h2>
             </div>
             """,
             unsafe_allow_html=True
         )
+        _, mid_col, _ = st.columns([1, 6, 1])
+        with mid_col:
+            with st.form(f"{category}_center_search_form"):
+                mid_q = st.text_input(
+                    f"Ask a {category} question...",
+                    placeholder=f"Type your {category} question here and press Enter...",
+                    label_visibility="collapsed",
+                    key=f"{category}_center_q"
+                )
+                mid_sub = st.form_submit_button("🔍 Search / Ask Question", type="primary", use_container_width=True)
+            if mid_sub and mid_q.strip():
+                _do_ask(mid_q.strip())
+                st.rerun()
+
         sc1, sc2, sc3 = st.columns(3)
         sample_chips = [
             (sc1, "Analyze contract risks", "Contract Risk Analyzer"),
@@ -965,11 +979,13 @@ def show_chat_page(category: str, page_title: str):
         for col, label, page_target in sample_chips:
             with col:
                 if st.button(f"💡 {label}", key=f"{category}_empty_chip_{label}", use_container_width=True):
-                    if page_target != title:
+                    if page_target != page_title:
                         st.session_state.current_page = page_target
+                        st.session_state[f"{category}_prefill"] = label
+                        st.rerun()
                     else:
-                        st.session_state[prefill_key] = label
-                    st.rerun()
+                        _do_ask(label)
+                        st.rerun()
 
     for idx, msg in enumerate(st.session_state[messages_key]):
         raw_c = msg.get("content", "")
@@ -987,7 +1003,7 @@ def show_chat_page(category: str, page_title: str):
                     st.markdown("**Suggested follow-up questions:**")
                     for i, s in enumerate(msg["suggestions"]):
                         if st.button(s, key=f"{category}_sugg_{idx}_{i}", use_container_width=True):
-                            st.session_state[prefill_key] = s
+                            _do_ask(s)
                             st.rerun()
 
     last_draft = st.session_state.get(draft_key, "")
@@ -1011,17 +1027,32 @@ def show_chat_page(category: str, page_title: str):
 def show_home_page():
     st.markdown(
         """
-        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 4rem 1rem 2rem; text-align:center;">
-            <h1 style="font-family:'Inter',sans-serif; font-size: 2.2rem; font-weight: 600; color: #ececec; margin-bottom: 0.8rem; letter-spacing:-0.02em;">
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 3rem 1rem 1rem; text-align:center;">
+            <h1 style="font-family:'Outfit',sans-serif; font-size: 2.3rem; font-weight: 800; color: #ececec; margin-bottom: 0.6rem; letter-spacing:-0.02em;">
                 What legal or tax question can I help with today?
             </h1>
-            <p style="font-size: 0.98rem; color: #b4b4b4; max-width: 620px; margin: 0 auto 2rem; line-height: 1.6;">
+            <p style="font-size: 0.98rem; color: #aaa; max-width: 620px; margin: 0 auto 1.5rem; line-height: 1.6;">
                 AI-powered legal assistant grounded in Indian Civil, Criminal, Contract, and Tax statutes.
             </p>
         </div>
         """,
         unsafe_allow_html=True
     )
+
+    _, mid_col, _ = st.columns([1, 6, 1])
+    with mid_col:
+        with st.form("home_center_search_form"):
+            home_q = st.text_input(
+                "Search Indian Law",
+                placeholder="Ask any legal question (e.g. Section 420 IPC, Section 80C deductions, tenant eviction)...",
+                label_visibility="collapsed",
+                key="home_center_q"
+            )
+            home_sub = st.form_submit_button("🔍 Search LexAssist", type="primary", use_container_width=True)
+        if home_sub and home_q.strip():
+            st.session_state["legal_prefill"] = home_q.strip()
+            st.session_state.current_page = "Ask Legal Question"
+            st.rerun()
 
     c1, c2, c3 = st.columns(3)
     chips = [
@@ -1542,14 +1573,6 @@ def show_main_app():
             """,
             unsafe_allow_html=True
         )
-        
-        if st.button("➕  New chat", key="nav_new_chat", use_container_width=True, type="primary"):
-            st.session_state.legal_messages = []
-            st.session_state.tax_messages = []
-            st.session_state.general_messages = []
-            st.session_state.current_page = "Ask Legal Question"
-            st.rerun()
-
         st.markdown("<hr style='border-color:#262626; margin:0.6rem 0'>", unsafe_allow_html=True)
 
         NAV_ITEMS = [
