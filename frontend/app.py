@@ -986,43 +986,43 @@ def show_chat_page(category: str, page_title: str):
                     else:
                         _do_ask(label)
                         st.rerun()
+    else:
+        for idx, msg in enumerate(st.session_state[messages_key]):
+            raw_c = msg.get("content", "")
+            clean_c = clean_ai_response(raw_c) if msg["role"] == "assistant" else raw_c
+            with st.chat_message(msg["role"], avatar="👤" if msg["role"] == "user" else "⚖️"):
+                st.markdown(clean_c)
+                if msg["role"] == "assistant":
+                    if not clean_c.startswith("Error:") and not clean_c.startswith("Could not reach"):
+                        _response_actions_bar(clean_c, key=f"{category}_resp_{idx}")
+                    if msg.get("sources"):
+                        with st.expander(f"📚 {len(msg['sources'])} Source Chunks Used", expanded=False):
+                            for si, src in enumerate(msg["sources"], 1):
+                                st.markdown(f"**{si}.** {src}")
+                    if msg.get("suggestions"):
+                        st.markdown("**Suggested follow-up questions:**")
+                        for i, s in enumerate(msg["suggestions"]):
+                            if st.button(s, key=f"{category}_sugg_{idx}_{i}", use_container_width=True):
+                                _do_ask(s)
+                                st.rerun()
 
-    for idx, msg in enumerate(st.session_state[messages_key]):
-        raw_c = msg.get("content", "")
-        clean_c = clean_ai_response(raw_c) if msg["role"] == "assistant" else raw_c
-        with st.chat_message(msg["role"], avatar="👤" if msg["role"] == "user" else "⚖️"):
-            st.markdown(clean_c)
-            if msg["role"] == "assistant":
-                if not clean_c.startswith("Error:") and not clean_c.startswith("Could not reach"):
-                    _response_actions_bar(clean_c, key=f"{category}_resp_{idx}")
-                if msg.get("sources"):
-                    with st.expander(f"📚 {len(msg['sources'])} Source Chunks Used", expanded=False):
-                        for si, src in enumerate(msg["sources"], 1):
-                            st.markdown(f"**{si}.** {src}")
-                if msg.get("suggestions"):
-                    st.markdown("**Suggested follow-up questions:**")
-                    for i, s in enumerate(msg["suggestions"]):
-                        if st.button(s, key=f"{category}_sugg_{idx}_{i}", use_container_width=True):
-                            _do_ask(s)
-                            st.rerun()
+        last_draft = st.session_state.get(draft_key, "")
+        if last_draft:
+            st.markdown(_char_counter_html(last_draft), unsafe_allow_html=True)
 
-    last_draft = st.session_state.get(draft_key, "")
-    if last_draft:
-        st.markdown(_char_counter_html(last_draft), unsafe_allow_html=True)
-
-    user_input = st.chat_input(f"Ask a {category} question... (max {MAX_QUERY_CHARS} chars)")
-    if user_input:
-        stripped = user_input.strip()
-        if stripped:
-            if len(stripped) > MAX_QUERY_CHARS:
-                st.session_state[draft_key] = stripped
-                toast(f"Query too long — max {MAX_QUERY_CHARS} characters.", "⚠️")
-                st.rerun()
-            else:
-                st.session_state[draft_key] = stripped
-                _do_ask(stripped)
-                st.session_state[draft_key] = ""
-        st.rerun()
+        user_input = st.chat_input(f"Ask a {category} question... (max {MAX_QUERY_CHARS} chars)")
+        if user_input:
+            stripped = user_input.strip()
+            if stripped:
+                if len(stripped) > MAX_QUERY_CHARS:
+                    st.session_state[draft_key] = stripped
+                    toast(f"Query too long — max {MAX_QUERY_CHARS} characters.", "⚠️")
+                    st.rerun()
+                else:
+                    st.session_state[draft_key] = stripped
+                    _do_ask(stripped)
+                    st.session_state[draft_key] = ""
+            st.rerun()
 
 def show_home_page():
     st.markdown(
@@ -1038,21 +1038,6 @@ def show_home_page():
         """,
         unsafe_allow_html=True
     )
-
-    _, mid_col, _ = st.columns([1, 6, 1])
-    with mid_col:
-        with st.form("home_center_search_form"):
-            home_q = st.text_input(
-                "Search Indian Law",
-                placeholder="Ask any legal question (e.g. Section 420 IPC, Section 80C deductions, tenant eviction)...",
-                label_visibility="collapsed",
-                key="home_center_q"
-            )
-            home_sub = st.form_submit_button("🔍 Search LexAssist", type="primary", use_container_width=True)
-        if home_sub and home_q.strip():
-            st.session_state["legal_prefill"] = home_q.strip()
-            st.session_state.current_page = "Ask Legal Question"
-            st.rerun()
 
     c1, c2, c3 = st.columns(3)
     chips = [
