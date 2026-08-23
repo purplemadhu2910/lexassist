@@ -85,85 +85,85 @@ def clean_ai_response(text: str) -> str:
 # ── Theme CSS ──────────────────────────────────────────────────────────────
 def _build_theme_css(dark: bool) -> str:
     if dark:
-        bg        = "#0e1117"
-        bg2       = "#161b22"
-        bg3       = "#1e2a3a"
-        border    = "#2e4a6a"
-        text      = "#fafafa"
-        text2     = "#aaa"
-        accent    = "#4da6ff"
-        btn_bg    = "#1e2a3a"
-        btn_text  = "#fafafa"
-        btn_bdr   = "#2e4a6a"
-        alert_bg  = "#1e2a3a"
-        sb_bg     = "#111827"
-        sb_bdr    = "#1f2d3d"
-        sb_text   = "#9ca3af"
-        sb_hover  = "#1e2a3a"
-        sb_active = "#1d4ed8"
-        hdr_color = "#4da6ff"
-        disc_bg   = "#2a2200"
-        disc_text = "#ffe082"
-        rag_bg    = "#1a3a2a"
-        rag_bdr   = "#28a745"
-        rag_text  = "#66bb6a"
-        resp_bg   = "#1e2a3a"
-        resp_text = "#e8f4ff"
-        resp_bdr  = "#2e4a6a"
-        resp_shad = "0 4px 16px rgba(0,0,0,0.4)"
-        scrl_bg   = "#0e1117"
-        scrl_thm  = "#2e4a6a"
-        tab_color = "#aaa"
-        warn_clr  = "#ffc107"
-        over_clr  = "#f44336"
-        file_bg   = "#1e2a3a"
-        chat_bg   = "#161b22"
-        chat_text = "#e5e7eb"
+        bg        = "#0B0F17"  # Primary background
+        bg2       = "#141C29"  # Card background
+        bg3       = "#101722"  # Input/surface background
+        border    = "#263244"  # Subtle borders
+        text      = "#F8FAFC"  # High readability white
+        text2     = "#94A3B8"  # Secondary text
+        accent    = "#8B5CF6"  # Primary purple accent
+        btn_bg    = "#141C29"
+        btn_text  = "#F8FAFC"
+        btn_bdr   = "#263244"
+        alert_bg  = "#141C29"
+        sb_bg     = "#101722"  # Sidebar background
+        sb_bdr    = "#263244"  # Sidebar border
+        sb_text   = "#94A3B8"
+        sb_hover  = "rgba(139, 92, 246, 0.08)"
+        sb_active = "rgba(139, 92, 246, 0.16)"
+        hdr_color = "#8B5CF6"
+        disc_bg   = "rgba(212, 167, 44, 0.1)"
+        disc_text = "#D4A72C"
+        rag_bg    = "rgba(139, 92, 246, 0.1)"
+        rag_bdr   = "rgba(139, 92, 246, 0.3)"
+        rag_text  = "#A78BFA"
+        resp_bg   = "#141C29"
+        resp_text = "#F8FAFC"
+        resp_bdr  = "#263244"
+        resp_shad = "0 8px 32px rgba(0,0,0,0.5)"
+        scrl_bg   = "#0B0F17"
+        scrl_thm  = "#263244"
+        tab_color = "#94A3B8"
+        warn_clr  = "#F59E0B"
+        over_clr  = "#EF4444"
+        file_bg   = "#141C29"
+        chat_bg   = "#141C29"
+        chat_text = "#F8FAFC"
     else:
-        bg        = "#f5f7fa"
-        bg2       = "#ffffff"
-        bg3       = "#eaf1fb"
-        border    = "#cce0ff"
-        text      = "#111111"
-        text2     = "#555555"
-        accent    = "#1f77b4"
-        btn_bg    = "#ffffff"
-        btn_text  = "#111111"
-        btn_bdr   = "#cce0ff"
-        alert_bg  = "#e8f4ff"
-        sb_bg     = "#1e293b"
-        sb_bdr    = "#334155"
-        sb_text   = "#94a3b8"
-        sb_hover  = "#273549"
-        sb_active = "#2563eb"
-        hdr_color = "#1f77b4"
-        disc_bg   = "#fff3cd"
-        disc_text = "#7c4a00"
-        rag_bg    = "#d4edda"
-        rag_bdr   = "#28a745"
-        rag_text  = "#155724"
-        resp_bg   = "#ffffff"
-        resp_text = "#111111"
-        resp_bdr  = "#cce0ff"
-        resp_shad = "0 2px 8px rgba(0,0,0,0.08)"
-        scrl_bg   = "#f5f7fa"
-        scrl_thm  = "#cce0ff"
-        tab_color = "#555555"
-        warn_clr  = "#e65100"
-        over_clr  = "#c62828"
-        file_bg   = "#ffffff"
-        chat_bg   = "#f0f4f8"
-        chat_text = "#111111"
+        bg        = "#F8FAFC"
+        bg2       = "#FFFFFF"
+        bg3       = "#F1F5F9"
+        border    = "#E2E8F0"
+        text      = "#0F172A"
+        text2     = "#64748B"
+        accent    = "#7C3AED"
+        btn_bg    = "#FFFFFF"
+        btn_text  = "#0F172A"
+        btn_bdr   = "#CBD5E1"
+        alert_bg  = "#F1F5F9"
+        sb_bg     = "#F1F5F9"
+        sb_bdr    = "#E2E8F0"
+        sb_text   = "#64748B"
+        sb_hover  = "rgba(124, 58, 237, 0.06)"
+        sb_active = "rgba(124, 58, 237, 0.12)"
+        hdr_color = "#7C3AED"
+        disc_bg   = "#FEF3C7"
+        disc_text = "#92400E"
+        rag_bg    = "#EDE9FE"
+        rag_bdr   = "#DDD6FE"
+        rag_text  = "#6D28D9"
+        resp_bg   = "#FFFFFF"
+        resp_text = "#0F172A"
+        resp_bdr  = "#E2E8F0"
+        resp_shad = "0 4px 16px rgba(0,0,0,0.06)"
+        scrl_bg   = "#F8FAFC"
+        scrl_thm  = "#CBD5E1"
+        tab_color = "#64748B"
+        warn_clr  = "#D97706"
+        over_clr  = "#DC2626"
+        file_bg   = "#FFFFFF"
+        chat_bg   = "#F1F5F9"
+        chat_text = "#0F172A"
 
     return f"""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
     header[data-testid="stHeader"]   {{ display: none !important; }}
     [data-testid="collapsedControl"] {{ display: none !important; }}
 
     html, body, [data-testid="stAppViewContainer"], .block-container, p, span, li, td, th, label, input, textarea, select {{
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }}
 
     h1, h2, h3, h4, h5, h6, .main-header, .la-brand-name, .la-feat-title {{
@@ -182,12 +182,29 @@ def _build_theme_css(dark: bool) -> str:
         color: {text} !important;
     }}
 
+    .block-container {{
+        max-width: 1100px !important;
+        padding-top: 2rem !important;
+        padding-bottom: 3rem !important;
+    }}
+
+    /* Sidebar Navigation Styling */
     [data-testid="stSidebar"],
     [data-testid="stSidebarContent"],
     section[data-testid="stSidebar"] > div {{
         background-color: {sb_bg} !important;
         border-right: 1px solid {sb_bdr} !important;
     }}
+
+    .sidebar-sec-title {{
+        font-size: 0.68rem !important;
+        font-weight: 700 !important;
+        color: #64748B !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+        margin: 1.1rem 0 0.35rem 0.5rem !important;
+    }}
+
     [data-testid="stSidebar"] .stButton > button {{
         width: 100% !important;
         text-align: left !important;
@@ -195,33 +212,37 @@ def _build_theme_css(dark: bool) -> str:
         color: {sb_text} !important;
         border: none !important;
         border-radius: 8px !important;
-        padding: 9px 12px !important;
-        font-size: 0.88rem !important;
+        padding: 7px 12px !important;
+        font-size: 0.86rem !important;
         font-weight: 500 !important;
-        transition: background 0.15s, color 0.15s !important;
+        transition: all 0.15s ease !important;
         margin-bottom: 2px !important;
         justify-content: flex-start !important;
     }}
     [data-testid="stSidebar"] .stButton > button:hover {{
         background: {sb_hover} !important;
-        color: #e5e7eb !important;
+        color: #F8FAFC !important;
         border: none !important;
+        transform: translateX(2px) !important;
     }}
     [data-testid="stSidebar"] .stButton > button[kind="primary"] {{
         background: {sb_active} !important;
-        color: #ffffff !important;
+        color: #F8FAFC !important;
         font-weight: 600 !important;
-        border: none !important;
+        border-left: 3px solid #8B5CF6 !important;
+        border-radius: 6px !important;
     }}
+
     [data-testid="stSidebar"] .la-logout .stButton > button {{
-        color: #ef4444 !important;
-        border: 1px solid #7f1d1d !important;
-        background: transparent !important;
+        color: #EF4444 !important;
+        border: 1px solid rgba(239, 68, 68, 0.3) !important;
+        background: rgba(239, 68, 68, 0.08) !important;
+        margin-top: 0.8rem !important;
     }}
     [data-testid="stSidebar"] .la-logout .stButton > button:hover {{
-        background: #7f1d1d !important;
-        color: #fff !important;
-        border-color: #ef4444 !important;
+        background: #EF4444 !important;
+        color: #FFFFFF !important;
+        border-color: #EF4444 !important;
     }}
     [data-testid="stSidebar"] p,
     [data-testid="stSidebar"] span,
@@ -229,6 +250,7 @@ def _build_theme_css(dark: bool) -> str:
         color: {sb_text} !important;
     }}
 
+    /* Inputs, Textareas, Selectboxes */
     input, textarea, select,
     [data-testid="stTextInput"] input,
     [data-testid="stTextArea"] textarea,
@@ -239,7 +261,15 @@ def _build_theme_css(dark: bool) -> str:
         background-color: {bg3} !important;
         color: {text} !important;
         border-color: {border} !important;
+        border-radius: 12px !important;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
     }}
+    input:focus, textarea:focus, select:focus,
+    [data-baseweb="input"]:focus-within {{
+        border-color: #8B5CF6 !important;
+        box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25) !important;
+    }}
+
     [data-testid="stChatInput"] textarea,
     [data-testid="stChatInputContainer"] textarea {{
         background-color: {bg3} !important;
@@ -248,217 +278,149 @@ def _build_theme_css(dark: bool) -> str:
 
     [data-testid="stFileUploader"] {{
         background-color: {file_bg} !important;
-        border-color: {border} !important;
+        border: 1px dashed {border} !important;
+        border-radius: 14px !important;
         color: {text} !important;
-    }}
-    [data-testid="stFileUploader"] span,
-    [data-testid="stFileUploader"] p {{
-        color: {text} !important;
+        padding: 1rem !important;
     }}
 
     [data-testid="stChatMessage"] {{
         background-color: {chat_bg} !important;
         color: {chat_text} !important;
-    }}
-    [data-testid="stChatMessage"] p,
-    [data-testid="stChatMessage"] span,
-    [data-testid="stChatMessage"] div {{
-        color: {chat_text} !important;
+        border: 1px solid {border} !important;
+        border-radius: 14px !important;
+        margin-bottom: 0.8rem !important;
+        padding: 1rem 1.2rem !important;
     }}
 
-    p, span, li, td, th, label, div {{
-        color: {text};
-    }}
+    p, span, li, td, th, label, div {{ color: {text}; }}
     h1, h2, h3, h4, h5, h6 {{ color: {text} !important; }}
-    [data-testid="stMarkdownContainer"] p,
-    [data-testid="stMarkdownContainer"] li,
-    [data-testid="stMarkdownContainer"] span {{
-        color: {text} !important;
-    }}
 
     [data-testid="stExpander"] {{
         background-color: {bg2} !important;
-        border-color: {border} !important;
-    }}
-    [data-testid="stExpander"] summary,
-    [data-testid="stExpander"] summary span {{
-        color: {text} !important;
-    }}
-    [data-testid="stExpander"] p,
-    [data-testid="stExpander"] div {{
-        color: {text} !important;
+        border: 1px solid {border} !important;
+        border-radius: 12px !important;
     }}
 
+    /* Buttons & Actions */
     .block-container .stButton > button {{
         background-color: {btn_bg} !important;
         color: {btn_text} !important;
-        border-color: {btn_bdr} !important;
-        transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease !important;
-        border-radius: 8px !important;
+        border: 1px solid {btn_bdr} !important;
+        transition: all 0.2s ease !important;
+        border-radius: 12px !important;
+        font-weight: 500 !important;
     }}
     .block-container .stButton > button:hover {{
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(96, 165, 250, 0.3) !important;
+        border-color: #8B5CF6 !important;
+        box-shadow: 0 4px 16px rgba(139, 92, 246, 0.25) !important;
     }}
     .block-container .stButton > button[kind="primary"] {{
-        background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
-        color: #ffffff !important;
+        background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%) !important;
+        color: #FFFFFF !important;
         border: none !important;
         font-weight: 600 !important;
+        box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35) !important;
     }}
     .block-container .stButton > button[kind="primary"]:hover {{
+        background: linear-gradient(135deg, #7C3AED 0%, #2563EB 100%) !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.45) !important;
-    }}
-
-    [data-testid="stSidebar"] .stButton > button {{
-        transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease !important;
-    }}
-    [data-testid="stSidebar"] .stButton > button:hover {{
-        transform: translateX(4px) !important;
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5) !important;
     }}
 
     [data-testid="stTabs"] [role="tab"] {{
         color: {tab_color} !important;
         transition: color 0.2s ease, border-bottom-color 0.2s ease !important;
     }}
-    [data-testid="stTabs"] [role="tab"]:hover {{
-        color: {accent} !important;
-    }}
+    [data-testid="stTabs"] [role="tab"]:hover {{ color: {accent} !important; }}
     [data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
         color: {accent} !important;
         border-bottom-color: {accent} !important;
     }}
-    [data-testid="stTabs"] {{ background-color: {bg} !important; }}
 
-    [data-testid="stMetric"] {{ background-color: {bg2} !important; }}
-    [data-testid="stMetricValue"], [data-testid="stMetricLabel"] {{ color: {text} !important; }}
-
-    [data-testid="stAlert"] {{
-        background-color: {alert_bg} !important;
-        color: {text} !important;
+    [data-testid="stMetric"] {{
+        background: {bg2} !important;
+        border: 1px solid {border} !important;
+        border-radius: 14px !important;
+        padding: 1rem !important;
     }}
-    [data-testid="stAlert"] p {{ color: {text} !important; }}
 
-    [data-baseweb="popover"] ul,
-    [data-baseweb="menu"] {{
-        background-color: {bg2} !important;
-        color: {text} !important;
-    }}
-    [data-baseweb="menu"] li {{ color: {text} !important; }}
-    [data-baseweb="menu"] li:hover {{ background-color: {bg3} !important; }}
-
-    [data-testid="stProgress"] > div {{ background-color: {border} !important; }}
-    [data-testid="stProgress"] > div > div {{ background-color: {accent} !important; }}
-
-    table {{ background-color: {bg2} !important; color: {text} !important; }}
-    th {{ background-color: {bg3} !important; color: {text} !important; }}
-    td {{ color: {text} !important; border-color: {border} !important; }}
-
-    ::-webkit-scrollbar {{ background: {scrl_bg}; }}
+    ::-webkit-scrollbar {{ background: {scrl_bg}; width: 6px; }}
     ::-webkit-scrollbar-thumb {{ background: {scrl_thm}; border-radius: 4px; }}
 
     .main-header {{
-        font-size: 2.5rem;
+        font-size: 2.2rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #60a5fa 0%, #c084fc 50%, #f472b6 100%);
+        background: linear-gradient(135deg, #F8FAFC 0%, #8B5CF6 50%, #3B82F6 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         text-align: center;
-        margin-bottom: 1.2rem;
+        margin-bottom: 1rem;
         font-family: 'Outfit', sans-serif !important;
         letter-spacing: -0.02em;
     }}
-    .sub-header {{ font-size: 1.2rem; color: {text2}; text-align: center; margin-bottom: 2rem; }}
+    .sub-header {{ font-size: 1.05rem; color: {text2}; text-align: center; margin-bottom: 1.8rem; }}
     .disclaimer-box {{
-        background: rgba(42, 34, 0, 0.7) !important;
-        border-left: 5px solid #ffc107;
-        padding: 1rem; margin: 1rem 0; border-radius: 8px;
-        color: {disc_text} !important;
-        backdrop-filter: blur(10px);
+        background: rgba(212, 167, 44, 0.08) !important;
+        border-left: 4px solid #D4A72C;
+        padding: 0.9rem 1.2rem; margin: 1rem 0; border-radius: 10px;
+        color: #D4A72C !important;
+        font-size: 0.83rem;
     }}
-    .disclaimer-box strong {{ color: {disc_text} !important; }}
     .rag-badge {{
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(59, 130, 246, 0.18));
-        border: 1px solid rgba(52, 211, 153, 0.4);
+        background: rgba(139, 92, 246, 0.12);
+        border: 1px solid rgba(139, 92, 246, 0.3);
         padding: 0.35rem 0.9rem; border-radius: 20px;
-        color: #34d399; font-size: 0.85rem; display: inline-block; margin-bottom: 1rem;
+        color: #8B5CF6; font-size: 0.82rem; display: inline-block; margin-bottom: 1rem;
         font-weight: 600;
-        backdrop-filter: blur(8px);
     }}
-    .auth-divider {{ text-align: center; color: {text2}; margin: 1rem 0; font-size: 0.85rem; }}
     .response-box {{
-        background: rgba(30, 42, 58, 0.75) !important;
+        background: {bg2} !important;
         color: {resp_text} !important;
-        padding: 1.5rem; border-radius: 14px;
-        border: 1px solid rgba(96, 165, 250, 0.25);
-        margin: 1rem 0; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-        backdrop-filter: blur(12px);
+        padding: 1.4rem; border-radius: 16px;
+        border: 1px solid {border};
+        margin: 1rem 0; box-shadow: {resp_shad};
     }}
-    [data-testid="stMetric"] {{
-        background: rgba(22, 27, 34, 0.75) !important;
-        border: 1px solid rgba(96, 165, 250, 0.2) !important;
-        border-radius: 14px !important;
-        padding: 0.8rem 1rem !important;
-        backdrop-filter: blur(10px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    /* --- SaaS Hero & Feature Card Styling --- */
+    .saas-card {{
+        background: {bg2};
+        border: 1px solid {border};
+        border-radius: 16px;
+        padding: 1.3rem;
+        transition: all 0.2s ease;
+        height: 100%;
     }}
-    [data-testid="stExpander"] {{
-        background: rgba(22, 27, 34, 0.7) !important;
-        border: 1px solid rgba(96, 165, 250, 0.2) !important;
-        border-radius: 12px !important;
-        backdrop-filter: blur(10px);
+    .saas-card:hover {{
+        transform: translateY(-3px);
+        border-color: #8B5CF6;
+        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.18);
     }}
-    iframe[data-testid="stCustomComponentV1"],
-    iframe {{
-        border: none !important;
-        background: transparent !important;
-        box-shadow: none !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: hidden !important;
+    .saas-card-title {{
+        font-family: 'Outfit', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #F8FAFC;
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }}
-    /* --- Professional Floating Glassmorphic Query Input Box --- */
-    [data-testid="stBottom"] {{
-        background: transparent !important;
-        padding-bottom: 1.2rem !important;
-    }}
-    [data-testid="stChatInput"],
-    .stChatInputContainer {{
-        background: rgba(22, 27, 34, 0.88) !important;
-        border: 1px solid rgba(96, 165, 250, 0.35) !important;
-        border-radius: 28px !important;
-        padding: 6px 14px !important;
-        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45), 0 0 16px rgba(59, 130, 246, 0.15) !important;
-        backdrop-filter: blur(16px) !important;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
-    }}
-    [data-testid="stChatInput"]:focus-within,
-    .stChatInputContainer:focus-within {{
-        border-color: #60a5fa !important;
-        box-shadow: 0 10px 36px rgba(0, 0, 0, 0.55), 0 0 24px rgba(96, 165, 250, 0.35) !important;
-    }}
-    textarea[data-testid="stChatInputTextArea"] {{
-        color: #f3f4f6 !important;
-        font-family: 'Inter', system-ui, sans-serif !important;
-        font-size: 0.95rem !important;
-        font-weight: 450 !important;
-        line-height: 1.5 !important;
-    }}
-    textarea[data-testid="stChatInputTextArea"]::placeholder {{
-        color: #9ca3af !important;
-        font-weight: 400 !important;
+    .saas-card-desc {{
+        font-size: 0.85rem;
+        color: #94A3B8;
+        line-height: 1.5;
     }}
     button[data-testid="stChatInputSubmitButton"] {{
-        background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+        background: linear-gradient(135deg, #8B5CF6, #3B82F6) !important;
         color: #ffffff !important;
         border: none !important;
         border-radius: 50% !important;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4) !important;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4) !important;
         transition: transform 0.15s ease, background 0.15s ease !important;
     }}
     button[data-testid="stChatInputSubmitButton"]:hover {{
-        background: linear-gradient(135deg, #1d4ed8, #2563eb) !important;
+        background: linear-gradient(135deg, #7C3AED, #2563EB) !important;
         transform: scale(1.08) !important;
     }}
     .char-counter {{ font-size: 0.78rem; color: #888; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem; }}
@@ -991,20 +953,23 @@ def show_chat_page(category: str, page_title: str):
             raw_c = msg.get("content", "")
             clean_c = clean_ai_response(raw_c) if msg["role"] == "assistant" else raw_c
             with st.chat_message(msg["role"], avatar="👤" if msg["role"] == "user" else "⚖️"):
-                st.markdown(clean_c)
                 if msg["role"] == "assistant":
+                    st.markdown('<div style="font-size: 0.72rem; font-weight: 700; color: #8B5CF6; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.5rem;">ANSWER</div>', unsafe_allow_html=True)
+                    st.markdown(clean_c)
                     if not clean_c.startswith("Error:") and not clean_c.startswith("Could not reach"):
                         _response_actions_bar(clean_c, key=f"{category}_resp_{idx}")
                     if msg.get("sources"):
-                        with st.expander(f"📚 {len(msg['sources'])} Source Chunks Used", expanded=False):
+                        with st.expander(f"📚 Sources & References ({len(msg['sources'])} items)", expanded=False):
                             for si, src in enumerate(msg["sources"], 1):
                                 st.markdown(f"**{si}.** {src}")
                     if msg.get("suggestions"):
-                        st.markdown("**Suggested follow-up questions:**")
+                        st.markdown('<div style="font-size: 0.78rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.05em; margin: 1rem 0 0.4rem;">Suggested follow-up questions</div>', unsafe_allow_html=True)
                         for i, s in enumerate(msg["suggestions"]):
                             if st.button(s, key=f"{category}_sugg_{idx}_{i}", use_container_width=True):
                                 _do_ask(s)
                                 st.rerun()
+                else:
+                    st.markdown(clean_c)
 
         last_draft = st.session_state.get(draft_key, "")
         if last_draft:
@@ -1027,48 +992,125 @@ def show_chat_page(category: str, page_title: str):
 def show_home_page():
     st.markdown(
         """
-        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 3rem 1rem 1rem; text-align:center;">
-            <h1 style="font-family:'Outfit',sans-serif; font-size: 2.3rem; font-weight: 800; color: #ececec; margin-bottom: 0.6rem; letter-spacing:-0.02em;">
-                What legal or tax question can I help with today?
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 1rem 0 0.8rem; text-align:center;">
+            <div style="display:inline-flex; align-items:center; gap:8px; padding: 5px 16px; background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: #8B5CF6; margin-bottom: 1rem;">
+                ⚖️ AI LEGAL ASSISTANT — Grounded in Indian Legal Documents
+            </div>
+            <h1 style="font-family:'Outfit',sans-serif; font-size: 2.6rem; font-weight: 800; color: #F8FAFC; margin-bottom: 0.5rem; letter-spacing:-0.03em;">
+                How can LexAssist help you today?
             </h1>
-            <p style="font-size: 0.98rem; color: #aaa; max-width: 620px; margin: 0 auto 1.5rem; line-height: 1.6;">
-                AI-powered legal assistant grounded in Indian Civil, Criminal, Contract, and Tax statutes.
+            <p style="font-size: 1.05rem; color: #94A3B8; max-width: 640px; margin: 0 auto 1.6rem; line-height: 1.6;">
+                AI-powered legal assistance grounded in Indian legal documents.
             </p>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    c1, c2, c3 = st.columns(3)
-    chips = [
-        (c1, "🔍 Analyze contract risks", "Contract Risk Analyzer"),
-        (c2, "📄 Summarize legal document", "Document Explanation"),
-        (c3, "📊 Tax deduction rules", "Tax Assistant"),
+    # Primary Hero Input Form
+    _, mid_col, _ = st.columns([0.2, 5.6, 0.2])
+    with mid_col:
+        with st.form("home_hero_search_form"):
+            h_col1, h_col2 = st.columns([4.2, 1.2])
+            with h_col1:
+                home_q = st.text_input(
+                    "Search Indian Law",
+                    placeholder="Ask anything about Indian law (e.g. Section 420 IPC, tenant rights, GST filing)...",
+                    label_visibility="collapsed",
+                    key="home_hero_input"
+                )
+            with h_col2:
+                home_sub = st.form_submit_button("Ask LexAssist", type="primary", use_container_width=True)
+
+        if home_sub and home_q.strip():
+            st.session_state["legal_prefill"] = home_q.strip()
+            st.session_state.current_page = "Ask Legal Question"
+            st.rerun()
+
+    # Try Asking Chips
+    st.markdown('<div style="font-size: 0.78rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em; margin: 1.4rem 0 0.7rem; text-align: center;">Try asking</div>', unsafe_allow_html=True)
+    
+    sc1, sc2, sc3, sc4 = st.columns(4)
+    suggs = [
+        (sc1, "What are my rights as a tenant?", "Ask Legal Question", "legal_prefill"),
+        (sc2, "Explain Section 420 in simple terms", "Ask Legal Question", "legal_prefill"),
+        (sc3, "Can an employer terminate without notice?", "Ask Legal Question", "legal_prefill"),
+        (sc4, "What tax deductions can I claim?", "Tax Assistant", "tax_prefill"),
     ]
-    for col, label, target_page in chips:
+    for col, label, page_target, p_key in suggs:
         with col:
-            if st.button(label, key=f"hp_chip_{target_page}", use_container_width=True):
-                st.session_state.current_page = target_page
+            if st.button(label, key=f"try_ask_{label[:15]}", use_container_width=True):
+                st.session_state[p_key] = label
+                st.session_state.current_page = page_target
                 st.rerun()
 
-    c4, c5 = st.columns(2)
-    chips2 = [
-        (c4, "⚖️ Section 420 IPC penalty & bail rules", "Ask Legal Question"),
-        (c5, "🛡️ Legal rights of an arrested person under CrPC", "Ask Legal Question"),
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Explore LexAssist Feature Cards
+    st.markdown('<div style="font-size: 1.25rem; font-weight: 700; color: #F8FAFC; font-family: \'Outfit\', sans-serif; margin: 0.8rem 0 1rem;">Explore LexAssist</div>', unsafe_allow_html=True)
+    
+    fc1, fc2, fc3 = st.columns(3)
+    feat_cards_row1 = [
+        (fc1, "⚖️ Legal Assistant", "Ask questions about Indian law.", "Ask Legal Question"),
+        (fc2, "📄 Document Analysis", "Upload and understand legal documents.", "Document Explanation"),
+        (fc3, "⚠️ Contract Risk Analyzer", "Identify potentially risky contract clauses.", "Contract Risk Analyzer"),
     ]
-    for idx, (col, label, target_page) in enumerate(chips2):
+    for col, title, desc, page_target in feat_cards_row1:
         with col:
-            if st.button(label, key=f"hp_chip2_{idx}_{target_page}", use_container_width=True):
-                st.session_state["legal_prefill"] = label
-                st.session_state.current_page = target_page
+            st.markdown(
+                f'<div class="saas-card">'
+                f'<div class="saas-card-title">{title}</div>'
+                f'<div class="saas-card-desc">{desc}</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+            if st.button(f"Open {title.split()[-1]} →", key=f"fc_{page_target}", use_container_width=True):
+                st.session_state.current_page = page_target
                 st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    fc4, fc5, fc6 = st.columns(3)
+    feat_cards_row2 = [
+        (fc4, "📊 Compare Contracts", "Compare two legal documents side by side.", "Compare Contracts"),
+        (fc5, "🔍 Case Law Search", "Find relevant Indian judgments and case law.", "Case Law Search"),
+        (fc6, "💰 Tax Assistant", "Get assistance with Indian tax-related questions.", "Tax Assistant"),
+    ]
+    for col, title, desc, page_target in feat_cards_row2:
+        with col:
+            st.markdown(
+                f'<div class="saas-card">'
+                f'<div class="saas-card-title">{title}</div>'
+                f'<div class="saas-card-desc">{desc}</div>'
+                f'</div>',
+                unsafe_allow_html=True
+            )
+            if st.button(f"Open {title.split()[-1]} →", key=f"fc_{page_target}", use_container_width=True):
+                st.session_state.current_page = page_target
+                st.rerun()
+
+    # Trust Indicators & Legal Disclaimer Footer
+    st.markdown(
+        """
+        <div style="display:flex; justify-content:center; align-items:center; gap: 2rem; margin: 3rem 0 1.2rem; color: #94A3B8; font-size: 0.85rem; font-weight: 500;">
+            <span>🔒 Privacy-focused</span>
+            <span>•</span>
+            <span>⚡ RAG-powered</span>
+            <span>•</span>
+            <span>🇮🇳 Built for Indian Law</span>
+        </div>
+        <div style="background: rgba(20,28,41,0.6); border: 1px solid #263244; border-radius: 12px; padding: 0.9rem 1.2rem; text-align: center; font-size: 0.82rem; color: #94A3B8;">
+            LexAssist provides AI-generated legal information for educational and informational purposes and does not replace advice from a qualified legal professional.
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 def show_contract_risk_analyzer():
     st.markdown('<div class="main-header">⚠️ Contract Risk Analyzer</div>', unsafe_allow_html=True)
     st.markdown("""
-    <div style="background:rgba(30,42,58,0.6);border:1px solid rgba(96,165,250,0.25);border-radius:12px;padding:1.2rem;margin-bottom:1.2rem;backdrop-filter:blur(10px)">
-        <h4 style="margin:0 0 0.4rem 0;color:#60a5fa">🛡️ Automated Legal Clause Risk Audit</h4>
-        <p style="margin:0;font-size:0.88rem;color:#9ca3af">
+    <div style="background:rgba(20,28,41,0.8);border:1px solid #263244;border-radius:14px;padding:1.2rem;margin-bottom:1.2rem;">
+        <h4 style="margin:0 0 0.4rem 0;color:#8B5CF6">🛡️ Automated Legal Clause Risk Audit</h4>
+        <p style="margin:0;font-size:0.88rem;color:#94A3B8">
             Upload any agreement, NDA, vendor contract, or lease (PDF, TXT, or DOCX). Our RAG engine scans the document under the <b>Indian Contract Act 1872</b> to detect risky clauses, hidden liabilities, missing terms, and generate actionable risk mitigation recommendations.
         </p>
     </div>
@@ -1088,30 +1130,19 @@ def show_contract_risk_analyzer():
                         score = data.get("risk_score", 0)
                         color = "🟢 Low Risk" if score <= 3 else "🟡 Moderate Risk" if score <= 6 else "🔴 High Risk"
                         
+                        st.markdown(f"### Overall Risk Rating: **{color}** ({score}/10)")
+                        st.markdown(f"**Summary:** {data.get('summary', '')}")
+                        
                         st.markdown("---")
-                        c_score, c_summary = st.columns([1, 2])
-                        with c_score:
-                            st.markdown(f"### {color}")
-                            st.markdown(f"<h2 style='color:#60a5fa;margin:0'>Score: {score}/10</h2>", unsafe_allow_html=True)
-                            st.progress(score / 10)
-                        with c_summary:
-                            st.markdown("### 📋 Executive Audit Summary")
-                            st.write(data.get('summary', 'N/A'))
-
-                        risks = data.get("risks", [])
-                        if risks:
-                            st.markdown("---\n### 🚨 Identified Clause Risks")
-                            for r in risks:
-                                sev = r.get("severity", "Medium")
-                                badge = "🔴 High Severity" if sev == "High" else "🟡 Medium Severity" if sev == "Medium" else "🟢 Low Severity"
-                                with st.expander(f"{badge} — {r.get('clause', 'Clause')}", expanded=True):
-                                    st.markdown(f"**Risk Analysis:** {r.get('risk', '')}")
-
-                        missing = data.get("missing_clauses", [])
-                        if missing:
-                            st.markdown("---\n### 📋 Essential Missing Clauses")
-                            for m in missing:
-                                st.markdown(f"- 🔴 **Missing:** {m}")
+                        c1, c2 = st.columns(2)
+                        with c1:
+                            st.markdown("### ⚠️ Risky Clauses Found")
+                            for r in data.get("risky_clauses", []):
+                                st.warning(f"**Clause {r.get('clause', '')}:** {r.get('risk', '')}\n\n*Recommendation:* {r.get('recommendation', '')}")
+                        with c2:
+                            st.markdown("### ❌ Missing Critical Terms")
+                            for m in data.get("missing_clauses", []):
+                                st.error(f"**Missing:** {m}")
 
                         recs = data.get("recommendations", [])
                         if recs:
@@ -1550,41 +1581,55 @@ def show_main_app():
     with st.sidebar:
         st.markdown(
             """
-            <div style="padding: 0.6rem 0.2rem 0.4rem;">
-                <div style="font-size: 1.2rem; font-weight: 600; color: #ececec; font-family: 'Inter', sans-serif;">
-                    ⚖️ LexAssist
+            <div style="padding: 0.8rem 0.4rem 0.6rem;">
+                <div style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: #F8FAFC; letter-spacing: 0.04em; display: flex; align-items: center; gap: 8px;">
+                    ⚖️ <span style="background: linear-gradient(135deg, #8B5CF6, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">LEXASSIST</span>
+                </div>
+                <div style="font-size: 0.68rem; font-weight: 700; color: #94A3B8; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 3px;">
+                    AI LEGAL & TAX ASSISTANT
                 </div>
             </div>
+            <hr style="border: none; border-top: 1px solid #263244; margin: 0.5rem 0 0.8rem 0;" />
             """,
             unsafe_allow_html=True
         )
-        st.markdown("<hr style='border-color:#262626; margin:0.6rem 0'>", unsafe_allow_html=True)
 
-        NAV_ITEMS = [
-            ("🏠  Home",                   "Home"),
-            ("⚖️  Ask Legal Question",      "Ask Legal Question"),
-            ("💰  Tax Assistant",           "Tax Assistant"),
-            ("💬  General Assistant",       "General Assistant"),
-            ("📄  Document Explanation",    "Document Explanation"),
-            ("⚠️  Contract Risk Analyzer",  "Contract Risk Analyzer"),
-            ("📊  Compare Contracts",       "Compare Contracts"),
-            ("🔍  Case Law Search",         "Case Law Search"),
-            ("📝  Draft Document",          "Draft Document"),
-            ("📌  Section Lookup",          "Section Lookup"),
-            ("🗓️  Legal Timeline",         "Legal Timeline"),
-            ("⚖️  Penalty Calculator",     "Penalty Calculator"),
-            ("📖  Legal Glossary",          "Legal Glossary"),
-            ("⭐  Bookmarks",               "Bookmarks"),
-            ("📜  Query History",           "Query History"),
-            ("📈  My Stats",                "My Stats"),
-            ("👤  Profile",                 "Profile"),
-            ("ℹ️  About",                   "About"),
+        NAV_SECTIONS = [
+            ("ASSISTANTS", [
+                ("🏠  Dashboard",               "Home"),
+                ("⚖️  Legal Assistant",         "Ask Legal Question"),
+                ("💰  Tax Assistant",           "Tax Assistant"),
+                ("💬  General Assistant",       "General Assistant"),
+            ]),
+            ("DOCUMENTS", [
+                ("📄  Document Analysis",       "Document Explanation"),
+                ("⚠️  Contract Risk Analyzer",  "Contract Risk Analyzer"),
+                ("📊  Compare Contracts",       "Compare Contracts"),
+                ("📝  Draft Document",          "Draft Document"),
+            ]),
+            ("RESEARCH", [
+                ("🔍  Case Law Search",         "Case Law Search"),
+                ("📌  Section Lookup",          "Section Lookup"),
+                ("🗓️  Legal Timeline",         "Legal Timeline"),
+                ("⚖️  Penalty Calculator",     "Penalty Calculator"),
+                ("📖  Legal Glossary",          "Legal Glossary"),
+            ]),
+            ("ACCOUNT & TOOLS", [
+                ("⭐  Bookmarks",               "Bookmarks"),
+                ("📜  Query History",           "Query History"),
+                ("📈  My Stats",                "My Stats"),
+                ("👤  Profile",                 "Profile"),
+                ("ℹ️  About",                   "About"),
+            ])
         ]
-        for label, target in NAV_ITEMS:
-            if st.button(label, key=f"nav_{target}", use_container_width=True,
-                         type="primary" if page == target else "secondary"):
-                st.session_state.current_page = target
-                st.rerun()
+
+        for sec_title, items in NAV_SECTIONS:
+            st.markdown(f'<div class="sidebar-sec-title">{sec_title}</div>', unsafe_allow_html=True)
+            for label, target in items:
+                if st.button(label, key=f"nav_{target}", use_container_width=True,
+                             type="primary" if page == target else "secondary"):
+                    st.session_state.current_page = target
+                    st.rerun()
 
         st.markdown("<hr style='border-color:#262626; margin:0.6rem 0'>", unsafe_allow_html=True)
 
