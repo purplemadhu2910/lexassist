@@ -519,8 +519,6 @@ def show_login_page():
 
     st.markdown(f"""
     <style>
-    [data-testid="stSidebar"] {{ display: none !important; }}
-    [data-testid="collapsedControl"] {{ display: none !important; }}
     .block-container {{
         padding-top: 1.5rem !important;
         padding-bottom: 1rem !important;
