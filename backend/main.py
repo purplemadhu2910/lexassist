@@ -166,8 +166,6 @@ class AuthRequest(BaseModel):
     def validate_password(cls, v):
         if not v or len(v) < 6 or len(v) > 128:
             raise ValueError("Password must be 6–128 characters")
-        if not any(c.isdigit() or not c.isalpha() for c in v):
-            raise ValueError("Password must contain at least one number or special character")
         return v
 
 class BookmarkRequest(BaseModel):

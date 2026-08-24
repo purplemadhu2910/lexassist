@@ -655,7 +655,18 @@ def show_login_page():
                                         st.session_state.auth_alert = ("success", "Account created! Head over to Sign In to get started.")
                                         st.rerun()
                                 else:
-                                    st.session_state.auth_alert = ("error", "That username is already taken. Try a different one.")
+                                    err_detail = "That username is already taken. Try a different one."
+                                    try:
+                                        res_json = response.json()
+                                        if "detail" in res_json:
+                                            d = res_json["detail"]
+                                            if isinstance(d, list) and len(d) > 0 and "msg" in d[0]:
+                                                err_detail = d[0]["msg"].replace("Value error, ", "")
+                                            elif isinstance(d, str):
+                                                err_detail = d
+                                    except Exception:
+                                        pass
+                                    st.session_state.auth_alert = ("error", err_detail)
                                     st.rerun()
                             except requests.exceptions.ConnectionError:
                                 st.session_state.auth_alert = ("error", "Could not reach the server. Please try again shortly.")
