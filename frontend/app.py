@@ -1575,6 +1575,26 @@ def show_legal_glossary():
     """)
 
 def show_main_app():
+    st.markdown(
+        """
+        <style>
+        [data-testid="stSidebar"], section[data-testid="stSidebar"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            transform: none !important;
+            width: 18rem !important;
+        }
+        [data-testid="collapsedControl"], button[data-testid="stSidebarCollapseButton"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            z-index: 999999 !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
     page = st.session_state.current_page
     dark = st.session_state.dark_mode
 
