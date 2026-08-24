@@ -159,10 +159,14 @@ def _build_theme_css(dark: bool) -> str:
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
-    header[data-testid="stHeader"]   {{ display: none !important; }}
-    [data-testid="collapsedControl"] {{
+    header[data-testid="stHeader"] {{ display: none !important; }}
+    [data-testid="collapsedControl"],
+    [data-testid="stSidebarCollapseButton"],
+    button[data-testid="stSidebarCollapseButton"],
+    div[data-testid="stSidebarCollapseButton"] {{
         display: flex !important;
         visibility: visible !important;
+        opacity: 1 !important;
         z-index: 100000 !important;
     }}
 
@@ -193,14 +197,15 @@ def _build_theme_css(dark: bool) -> str:
     }}
 
     /* Sidebar Navigation Styling */
-    [data-testid="stSidebar"] {{
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"],
+    div[data-testid="stSidebar"],
+    [data-testid="stSidebarContent"],
+    [data-testid="stSidebarUserContent"],
+    section[data-testid="stSidebar"] > div {{
         display: flex !important;
         visibility: visible !important;
         opacity: 1 !important;
-    }}
-    [data-testid="stSidebar"],
-    [data-testid="stSidebarContent"],
-    section[data-testid="stSidebar"] > div {{
         background-color: {sb_bg} !important;
         border-right: 1px solid {sb_bdr} !important;
     }}
@@ -528,8 +533,6 @@ def show_login_page():
 
     st.markdown(f"""
     <style>
-    [data-testid="stSidebar"] {{ display: none !important; }}
-    [data-testid="collapsedControl"] {{ display: none !important; }}
     .block-container {{
         padding-top: 1.5rem !important;
         padding-bottom: 1rem !important;
