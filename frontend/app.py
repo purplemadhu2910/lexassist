@@ -159,8 +159,22 @@ def _build_theme_css(dark: bool) -> str:
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
-    header[data-testid="stHeader"]   {{ display: none !important; }}
-    [data-testid="collapsedControl"] {{ display: none !important; }}
+    /* Ensure Streamlit header background is clean while keeping sidebar collapse/expand control accessible */
+    header[data-testid="stHeader"] {{
+        background: transparent !important;
+        z-index: 99999 !important;
+    }}
+    [data-testid="collapsedControl"] {{
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        z-index: 999999 !important;
+        color: {text} !important;
+    }}
+    [data-testid="stToolbar"],
+    [data-testid="stDecoration"] {{
+        display: none !important;
+    }}
 
     html, body, [data-testid="stAppViewContainer"], .block-container, p, span, li, td, th, label, input, textarea, select {{
         font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
