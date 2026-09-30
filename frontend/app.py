@@ -159,18 +159,11 @@ def _build_theme_css(dark: bool) -> str:
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
-    /* Ensure Streamlit header background is clean while keeping sidebar collapse/expand control accessible */
-    header[data-testid="stHeader"] {{
-        background: transparent !important;
-        z-index: 99999 !important;
-    }}
-    [data-testid="collapsedControl"] {{
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        z-index: 999999 !important;
-        color: {text} !important;
-    }}
+    /* Hide Streamlit Native Sidebar & Top Header bar */
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"],
+    [data-testid="collapsedControl"],
+    header[data-testid="stHeader"],
     [data-testid="stToolbar"],
     [data-testid="stDecoration"] {{
         display: none !important;
@@ -197,17 +190,64 @@ def _build_theme_css(dark: bool) -> str:
     }}
 
     .block-container {{
-        max-width: 1100px !important;
-        padding-top: 2rem !important;
+        max-width: 1240px !important;
+        padding-top: 1rem !important;
         padding-bottom: 3rem !important;
     }}
 
-    /* Sidebar Navigation Styling */
-    [data-testid="stSidebar"],
-    [data-testid="stSidebarContent"],
-    section[data-testid="stSidebar"] > div {{
-        background-color: {sb_bg} !important;
-        border-right: 1px solid {sb_bdr} !important;
+    /* Single Horizontal Top SaaS Navbar Styling */
+    .saas-navbar-container {{
+        background-color: {bg2} !important;
+        border: 1px solid {border} !important;
+        border-radius: 12px !important;
+        padding: 4px 12px !important;
+        margin-bottom: 1.2rem !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
+        position: sticky;
+        top: 0.25rem;
+        z-index: 9999;
+    }}
+
+    .saas-nav-item .stButton > button {{
+        background: transparent !important;
+        border: 1px solid transparent !important;
+        color: {text2} !important;
+        font-size: 0.82rem !important;
+        font-weight: 500 !important;
+        padding: 4px 8px !important;
+        border-radius: 8px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+        transition: all 0.15s ease !important;
+    }}
+    .saas-nav-item .stButton > button:hover {{
+        background: {sb_hover} !important;
+        color: {text} !important;
+        transform: none !important;
+        border-color: transparent !important;
+    }}
+    .saas-nav-item-active .stButton > button {{
+        background: {sb_active} !important;
+        color: #A78BFA !important;
+        font-weight: 600 !important;
+        border: 1px solid rgba(139, 92, 246, 0.3) !important;
+        border-radius: 8px !important;
+        height: 34px !important;
+        min-height: 34px !important;
+    }}
+
+    .saas-user-badge {{
+        font-size: 0.82rem;
+        color: {text2};
+        padding: 4px 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: right;
+        line-height: 34px;
     }}
 
     .sidebar-sec-title {{
@@ -1580,75 +1620,100 @@ def show_legal_glossary():
 def show_main_app():
     page = st.session_state.current_page
     dark = st.session_state.dark_mode
+    username = st.session_state.get("username", "")
 
-    with st.sidebar:
+    # Single-Row Horizontal SaaS Navbar Wrapper
+    st.markdown('<div class="saas-navbar-container">', unsafe_allow_html=True)
+    
+    # Single horizontal block with 13 columns (Logo | 8 Nav Links | More Dropdown | User | Theme | Logout)
+    c_brand, c_h, c_leg, c_tax, c_gen, c_doc, c_risk, c_comp, c_draft, c_more, c_user, c_th, c_lg = st.columns(
+        [1.8, 0.8, 0.8, 0.8, 0.9, 0.9, 0.8, 0.9, 0.9, 1.4, 1.2, 0.7, 0.7]
+    )
+
+    with c_brand:
         st.markdown(
             """
-            <div style="padding: 0.8rem 0.4rem 0.6rem;">
-                <div style="font-family: 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 800; color: #F8FAFC; letter-spacing: 0.04em; display: flex; align-items: center; gap: 8px;">
-                    ⚖️ <span style="background: linear-gradient(135deg, #8B5CF6, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">LEXASSIST</span>
-                </div>
-                <div style="font-size: 0.68rem; font-weight: 700; color: #94A3B8; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 3px;">
-                    AI LEGAL & TAX ASSISTANT
-                </div>
+            <div style="display: flex; align-items: center; gap: 6px; height: 34px;">
+                <span style="font-size: 1.2rem;">⚖️</span>
+                <span style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800; background: linear-gradient(135deg, #8B5CF6, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.03em;">LEXASSIST</span>
             </div>
-            <hr style="border: none; border-top: 1px solid #263244; margin: 0.5rem 0 0.8rem 0;" />
             """,
             unsafe_allow_html=True
         )
 
-        NAV_SECTIONS = [
-            ("ASSISTANTS", [
-                ("🏠  Dashboard",               "Home"),
-                ("⚖️  Legal Assistant",         "Ask Legal Question"),
-                ("💰  Tax Assistant",           "Tax Assistant"),
-                ("💬  General Assistant",       "General Assistant"),
-            ]),
-            ("DOCUMENTS", [
-                ("📄  Document Analysis",       "Document Explanation"),
-                ("⚠️  Contract Risk Analyzer",  "Contract Risk Analyzer"),
-                ("📊  Compare Contracts",       "Compare Contracts"),
-                ("📝  Draft Document",          "Draft Document"),
-            ]),
-            ("RESEARCH", [
-                ("🔍  Case Law Search",         "Case Law Search"),
-                ("📌  Section Lookup",          "Section Lookup"),
-                ("🗓️  Legal Timeline",         "Legal Timeline"),
-                ("⚖️  Penalty Calculator",     "Penalty Calculator"),
-                ("📖  Legal Glossary",          "Legal Glossary"),
-            ]),
-            ("ACCOUNT & TOOLS", [
-                ("⭐  Bookmarks",               "Bookmarks"),
-                ("📜  Query History",           "Query History"),
-                ("📈  My Stats",                "My Stats"),
-                ("👤  Profile",                 "Profile"),
-                ("ℹ️  About",                   "About"),
-            ])
+    # Primary Nav Link Items (Center)
+    nav_items = [
+        (c_h,    "🏠 Home",      "Home"),
+        (c_leg,  "⚖️ Legal",     "Ask Legal Question"),
+        (c_tax,  "💰 Tax",       "Tax Assistant"),
+        (c_gen,  "💬 General",   "General Assistant"),
+        (c_doc,  "📄 Docs",      "Document Explanation"),
+        (c_risk, "⚠️ Risk",      "Contract Risk Analyzer"),
+        (c_comp, "📊 Compare",   "Compare Contracts"),
+        (c_draft,"📝 Draft",     "Draft Document"),
+    ]
+
+    for col, label, target in nav_items:
+        with col:
+            is_active = (page == target)
+            wrapper_cls = "saas-nav-item-active" if is_active else "saas-nav-item"
+            st.markdown(f'<div class="{wrapper_cls}">', unsafe_allow_html=True)
+            if st.button(label, key=f"snav_{target}", use_container_width=True):
+                st.session_state.current_page = target
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    with c_more:
+        ALL_DESTINATIONS = [
+            ("🏠 Home", "Home"),
+            ("⚖️ Legal Assistant", "Ask Legal Question"),
+            ("💰 Tax Assistant", "Tax Assistant"),
+            ("💬 General Assistant", "General Assistant"),
+            ("📄 Document Analysis", "Document Explanation"),
+            ("⚠️ Contract Risk", "Contract Risk Analyzer"),
+            ("📊 Compare Contracts", "Compare Contracts"),
+            ("📝 Draft Document", "Draft Document"),
+            ("🔍 Case Law Search", "Case Law Search"),
+            ("📌 Section Lookup", "Section Lookup"),
+            ("🗓️ Legal Timeline", "Legal Timeline"),
+            ("⚖️ Penalty Calculator", "Penalty Calculator"),
+            ("📖 Legal Glossary", "Legal Glossary"),
+            ("⭐ Bookmarks", "Bookmarks"),
+            ("📜 Query History", "Query History"),
+            ("📈 My Stats", "My Stats"),
+            ("📊 Admin Analytics", "Admin Analytics"),
+            ("👤 Profile", "Profile"),
+            ("ℹ️ About", "About"),
         ]
-
-        for sec_title, items in NAV_SECTIONS:
-            st.markdown(f'<div class="sidebar-sec-title">{sec_title}</div>', unsafe_allow_html=True)
-            for label, target in items:
-                if st.button(label, key=f"nav_{target}", use_container_width=True,
-                             type="primary" if page == target else "secondary"):
-                    st.session_state.current_page = target
-                    st.rerun()
-
-        st.markdown("<hr style='border-color:#262626; margin:0.6rem 0'>", unsafe_allow_html=True)
-
-        username = st.session_state.get("username", "")
-        if username:
-            st.markdown(
-                f"<div style='color:#b4b4b4; font-size:0.8rem; padding:0 4px 6px'>👤 {username}</div>",
-                unsafe_allow_html=True
-            )
-
-        if st.button("🌞  Light mode" if dark else "🌙  Dark mode", key="nav_theme", use_container_width=True):
-            st.session_state.dark_mode = not dark
+        labels = [item[0] for item in ALL_DESTINATIONS]
+        targets = [item[1] for item in ALL_DESTINATIONS]
+        curr_idx = targets.index(page) if page in targets else 0
+        sel_label = st.selectbox(
+            "More Tools",
+            labels,
+            index=curr_idx,
+            key="saas_nav_more",
+            label_visibility="collapsed"
+        )
+        sel_target = targets[labels.index(sel_label)]
+        if sel_target != page:
+            st.session_state.current_page = sel_target
             st.rerun()
 
-        st.markdown('<div class="la-logout">', unsafe_allow_html=True)
-        if st.button("🚪  Logout", key="nav_logout", use_container_width=True):
+    with c_user:
+        if username:
+            st.markdown(f'<div class="saas-user-badge">👤 <b>{username}</b></div>', unsafe_allow_html=True)
+
+    with c_th:
+        st.markdown('<div class="saas-nav-item">', unsafe_allow_html=True)
+        if st.button("🌞" if dark else "🌙", key="snav_theme", use_container_width=True):
+            st.session_state.dark_mode = not dark
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    with c_lg:
+        st.markdown('<div class="saas-nav-item">', unsafe_allow_html=True)
+        if st.button("🚪 Logout", key="snav_logout", use_container_width=True):
             try:
                 requests.post(f"{API_URL}/logout", headers=auth_headers(), timeout=TIMEOUT_SHORT)
             except Exception:
@@ -1663,6 +1728,8 @@ def show_main_app():
                     st.session_state[k] = None
             st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # Dispatch views directly via page state
     if page == "Home":
