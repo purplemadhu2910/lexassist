@@ -159,95 +159,86 @@ def _build_theme_css(dark: bool) -> str:
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
-    /* Hide Streamlit Native Sidebar & Top Header bar */
-    [data-testid="stSidebar"],
-    section[data-testid="stSidebar"],
-    [data-testid="collapsedControl"],
+    /* Show Streamlit Sidebar, Hide Default Toolbar & Header */
     header[data-testid="stHeader"],
     [data-testid="stToolbar"],
     [data-testid="stDecoration"] {{
         display: none !important;
     }}
 
-    html, body, [data-testid="stAppViewContainer"], .block-container, p, span, li, td, th, label, input, textarea, select {{
-        font-family: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    /* Left Sidebar Panel Styling */
+    [data-testid="stSidebar"],
+    section[data-testid="stSidebar"] {{
+        background-color: {sb_bg} !important;
+        border-right: 1px solid {sb_bdr} !important;
     }}
 
-    h1, h2, h3, h4, h5, h6, .main-header, .la-brand-name, .la-feat-title {{
-        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif !important;
-        letter-spacing: -0.02em;
-    }}
-
-    html, body {{ background-color: {bg} !important; color: {text} !important; }}
-    .stApp, .stApp > div,
-    [data-testid="stAppViewContainer"],
-    [data-testid="stToolbar"],
-    [data-testid="stBottom"],
-    [data-testid="stDecoration"],
-    .block-container, .main {{
-        background-color: {bg} !important;
-        color: {text} !important;
-    }}
-
-    .block-container {{
-        max-width: 1240px !important;
-        padding-top: 1rem !important;
-        padding-bottom: 3rem !important;
-    }}
-
-    /* Single Horizontal Top SaaS Navbar Styling */
-    .saas-navbar-container {{
-        background-color: {bg2} !important;
-        border: 1px solid {border} !important;
-        border-radius: 12px !important;
-        padding: 4px 12px !important;
-        margin-bottom: 1.2rem !important;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35) !important;
-        position: sticky;
-        top: 0.25rem;
-        z-index: 9999;
-    }}
-
-    .saas-nav-item .stButton > button {{
+    /* Sidebar Navigation Button Styles */
+    [data-testid="stSidebar"] .stButton > button {{
+        width: 100% !important;
+        text-align: left !important;
         background: transparent !important;
+        color: {sb_text} !important;
         border: 1px solid transparent !important;
-        color: {text2} !important;
-        font-size: 0.82rem !important;
-        font-weight: 500 !important;
-        padding: 4px 8px !important;
         border-radius: 8px !important;
-        height: 34px !important;
-        min-height: 34px !important;
-        box-shadow: none !important;
-        margin: 0 !important;
-        white-space: nowrap !important;
+        padding: 8px 12px !important;
+        font-size: 0.88rem !important;
+        font-weight: 500 !important;
         transition: all 0.15s ease !important;
+        margin-bottom: 3px !important;
+        justify-content: flex-start !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
     }}
-    .saas-nav-item .stButton > button:hover {{
+    [data-testid="stSidebar"] .stButton > button:hover {{
         background: {sb_hover} !important;
         color: {text} !important;
-        transform: none !important;
-        border-color: transparent !important;
+        border-color: rgba(139, 92, 246, 0.2) !important;
+        transform: translateX(2px) !important;
     }}
-    .saas-nav-item-active .stButton > button {{
+    [data-testid="stSidebar"] .stButton > button[kind="primary"] {{
         background: {sb_active} !important;
-        color: #A78BFA !important;
+        color: #F8FAFC !important;
         font-weight: 600 !important;
-        border: 1px solid rgba(139, 92, 246, 0.3) !important;
-        border-radius: 8px !important;
-        height: 34px !important;
-        min-height: 34px !important;
+        border-left: 3.5px solid #8B5CF6 !important;
+        border-radius: 6px !important;
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15) !important;
+    }}
+
+    .sidebar-sec-title {{
+        font-size: 0.68rem !important;
+        font-weight: 700 !important;
+        color: #64748B !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+        margin: 1.2rem 0 0.4rem 0.4rem !important;
     }}
 
     .saas-user-badge {{
-        font-size: 0.82rem;
-        color: {text2};
-        padding: 4px 6px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        text-align: right;
-        line-height: 34px;
+        font-size: 0.82rem !important;
+        font-weight: 600 !important;
+        color: {text2} !important;
+        background: {bg3} !important;
+        border: 1px solid {border} !important;
+        padding: 6px 12px !important;
+        border-radius: 8px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        text-align: center !important;
+        height: 38px !important;
+        line-height: 24px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100% !important;
+    }}
+        line-height: 34px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin: 0 !important;
     }}
 
     .sidebar-sec-title {{
@@ -1622,114 +1613,84 @@ def show_main_app():
     dark = st.session_state.dark_mode
     username = st.session_state.get("username", "")
 
-    # Single-Row Horizontal SaaS Navbar Wrapper
-    st.markdown('<div class="saas-navbar-container">', unsafe_allow_html=True)
-    
-    # Single horizontal block with 13 columns (Logo | 8 Nav Links | More Dropdown | User | Theme | Logout)
-    c_brand, c_h, c_leg, c_tax, c_gen, c_doc, c_risk, c_comp, c_draft, c_more, c_user, c_th, c_lg = st.columns(
-        [1.8, 0.8, 0.8, 0.8, 0.9, 0.9, 0.8, 0.9, 0.9, 1.4, 1.2, 0.7, 0.7]
-    )
-
-    with c_brand:
+    with st.sidebar:
+        # Brand Logo Header
         st.markdown(
             """
-            <div style="display: flex; align-items: center; gap: 6px; height: 34px;">
-                <span style="font-size: 1.2rem;">⚖️</span>
-                <span style="font-family: 'Outfit', sans-serif; font-size: 1.15rem; font-weight: 800; background: linear-gradient(135deg, #8B5CF6, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.03em;">LEXASSIST</span>
+            <div style="display:flex; align-items:center; gap:10px; padding: 0.4rem 0.2rem 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 0.8rem;">
+                <span style="font-size: 1.6rem;">⚖️</span>
+                <div>
+                    <div style="font-family:'Outfit',sans-serif; font-size: 1.25rem; font-weight: 800; background: linear-gradient(135deg, #8B5CF6, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.03em;">LEXASSIST</div>
+                    <div style="font-size: 0.72rem; color: #94A3B8;">AI Legal & Tax Assistant</div>
+                </div>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-    # Primary Nav Link Items (Center)
-    nav_items = [
-        (c_h,    "🏠 Home",      "Home"),
-        (c_leg,  "⚖️ Legal",     "Ask Legal Question"),
-        (c_tax,  "💰 Tax",       "Tax Assistant"),
-        (c_gen,  "💬 General",   "General Assistant"),
-        (c_doc,  "📄 Docs",      "Document Explanation"),
-        (c_risk, "⚠️ Risk",      "Contract Risk Analyzer"),
-        (c_comp, "📊 Compare",   "Compare Contracts"),
-        (c_draft,"📝 Draft",     "Draft Document"),
-    ]
+        if username:
+            st.markdown(f'<div class="saas-user-badge" style="margin-bottom: 0.8rem;">👤 <b>{username}</b></div>', unsafe_allow_html=True)
 
-    for col, label, target in nav_items:
-        with col:
+        def _nav_button(label: str, target: str, icon: str):
             is_active = (page == target)
-            wrapper_cls = "saas-nav-item-active" if is_active else "saas-nav-item"
-            st.markdown(f'<div class="{wrapper_cls}">', unsafe_allow_html=True)
-            if st.button(label, key=f"snav_{target}", use_container_width=True):
+            btn_type = "primary" if is_active else "secondary"
+            if st.button(f"{icon} {label}", key=f"snav_{target}", type=btn_type, use_container_width=True):
                 st.session_state.current_page = target
                 st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
 
-    with c_more:
-        ALL_DESTINATIONS = [
-            ("🏠 Home", "Home"),
-            ("⚖️ Legal Assistant", "Ask Legal Question"),
-            ("💰 Tax Assistant", "Tax Assistant"),
-            ("💬 General Assistant", "General Assistant"),
-            ("📄 Document Analysis", "Document Explanation"),
-            ("⚠️ Contract Risk", "Contract Risk Analyzer"),
-            ("📊 Compare Contracts", "Compare Contracts"),
-            ("📝 Draft Document", "Draft Document"),
-            ("🔍 Case Law Search", "Case Law Search"),
-            ("📌 Section Lookup", "Section Lookup"),
-            ("🗓️ Legal Timeline", "Legal Timeline"),
-            ("⚖️ Penalty Calculator", "Penalty Calculator"),
-            ("📖 Legal Glossary", "Legal Glossary"),
-            ("⭐ Bookmarks", "Bookmarks"),
-            ("📜 Query History", "Query History"),
-            ("📈 My Stats", "My Stats"),
-            ("📊 Admin Analytics", "Admin Analytics"),
-            ("👤 Profile", "Profile"),
-            ("ℹ️ About", "About"),
-        ]
-        labels = [item[0] for item in ALL_DESTINATIONS]
-        targets = [item[1] for item in ALL_DESTINATIONS]
-        curr_idx = targets.index(page) if page in targets else 0
-        sel_label = st.selectbox(
-            "More Tools",
-            labels,
-            index=curr_idx,
-            key="saas_nav_more",
-            label_visibility="collapsed"
-        )
-        sel_target = targets[labels.index(sel_label)]
-        if sel_target != page:
-            st.session_state.current_page = sel_target
-            st.rerun()
+        # Section 1: MAIN ASSISTANTS
+        st.markdown('<div class="sidebar-sec-title">Core Assistants</div>', unsafe_allow_html=True)
+        _nav_button("Home", "Home", "🏠")
+        _nav_button("Legal Question", "Ask Legal Question", "⚖️")
+        _nav_button("Tax Assistant", "Tax Assistant", "💰")
+        _nav_button("General Assistant", "General Assistant", "💬")
 
-    with c_user:
-        if username:
-            st.markdown(f'<div class="saas-user-badge">👤 <b>{username}</b></div>', unsafe_allow_html=True)
+        # Section 2: DOCUMENT AI
+        st.markdown('<div class="sidebar-sec-title">Document AI</div>', unsafe_allow_html=True)
+        _nav_button("Document Analysis", "Document Explanation", "📄")
+        _nav_button("Contract Risk Analyzer", "Contract Risk Analyzer", "⚠️")
+        _nav_button("Compare Contracts", "Compare Contracts", "📊")
+        _nav_button("Draft Document", "Draft Document", "📝")
 
-    with c_th:
-        st.markdown('<div class="saas-nav-item">', unsafe_allow_html=True)
-        if st.button("🌞" if dark else "🌙", key="snav_theme", use_container_width=True):
-            st.session_state.dark_mode = not dark
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Section 3: LEGAL TOOLS
+        st.markdown('<div class="sidebar-sec-title">Legal Tools</div>', unsafe_allow_html=True)
+        _nav_button("Case Law Search", "Case Law Search", "🔍")
+        _nav_button("Section Lookup", "Section Lookup", "📌")
+        _nav_button("Legal Timeline", "Legal Timeline", "🗓️")
+        _nav_button("Penalty Calculator", "Penalty Calculator", "⚖️")
+        _nav_button("Legal Glossary", "Legal Glossary", "📖")
 
-    with c_lg:
-        st.markdown('<div class="saas-nav-item">', unsafe_allow_html=True)
-        if st.button("🚪 Logout", key="snav_logout", use_container_width=True):
-            try:
-                requests.post(f"{API_URL}/logout", headers=auth_headers(), timeout=TIMEOUT_SHORT)
-            except Exception:
-                pass
-            for k in ["logged_in", "user_id", "username", "token", "query_history",
-                      "legal_messages", "tax_messages", "general_messages"]:
-                if k == "logged_in":
-                    st.session_state[k] = False
-                elif k in ("query_history", "legal_messages", "tax_messages", "general_messages"):
-                    st.session_state[k] = []
-                else:
-                    st.session_state[k] = None
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Section 4: HISTORY & ACCOUNT
+        st.markdown('<div class="sidebar-sec-title">History & Account</div>', unsafe_allow_html=True)
+        _nav_button("Query History", "Query History", "📜")
+        _nav_button("Bookmarks", "Bookmarks", "⭐")
+        _nav_button("My Stats", "My Stats", "📈")
+        _nav_button("Admin Analytics", "Admin Analytics", "📊")
+        _nav_button("Profile", "Profile", "👤")
+        _nav_button("About", "About", "ℹ️")
 
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('<div style="margin-top: 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.8rem;"></div>', unsafe_allow_html=True)
+
+        col_th, col_lg = st.columns(2)
+        with col_th:
+            if st.button("🌞 Light" if dark else "🌙 Dark", key="snav_theme", use_container_width=True):
+                st.session_state.dark_mode = not dark
+                st.rerun()
+        with col_lg:
+            if st.button("🚪 Logout", key="snav_logout", use_container_width=True):
+                try:
+                    requests.post(f"{API_URL}/logout", headers=auth_headers(), timeout=TIMEOUT_SHORT)
+                except Exception:
+                    pass
+                for k in ["logged_in", "user_id", "username", "token", "query_history",
+                          "legal_messages", "tax_messages", "general_messages"]:
+                    if k == "logged_in":
+                        st.session_state[k] = False
+                    elif k in ("query_history", "legal_messages", "tax_messages", "general_messages"):
+                        st.session_state[k] = []
+                    else:
+                        st.session_state[k] = None
+                st.rerun()
 
     # Dispatch views directly via page state
     if page == "Home":
