@@ -1047,6 +1047,9 @@ def show_home_page():
     st.markdown(
         """
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 1rem 0 0.8rem; text-align:center;">
+            <div style="font-family:'Outfit',sans-serif; font-size: 2.4rem; font-weight: 800; background: linear-gradient(135deg, #8B5CF6, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.6rem; letter-spacing:-0.02em;">
+                LexAssist
+            </div>
             <div style="display:inline-flex; align-items:center; gap:8px; padding: 5px 16px; background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: #8B5CF6; margin-bottom: 1rem;">
                 ⚖️ AI LEGAL ASSISTANT — Grounded in Indian Legal Documents
             </div>
