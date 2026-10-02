@@ -21,7 +21,521 @@ PAGE_SIZE = 10
 MAX_QUERY_CHARS = 2000
 TIMEOUT_SHORT = 10
 TIMEOUT_MEDIUM = 30
-TIMEOUT_LONG = 60
+TIMEOUT_LONG = 120
+
+# --- Multilingual Support Constants & Translation Dictionary ---
+LANGUAGE_OPTIONS = {
+    "English": "English",
+    "हिन्दी": "Hindi",
+    "ગુજરાતી": "Gujarati",
+    "મરાઠી": "Marathi",
+    "বাংলা": "Bengali",
+    "தமிழ்": "Tamil",
+    "తెలుగు": "Telugu",
+    "ಕನ್ನಡ": "Kannada",
+    "മലയാളം": "Malayalam",
+    "ਪੰਜਾਬੀ": "Punjabi"
+}
+
+TRANSLATIONS = {
+    "English": {
+        "nav_home": "Home", "nav_legal": "Legal Question", "nav_tax": "Tax Assistant",
+        "nav_general": "General Assistant", "nav_doc_exp": "Document Analysis",
+        "nav_risk": "Risk Analyzer", "nav_compare": "Compare Contracts",
+        "nav_draft": "Draft Document", "nav_case_law": "Case Law Search",
+        "nav_section": "Section Lookup", "nav_timeline": "Legal Timeline",
+        "nav_penalty": "Penalty Calculator", "nav_glossary": "Legal Glossary",
+        "nav_history": "Query History", "nav_bookmarks": "Bookmarks",
+        "nav_stats": "My Stats", "nav_admin": "Admin Analytics", "nav_profile": "Profile",
+        "nav_about": "About", "language": "Language",
+        "hero_title": "How can LexAssist help you today?",
+        "hero_subtitle": "AI-powered legal assistance grounded in Indian legal documents.",
+        "badge_legal_assistant": "⚖️ AI LEGAL ASSISTANT — Grounded in Indian Legal Documents",
+        "try_asking": "TRY ASKING",
+        "explore_lexassist": "Explore LexAssist",
+        "sugg_1": "What are my rights as a tenant?",
+        "sugg_2": "Explain Section 420 in simple terms",
+        "sugg_3": "Can an employer terminate without notice?",
+        "sugg_4": "What tax deductions can I claim?",
+        "card_legal_title": "⚖️ Legal Assistant",
+        "card_legal_desc": "Ask questions about Indian law.",
+        "card_doc_title": "📄 Document Analysis",
+        "card_doc_desc": "Upload and understand legal documents.",
+        "card_risk_title": "⚠️ Contract Risk Analyzer",
+        "card_risk_desc": "Identify potentially risky contract clauses.",
+        "card_compare_title": "📊 Compare Contracts",
+        "card_compare_desc": "Compare two legal documents side by side.",
+        "card_caselaw_title": "🔍 Case Law Search",
+        "card_caselaw_desc": "Find relevant Indian judgments and case law.",
+        "card_tax_title": "💰 Tax Assistant",
+        "card_tax_desc": "Get assistance with Indian tax-related questions.",
+        "open_feature": "Open →",
+        "trust_privacy": "🔒 Privacy-focused",
+        "trust_rag": "⚡ RAG-powered",
+        "trust_indian_law": "🇮🇳 Built for Indian Law",
+        "disclaimer_text": "LexAssist provides AI-generated legal information for educational and informational purposes and does not replace advice from a qualified legal professional.",
+        "ask_question": "Ask a Question",
+        "ask_legal_q": "Ask a Legal Question",
+        "ask_tax_q": "Ask a Tax Question",
+        "ask_general_q": "Ask a General Question",
+        "chat_placeholder": "Type your question here and press Enter...",
+        "send": "Send", "clear_chat": "Clear Chat", "new_chat": "New Chat",
+        "sources": "Sources & References", "suggested_questions": "Suggested follow-up questions",
+        "ask_with_voice": "Ask with Voice",
+        "rag_badge": "RAG-Enhanced answers from Indian legal documents",
+        "upload_doc": "Upload Document", "explain_doc": "Explain Document",
+        "search": "Search", "logout": "Logout"
+    },
+    "Hindi": {
+        "nav_home": "होम", "nav_legal": "कानूनी प्रश्न पूछें", "nav_tax": "कर (टैक्स) सहायक",
+        "nav_general": "सामान्य सहायक", "nav_doc_exp": "दस्तावेज़ विश्लेषण",
+        "nav_risk": "अनुबंध जोखिम विश्लेषक", "nav_compare": "अनुबंध तुलना",
+        "nav_draft": "दस्तावेज़ ड्राफ्ट", "nav_case_law": "केस लॉ खोज",
+        "nav_section": "धारा (Section) खोज", "nav_timeline": "कानूनी समय-सीमा",
+        "nav_penalty": "दंड कैलकुलेटर", "nav_glossary": "कानूनी शब्दावली",
+        "nav_history": "प्रश्न इतिहास", "nav_bookmarks": "बुकमार्क",
+        "nav_stats": "मेरे आँकड़े", "nav_admin": "एडमिन विश्लेषण", "nav_profile": "प्रोफ़ाइल",
+        "nav_about": "हमारे बारे में", "language": "भाषा",
+        "hero_title": "आज LexAssist आपकी कैसे सहायता कर सकता है?",
+        "hero_subtitle": "भारतीय कानूनी दस्तावेज़ों पर आधारित AI-संचालित कानूनी सहायता।",
+        "badge_legal_assistant": "⚖️ AI कानूनी सहायक — भारतीय कानूनी दस्तावेज़ों पर आधारित",
+        "try_asking": "यह पूछकर देखें",
+        "explore_lexassist": "LexAssist की सुविधाएँ देखें",
+        "sugg_1": "एक किराएदार के रूप में मेरे क्या अधिकार हैं?",
+        "sugg_2": "धारा 420 (Section 420) को सरल शब्दों में समझाइए",
+        "sugg_3": "क्या नियोक्ता बिना नोटिस के नौकरी से निकाल सकता है?",
+        "sugg_4": "मैं कौन सी टैक्स कटौती (Tax Deductions) का दावा कर सकता हूँ?",
+        "card_legal_title": "⚖️ कानूनी सहायक",
+        "card_legal_desc": "भारतीय कानून से संबंधित प्रश्न पूछें।",
+        "card_doc_title": "📄 दस्तावेज़ विश्लेषण",
+        "card_doc_desc": "कानूनी दस्तावेज़ अपलोड करें और समझें।",
+        "card_risk_title": "⚠️ अनुबंध जोखिम विश्लेषक",
+        "card_risk_desc": "अनुबंधों में संभावित जोखिम वाली शर्तों की पहचान करें।",
+        "card_compare_title": "📊 अनुबंध तुलना",
+        "card_compare_desc": "दो कानूनी दस्तावेज़ों की साथ-साथ तुलना करें।",
+        "card_caselaw_title": "🔍 केस लॉ खोज",
+        "card_caselaw_desc": "महत्वपूर्ण भारतीय अदालती फैसले खोजें।",
+        "card_tax_title": "💰 कर सहायक",
+        "card_tax_desc": "भारतीय कर से संबंधित प्रश्नों में सहायता पाएं।",
+        "open_feature": "खोलें →",
+        "trust_privacy": "🔒 गोपनीयता-केंद्रित",
+        "trust_rag": "⚡ RAG-संचालित",
+        "trust_indian_law": "🇮🇳 भारतीय कानून के लिए निर्मित",
+        "disclaimer_text": "LexAssist शैक्षणिक और सूचनात्मक उद्देश्यों के लिए AI-जनरेटेड कानूनी जानकारी प्रदान करता है और यह किसी योग्य कानूनी पेशेवर की सलाह का विकल्प नहीं है।",
+        "ask_question": "प्रश्न पूछें",
+        "ask_legal_q": "कानूनी प्रश्न पूछें",
+        "ask_tax_q": "कर (टैक्स) प्रश्न पूछें",
+        "ask_general_q": "सामान्य प्रश्न पूछें",
+        "chat_placeholder": "अपना प्रश्न यहाँ लिखें और एंटर दबाएँ...",
+        "send": "भेजें", "clear_chat": "चैट साफ़ करें", "new_chat": "नई चैट",
+        "sources": "स्रोत और संदर्भ", "suggested_questions": "सुझाए गए आगामी प्रश्न",
+        "ask_with_voice": "आवाज़ से पूछें",
+        "rag_badge": "भारतीय कानूनी दस्तावेज़ों से RAG-संवर्धित उत्तर",
+        "upload_doc": "दस्तावेज़ अपलोड करें", "explain_doc": "दस्तावेज़ समझाइए",
+        "search": "खोजें", "logout": "लॉगआउट"
+    },
+    "Gujarati": {
+        "nav_home": "હોમ", "nav_legal": "કાનૂની પ્રશ્ન પૂછો", "nav_tax": "ટેક્સ સહાયક",
+        "nav_general": "સામાન્ય સહાયક", "nav_doc_exp": "દસ્તાવેજ પૃથક્કરણ",
+        "nav_risk": "કરાર જોખમ વિશ્લેષક", "nav_compare": "કરાર સરખામણી",
+        "nav_draft": "દસ્તાવેજ ડ્રાફ્ટ", "nav_case_law": "કેસ લો શોધ",
+        "nav_section": "કલમ (Section) શોધો", "nav_timeline": "કાનૂની ટાઇમલાઇન",
+        "nav_penalty": "દંડ કેલ્ક્યુલેટર", "nav_glossary": "કાનૂની શબ્દકોશ",
+        "nav_history": "પ્રશ્ન ઇતિહાસ", "nav_bookmarks": "બુકમાર્ક્સ",
+        "nav_stats": "મારા આંકડા", "nav_admin": "એડમિન પૃથક્કરણ", "nav_profile": "પ્રોફાઇલ",
+        "nav_about": "અમારા વિશે", "language": "ભાષા",
+        "hero_title": "આજે LexAssist તમને કેવી રીતે મદદ કરી શકે?",
+        "hero_subtitle": "ભારતીય કાનૂની દસ્તાવેજો પર આધારિત AI કાનૂની સહાયક.",
+        "badge_legal_assistant": "⚖️ AI કાનૂની સહાયક — ભારતીય કાનૂની દસ્તાવેજો પર આધારિત",
+        "try_asking": "આ પૂછી જુઓ",
+        "explore_lexassist": "LexAssist ના ફીચર્સ જુઓ",
+        "sugg_1": "ભાડૂઆત તરીકે મારા અધિકારો શું છે?",
+        "sugg_2": "કલમ 420 (Section 420) સરળ શબ્દોમાં સમજાવો",
+        "sugg_3": "શું નોકરીદાતા નોટિસ વિના નોકરીમાંથી કાઢી શકે?",
+        "sugg_4": "હું કયા ટેક્સ કપાત (Tax Deductions) નો દાવો કરી શકું?",
+        "card_legal_title": "⚖️ કાનૂની સહાયક",
+        "card_legal_desc": "ભારતીય કાયદા વિશે પ્રશ્નો પૂછો.",
+        "card_doc_title": "📄 દસ્તાવેજ પૃથક્કરણ",
+        "card_doc_desc": "કાનૂની દસ્તાવેજો અપલોડ કરો અને સમજો.",
+        "card_risk_title": "⚠️ કરાર જોખમ વિશ્લેષક",
+        "card_risk_desc": "કરારોમાં જોખમી શરતો ઓળખો.",
+        "card_compare_title": "📊 કરાર સરખામણી",
+        "card_compare_desc": "બે દસ્તાવેજોની સાથે-સાથે સરખામણી કરો.",
+        "card_caselaw_title": "🔍 કેસ લો શોધ",
+        "card_caselaw_desc": "મહત્વપૂર્ણ ભારતીય કોર્ટના ચુકાદાઓ શોધો.",
+        "card_tax_title": "💰 ટેક્સ સહાયક",
+        "card_tax_desc": "ભારતીય ટેક્સ સંબંધિત પ્રશ્નોમાં મદદ મેળવો.",
+        "open_feature": "ખોલો →",
+        "trust_privacy": "🔒 ગોપનીયતા-કેન્દ્રિત",
+        "trust_rag": "⚡ RAG-સંચાલિત",
+        "trust_indian_law": "🇮🇳 ભારતીય કાયદા માટે નિર્મિત",
+        "disclaimer_text": "LexAssist શૈક્ષણિક હેતુઓ માટે AI-જનરેટેડ કાનૂની માહિતી પૂરી પાડે છે અને તે કાનૂની સલાહનો વિકલ્પ નથી.",
+        "ask_question": "પ્રશ્ન પૂછો",
+        "ask_legal_q": "કાનૂની પ્રશ્ન પૂછો",
+        "ask_tax_q": "ટેક્સ પ્રશ્ન પૂછો",
+        "ask_general_q": "સામાન્ય પ્રશ્ન પૂછો",
+        "chat_placeholder": "તમારો પ્રશ્ન અહીં લખો અને એન્ટર દબાવો...",
+        "send": "મોકલો", "clear_chat": "ચેટ સાફ કરો", "new_chat": "નવી ચેટ",
+        "sources": "સંદર્ભ અને સ્રોત", "suggested_questions": "સૂચવેલા આગામી પ્રશ્નો",
+        "ask_with_voice": "અવાજથી પૂછો",
+        "rag_badge": "ભારતીય કાનૂની દસ્તાવેજો પર આધારિત RAG ઉત્તરો",
+        "upload_doc": "દસ્તાવેજ અપલોડ કરો", "explain_doc": "દસ્તાવેજ સમજાવો",
+        "search": "શોધો", "logout": "લૉગઆઉટ"
+    },
+    "Marathi": {
+        "nav_home": "मुख्यपृष्ठ", "nav_legal": "कायदेशीर प्रश्न विचारा", "nav_tax": "कर (टॅक्स) सहाय्यक",
+        "nav_general": "सामान्य सहाय्यक", "nav_doc_exp": "कागदपत्र विश्लेषण",
+        "nav_risk": "करारात धोका विश्लेषक", "nav_compare": "करार तुलना",
+        "nav_draft": "कागदपत्र मसुदा", "nav_case_law": "केस लॉ शोध",
+        "nav_section": "कलम (Section) शोध", "nav_timeline": "कायदेशीर वेळापत्रक",
+        "nav_penalty": "दंड कॅल्क्युलेटर", "nav_glossary": "कायदेशीर शब्दकोश",
+        "nav_history": "प्रश्न इतिहास", "nav_bookmarks": "बुकमार्क",
+        "nav_stats": "माझी आकडेवारी", "nav_admin": "ॲडमिन विश्लेषण", "nav_profile": "प्रोफाइल",
+        "nav_about": "आमच्याबद्दल", "language": "भाषा",
+        "hero_title": "आज LexAssist तुम्हाला कशी मदत करू शकते?",
+        "hero_subtitle": "भारतीय कायदेशीर कागदपत्रांवर आधारित AI कायदेशीर सहाय्यक.",
+        "badge_legal_assistant": "⚖️ AI कायदेशीर सहाय्यक — भारतीय कायदेशीर कागदपत्रांवर आधारित",
+        "try_asking": "हे विचारून पहा",
+        "explore_lexassist": "LexAssist ची वैशिष्ट्ये पहा",
+        "sugg_1": "भाडेकरू म्हणून माझे अधिकार काय आहेत?",
+        "sugg_2": "कलम ४२० (Section 420) सोप्या शब्दांत समजावून सांगा",
+        "sugg_3": "मालक नोटीस न देता नोकरीवरून काढू शकतो का?",
+        "sugg_4": "मी कोणत्या कर सवलतींचा (Tax Deductions) दावा करू शकतो?",
+        "card_legal_title": "⚖️ कायदेशीर सहाय्यक",
+        "card_legal_desc": "भारतीय कायद्यांबद्दल प्रश्न विचारा.",
+        "card_doc_title": "📄 कागदपत्र विश्लेषण",
+        "card_doc_desc": "कायदेशीर कागदपत्रे अपलोड करा आणि समजून घ्या.",
+        "card_risk_title": "⚠️ करारात धोका विश्लेषक",
+        "card_risk_desc": "करारातील संभाव्य धोके ओळखा.",
+        "card_compare_title": "📊 करार तुलना",
+        "card_compare_desc": "दोन करारांची शेजारी-शेजारी तुलना करा.",
+        "card_caselaw_title": "🔍 केस लॉ शोध",
+        "card_caselaw_desc": "महत्त्वाचे भारतीय न्यायालयीन निकाल शोधा.",
+        "card_tax_title": "💰 कर सहाय्यक",
+        "card_tax_desc": "भारतीय करांशी संबंधित प्रश्नांमध्ये मदत मिळवा.",
+        "open_feature": "उघडा →",
+        "trust_privacy": "🔒 गोपनीयता-केंद्रित",
+        "trust_rag": "⚡ RAG-आधारित",
+        "trust_indian_law": "🇮🇳 भारतीय कायद्यासाठी बनवलेले",
+        "disclaimer_text": "LexAssist केवळ माहिती आणि शैक्षणिक उद्देशांसाठी AI-जनरेट केलेली कायदेशीर माहिती प्रदान करते.",
+        "ask_question": "प्रश्न विचारा",
+        "ask_legal_q": "कायदेशीर प्रश्न विचारा",
+        "ask_tax_q": "कर (टॅक्स) प्रश्न विचारा",
+        "ask_general_q": "सामान्य प्रश्न विचारा",
+        "chat_placeholder": "तुमचा प्रश्न येथे लिहा आणि एंटर दाबा...",
+        "send": "पाठवा", "clear_chat": "चॅट साफ करा", "new_chat": "नवीन चॅट",
+        "sources": "संदर्भ आणि स्त्रोत", "suggested_questions": "सुचवलेले पुढील प्रश्न",
+        "ask_with_voice": "आवाजाने विचारा",
+        "rag_badge": "भारतीय कायदेशीर कागदपत्रांवर आधारित RAG उत्तरे",
+        "upload_doc": "कागदपत्र अपलोड करा", "explain_doc": "कागदपत्र स्पष्ट करा",
+        "search": "शोधा", "logout": "लॉगआउट"
+    },
+    "Bengali": {
+        "nav_home": "হোম", "nav_legal": "আইনি প্রশ্ন জিজ্ঞাসা করুন", "nav_tax": "ট্যাক্স সহায়ক",
+        "nav_general": "সাধারণ সহায়ক", "nav_doc_exp": "নথি বিশ্লেষণ",
+        "nav_risk": "চুক্তি ঝুঁকি বিশ্লেষক", "nav_compare": "চুক্তি তুলনা",
+        "nav_draft": "নথি ড্রাফট", "nav_case_law": "কেস ল অনুসন্ধান",
+        "nav_section": "ধারা (Section) সন্ধান", "nav_timeline": "আইনি সময়রেখা",
+        "nav_penalty": "জরিমানা ক্যালকুলেটর", "nav_glossary": "আইনি শব্দকোষ",
+        "nav_history": "প্রশ্ন ইতিহাস", "nav_bookmarks": "বুকমার্ক",
+        "nav_stats": "আমার পরিসংখ্যান", "nav_admin": "এডমিন বিশ্লেষণ", "nav_profile": "প্রোফাইল",
+        "nav_about": "আমাদের সম্পর্কে", "language": "ভাষা",
+        "hero_title": "আজ LexAssist কীভাবে আপনাকে সাহায্য করতে পারে?",
+        "hero_subtitle": "ভারতীয় আইনি নথির উপর ভিত্তি করে AI আইনি সহায়ক।",
+        "badge_legal_assistant": "⚖️ AI আইনি সহায়ক — ভারতীয় আইনি নথির উপর ভিত্তি করে",
+        "try_asking": "এগুলি জিজ্ঞাসা করে দেখুন",
+        "explore_lexassist": "LexAssist এর বৈশিষ্ট্যগুলি দেখুন",
+        "sugg_1": "ভাড়াটিয়া হিসেবে আমার অধিকারগুলি কী কী?",
+        "sugg_2": "ধারা ৪২০ (Section 420) সহজ ভাষায় ব্যাখ্যা করুন",
+        "sugg_3": "নিয়োগকর্তা কি নোটিশ ছাড়াই চাকরি থেকে বরখাস্ত করতে পারেন?",
+        "sugg_4": "আমি কোন কোন ট্যাক্স ছাড়ের (Tax Deductions) দাবি করতে পারি?",
+        "card_legal_title": "⚖️ আইনি সহায়ক",
+        "card_legal_desc": "ভারতীয় আইন সম্পর্কে প্রশ্ন জিজ্ঞাসা করুন।",
+        "card_doc_title": "📄 নথি বিশ্লেষণ",
+        "card_doc_desc": "আইনি নথি আপলোড করুন এবং বুঝুন।",
+        "card_risk_title": "⚠️ চুক্তি ঝুঁকি বিশ্লেষক",
+        "card_risk_desc": "চুক্তিতে সম্ভাব্য ঝুঁকিপূর্ণ শর্তাবলী শনাক্ত করুন।",
+        "card_compare_title": "📊 চুক্তি তুলনা",
+        "card_compare_desc": "পাশাপাশি দুটি আইনি নথির তুলনা করুন।",
+        "card_caselaw_title": "🔍 কেস ল অনুসন্ধান",
+        "card_caselaw_desc": "গুরুত্বপূর্ণ ভারতীয় আদালতের রায় খুঁজুন।",
+        "card_tax_title": "💰 ট্যাক্স সহায়ক",
+        "card_tax_desc": "ভারতীয় ট্যাক্স সংক্রান্ত প্রশ্নে সাহায্য পান।",
+        "open_feature": "খুলুন →",
+        "trust_privacy": "🔒 গোপনীয়তা-কেন্দ্রিক",
+        "trust_rag": "⚡ RAG-চালিত",
+        "trust_indian_law": "🇮🇳 ভারতীয় আইনের জন্য তৈরি",
+        "disclaimer_text": "LexAssist শুধুমাত্র তথ্যের জন্য AI-তৈরি আইনি তথ্য প্রদান করে।",
+        "ask_question": "প্রশ্ন করুন",
+        "ask_legal_q": "আইনি প্রশ্ন করুন",
+        "ask_tax_q": "ট্যাক্স প্রশ্ন করুন",
+        "ask_general_q": "সাধারণ প্রশ্ন করুন",
+        "chat_placeholder": "আপনার প্রশ্নটি লিখুন এবং এন্টার চাপুন...",
+        "send": "পাঠান", "clear_chat": "চ্যাট মুছে ফেলুন", "new_chat": "নতুন চ্যাট",
+        "sources": "উৎস এবং রেফারেন্স", "suggested_questions": "প্রস্তাবিত পরবর্তী প্রশ্ন",
+        "ask_with_voice": "ভয়েস দিয়ে জিজ্ঞাসা করুন",
+        "rag_badge": "ভারতীয় আইনি নথি ভিত্তিক RAG উত্তর",
+        "upload_doc": "নথি আপলোড করুন", "explain_doc": "নথি ব্যাখ্যা করুন",
+        "search": "অনুসন্ধান", "logout": "লগআউট"
+    },
+    "Tamil": {
+        "nav_home": "முகப்பு", "nav_legal": "சட்டக் கேள்வி கேட்கவும்", "nav_tax": "வரி உதவியாளர்",
+        "nav_general": "பொது உதவியாளர்", "nav_doc_exp": "ஆவண பகுப்பாய்வு",
+        "nav_risk": "ஒப்பந்த ஆபத்து பகுப்பாய்வி", "nav_compare": "ஒப்பந்த ஒப்பீடு",
+        "nav_draft": "ஆவண வரைவு", "nav_case_law": "வழக்கு சட்டத் தேடல்",
+        "nav_section": "பிரிவு (Section) தேடல்", "nav_timeline": "சட்ட காலவரிசை",
+        "nav_penalty": "அபராதக் கணிப்பான்", "nav_glossary": "சட்டச் சொல்லகராதி",
+        "nav_history": "கேள்வி வரலாறு", "nav_bookmarks": "புத்தகக்குறிகள்",
+        "nav_stats": "என் புள்ளிவிவரங்கள்", "nav_admin": "நிர்வாகி பகுப்பாய்வு", "nav_profile": "சுயவிவரம்",
+        "nav_about": "எங்களைப் பற்றி", "language": "மொழி",
+        "hero_title": "LexAssist இன்று உங்களுக்கு எவ்வாறு உதவ முடியும்?",
+        "hero_subtitle": "இந்திய சட்ட ஆவணங்களை அடிப்படையாகக் கொண்ட AI சட்ட உதவியாளர்.",
+        "badge_legal_assistant": "⚖️ AI சட்ட உதவியாளர் — இந்திய சட்ட ஆவணங்களை அடிப்படையாகக் கொண்டது",
+        "try_asking": "இவற்றைக் கேட்டுப் பாருங்கள்",
+        "explore_lexassist": "LexAssist அம்சங்களை ஆராயுங்கள்",
+        "sugg_1": "வாடகைதாரராக என் உரிமைகள் என்ன?",
+        "sugg_2": "பிரிவு 420 (Section 420) எளிய சொற்களில் விளக்கவும்",
+        "sugg_3": "அறிவிப்பு இன்றி வேலை வழங்குநர் பணிநீக்கம் செய்ய முடியுமா?",
+        "sugg_4": "நான் என்ன வரி விலக்குகளைப் (Tax Deductions) பெற முடியும்?",
+        "card_legal_title": "⚖️ சட்ட உதவியாளர்",
+        "card_legal_desc": "இந்திய சட்டம் பற்றிய கேள்விகளைக் கேட்கவும்.",
+        "card_doc_title": "📄 ஆவண பகுப்பாய்வு",
+        "card_doc_desc": "சட்ட ஆவணங்களைப் பதிவேற்றிப் புரிந்துகொள்ளுங்கள்.",
+        "card_risk_title": "⚠️ ஒப்பந்த ஆபத்து பகுப்பாய்வி",
+        "card_risk_desc": "ஒப்பந்தங்களில் உள்ள ஆபத்தான விவாதங்களைக் கண்டறியவும்.",
+        "card_compare_title": "📊 ஒப்பந்த ஒப்பீடு",
+        "card_compare_desc": "இரண்டு ஆவணங்களை அருகருகே ஒப்பிட்டுப் பாருங்கள்.",
+        "card_caselaw_title": "🔍 வழக்கு சட்டத் தேடல்",
+        "card_caselaw_desc": "முக்கிய இந்திய நீதிமன்றத் தீர்ப்புகளைத் தேடுங்கள்.",
+        "card_tax_title": "💰 வரி உதவியாளர்",
+        "card_tax_desc": "இந்திய வரி தொடர்பான கேள்விகளுக்கு உதவி பெறுங்கள்.",
+        "open_feature": "திறக்க →",
+        "trust_privacy": "🔒 தனியுரிமை மையக் கட்டுப்பாடு",
+        "trust_rag": "⚡ RAG-இயக்கப்படும்",
+        "trust_indian_law": "🇮🇳 இந்திய சட்டத்திற்காக உருவாக்கப்பட்டது",
+        "disclaimer_text": "LexAssist கல்வி மற்றும் தகவல் நோக்கங்களுக்காக மட்டுமே AI சட்டத் தகவலை வழங்குகிறது.",
+        "ask_question": "கேள்வி கேட்கவும்",
+        "ask_legal_q": "சட்டக் கேள்வி கேட்கவும்",
+        "ask_tax_q": "வரிக் கேள்வி கேட்கவும்",
+        "ask_general_q": "பொதுக் கேள்வி கேட்கவும்",
+        "chat_placeholder": "உங்கள் கேள்வியை இங்கே தட்டச்சு செய்து என்டர் அழுத்தவும்...",
+        "send": "அனுப்பு", "clear_chat": "அரட்டையை அழி", "new_chat": "புதிய அரட்டை",
+        "sources": "ஆதாரங்கள் மற்றும் மேற்கோள்கள்", "suggested_questions": "பரிந்துரைக்கப்பட்ட அடுத்த கேள்விகள்",
+        "ask_with_voice": "குரல் மூலம் கேட்கவும்",
+        "rag_badge": "இந்திய சட்ட ஆவணங்கள் அடிப்படையிலான RAG பதில்கள்",
+        "upload_doc": "ஆவணத்தைப் பதிவேற்றவும்", "explain_doc": "ஆவணத்தை விளக்குக",
+        "search": "தேடு", "logout": "வெளியேறு"
+    },
+    "Telugu": {
+        "nav_home": "హోమ్", "nav_legal": "చట్టపరమైన ప్రశ్న అడగండి", "nav_tax": "పన్ను (టాక్స్) సహాయకుడు",
+        "nav_general": "సాధారణ సహాయకుడు", "nav_doc_exp": "పత్రం విశ్లేషణ",
+        "nav_risk": "ఒప్పంద ప్రమాద విశ్లేషకుడు", "nav_compare": "ఒప్పందాల పోలిక",
+        "nav_draft": "పత్రం డ్రాఫ్ట్", "nav_case_law": "కేసు లా శోధన",
+        "nav_section": "సెక్షన్ శోధన", "nav_timeline": "చట్టపరమైన టైమ్‌లైన్",
+        "nav_penalty": "పెనాల్టీ కాలిక్యులేటర్", "nav_glossary": "చట్టపరమైన పదకోశం",
+        "nav_history": "ప్రశ్నల చరిత్ర", "nav_bookmarks": "బుక్‌మార్క్‌లు",
+        "nav_stats": "నా గణాంకాలు", "nav_admin": "అడ్మిన్ విశ్లేషణ", "nav_profile": "ప్రొఫైల్",
+        "nav_about": "మా గురించి", "language": "భాష",
+        "hero_title": "LexAssist నేడు మీకు ఎలా సహాయపడుతుంది?",
+        "hero_subtitle": "భారతీయ చట్టపరమైన పత్రాలపై ఆధారపడిన AI చట్ట సహాయకుడు.",
+        "badge_legal_assistant": "⚖️ AI చట్ట సహాయకుడు — భారతీయ చట్టపరమైన పత్రాలపై ఆధారపడింది",
+        "try_asking": "ఇవి అడిగి చూడండి",
+        "explore_lexassist": "LexAssist ఫీచర్లను పరిశీలించండి",
+        "sugg_1": "కిరాయిదారుగా నా హక్కులు ఏమిటి?",
+        "sugg_2": "సెక్షన్ 420 (Section 420) సులభమైన మాటల్లో వివరించండి",
+        "sugg_3": "యజమాని నోటీసు లేకుండా ఉద్యోగం నుండి తీసివేయవచ్చా?",
+        "sugg_4": "నేను ఏ పన్ను మినహాయింపులను (Tax Deductions) క్లెయిమ్ చేయవచ్చు?",
+        "card_legal_title": "⚖️ చట్ట సహాయకుడు",
+        "card_legal_desc": "భారతీయ చట్టాల గురించి ప్రశ్నలు అడగండి.",
+        "card_doc_title": "📄 పత్రం విశ్లేషణ",
+        "card_doc_desc": "చట్టపరమైన పత్రాలను అప్‌లోడ్ చేసి అర్థం చేసుకోండి.",
+        "card_risk_title": "⚠️ ఒప్పంద ప్రమాద విశ్లేషకుడు",
+        "card_risk_desc": "ఒప్పందాలలో ఉన్న ప్రమాదకరమైన నిబంధనలను గుర్తించండి.",
+        "card_compare_title": "📊 ఒప్పందాల పోలిక",
+        "card_compare_desc": "రెండు పత్రాలను పక్కపక్కనే పోల్చి చూడండి.",
+        "card_caselaw_title": "🔍 కేసు లా శోధన",
+        "card_caselaw_desc": "ముఖ్యమైన భారతీయ కోర్టు తీర్పులను శోధించండి.",
+        "card_tax_title": "💰 పన్ను సహాయకుడు",
+        "card_tax_desc": "భారతీయ పన్ను సంబంధిత ప్రశ్నలకు సహాయం పొందండి.",
+        "open_feature": "తెరువు →",
+        "trust_privacy": "🔒 గోప్యత ఆధారితం",
+        "trust_rag": "⚡ RAG ఆధారితం",
+        "trust_indian_law": "🇮🇳 భారతీయ చట్టం కోసం నిర్మించబడింది",
+        "disclaimer_text": "LexAssist విద్యా మరియు సమాచార ప్రయోజనాల కోసం మాత్రమే AI సమాచారాన్ని అందిస్తుంది.",
+        "ask_question": "ప్రశ్న అడగండి",
+        "ask_legal_q": "చట్టపరమైన ప్రశ్న అడగండి",
+        "ask_tax_q": "పన్ను ప్రశ్న అడగండి",
+        "ask_general_q": "సాధారణ ప్రశ్న అడగండి",
+        "chat_placeholder": "మీ ప్రశ్నను ఇక్కడ టైప్ చేసి ఎంటర్ నొక్కండి...",
+        "send": "పంపండి", "clear_chat": "చాట్ క్లియర్ చేయండి", "new_chat": "కొత్త చాట్",
+        "sources": "మూలాలు మరియు సూచనలు", "suggested_questions": "సూచించబడిన తదుపరి ప్రశ్నలు",
+        "ask_with_voice": "వాయిస్‌తో అడగండి",
+        "rag_badge": "భారతీయ చట్ట పత్రాల ఆధారిత RAG సమాధానాలు",
+        "upload_doc": "పత్రాన్ని అప్‌లోడ్ చేయండి", "explain_doc": "పత్రాన్ని వివరించండి",
+        "search": "శోధించండి", "logout": "లాగ్‌అవుట్"
+    },
+    "Kannada": {
+        "nav_home": "ಮುಖಪುಟ", "nav_legal": "ಕಾನೂನು ಪ್ರಶ್ನೆ ಕೇಳಿ", "nav_tax": "ತೆರಿಗೆ ಸಹಾಯಕ",
+        "nav_general": "ಸಾಮಾನ್ಯ ಸಹಾಯಕ", "nav_doc_exp": "ದಾಖಲೆ ವಿಶ್ಲೇಷಣೆ",
+        "nav_risk": "ಒಪ್ಪಂದ ಅಪಾಯ ವಿಶ್ಲೇಷಕ", "nav_compare": "ಒಪ್ಪಂದ ಹೋಲಿಕೆ",
+        "nav_draft": "ದಾಖಲೆ ಕರಡು", "nav_case_law": "ಪ್ರಕರಣ ಕಾನೂನು ಹುಡುಕಾಟ",
+        "nav_section": "ಸೆಕ್ಷನ್ ಹುಡುಕಾಟ", "nav_timeline": "ಕಾನೂನು ಕಾಲಾವಧಿ",
+        "nav_penalty": "ದಂಡ ಲೆಕ್ಕಾಚಾರ", "nav_glossary": "ಕಾನೂನು ಪದಕೋಶ",
+        "nav_history": "ಪ್ರಶ್ನೆ ಇತಿಹಾಸ", "nav_bookmarks": "ಬುಕ್‌ಮಾರ್ಕ್‌ಗಳು",
+        "nav_stats": "ನನ್ನ ಅಂಕಿಅಂಶಗಳು", "nav_admin": "ಅಡ್ಮಿನ್ ವಿಶ್ಲೇಷಣೆ", "nav_profile": "ಪ್ರೊಫೈಲ್",
+        "nav_about": "ನಮ್ಮ ಬಗ್ಗೆ", "language": "ಭಾಷೆ",
+        "hero_title": "LexAssist ಇಂದು ನಿಮಗೆ ಹೇಗೆ ಸಹಾಯ ಮಾಡಬಹುದು?",
+        "hero_subtitle": "ಭಾರತೀಯ ಕಾನೂನು ದಾಖಲೆಗಳನ್ನು ಆಧರಿಸಿದ AI ಕಾನೂನು ಸಹಾಯಕ.",
+        "badge_legal_assistant": "⚖️ AI ಕಾನೂನು ಸಹಾಯಕ — ಭಾರತೀಯ ಕಾನೂನು ದಾಖಲೆಗಳ ಆಧಾರಿತ",
+        "try_asking": "ಇದನ್ನು ಕೇಳಿ ನೋಡಿ",
+        "explore_lexassist": "LexAssist ವೈಶಿಷ್ಟ್ಯಗಳನ್ನು ಅನ್ವೇಷಿಸಿ",
+        "sugg_1": "ಬಾಡಿಗೆದಾರನಾಗಿ ನನ್ನ ಹಕ್ಕುಗಳು ಯಾವುವು?",
+        "sugg_2": "ಸೆಕ್ಷನ್ 420 (Section 420) ಸರಳ ಪದಗಳಲ್ಲಿ ವಿವರಿಸಿ",
+        "sugg_3": "ಮಾಲೀಕರು ನೋಟಿಸ್ ನೀಡದೆ ಕೆಲಸದಿಂದ ತೆಗೆದುಹಾಕಬಹುದೇ?",
+        "sugg_4": "ನಾನು ಯಾವ ತೆರಿಗೆ ವಿನಾಯಿತಿಗಳನ್ನು (Tax Deductions) ಪಡೆಯಬಹುದು?",
+        "card_legal_title": "⚖️ ಕಾನೂನು ಸಹಾಯಕ",
+        "card_legal_desc": "ಭಾರತೀಯ ಕಾನೂನುಗಳ ಬಗ್ಗೆ ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳಿ.",
+        "card_doc_title": "📄 ದಾಖಲೆ ವಿಶ್ಲೇಷಣೆ",
+        "card_doc_desc": "ಕಾನೂನು ದಾಖಲೆಗಳನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ ಮತ್ತು ಅರ್ಥಮಾಡಿಕೊಳ್ಳಿ.",
+        "card_risk_title": "⚠️ ಒಪ್ಪಂದ ಅಪಾಯ ವಿಶ್ಲೇಷಕ",
+        "card_risk_desc": "ಒಪ್ಪಂದಗಳಲ್ಲಿನ ಅಪಾಯಕಾರಿ ಷರತ್ತುಗಳನ್ನು ಗುರುತಿಸಿ.",
+        "card_compare_title": "📊 ಒಪ್ಪಂದ ಹೋಲಿಕೆ",
+        "card_compare_desc": "ಎರಡು ದಾಖಲೆಗಳನ್ನು ಅಕ್ಕಪಕ್ಕ ಹೋಲಿಸಿ ನೋಡಿ.",
+        "card_caselaw_title": "🔍 ಪ್ರಕರಣ ಕಾನೂನು ಹುಡುಕಾಟ",
+        "card_caselaw_desc": "ಪ್ರಮುಖ ಭಾರತೀಯ ನ್ಯಾಯಾಲಯದ ತೀರ್ಪುಗಳನ್ನು ಹುಡುಕಿ.",
+        "card_tax_title": "💰 ತೆರಿಗೆ ಸಹಾಯಕ",
+        "card_tax_desc": "ಭಾರತೀಯ ತೆರಿಗೆ ಸಂಬಂಧಿತ ಪ್ರಶ್ನೆಗಳಲ್ಲಿ ಸಹಾಯ ಪಡೆಯಿರಿ.",
+        "open_feature": "ತೆರೆಯಿರಿ →",
+        "trust_privacy": "🔒 ಗೌಪ್ಯತೆ-ಆಧಾರಿತ",
+        "trust_rag": "⚡ RAG-ಚಾಲಿತ",
+        "trust_indian_law": "🇮🇳 ಭಾರತೀಯ ಕಾನೂನಿಗಾಗಿ ನಿರ್ಮಿಸಲಾಗಿದೆ",
+        "disclaimer_text": "LexAssist ಶೈಕ್ಷಣಿಕ ಮತ್ತು ಮಾಹಿತಿ ಉದ್ದೇಶಗಳಿಗಾಗಿ ಮಾತ್ರ AI ಕಾನೂನು ಮಾಹಿತಿಯನ್ನು ಒದಗಿಸುತ್ತದೆ.",
+        "ask_question": "ಪ್ರಶ್ನೆ ಕೇಳಿ",
+        "ask_legal_q": "ಕಾನೂನು ಪ್ರಶ್ನೆ ಕೇಳಿ",
+        "ask_tax_q": "ತೆರಿಗೆ ಪ್ರಶ್ನೆ ಕೇಳಿ",
+        "ask_general_q": "ಸಾಮಾನ್ಯ ಪ್ರಶ್ನೆ ಕೇಳಿ",
+        "chat_placeholder": "ನಿಮ್ಮ ಪ್ರಶ್ನೆಯನ್ನು ಇಲ್ಲಿ ಟೈಪ್ ಮಾಡಿ ಮತ್ತು ಎಂಟರ್ ಒತ್ತಿರಿ...",
+        "send": "ಕಳುಹಿಸಿ", "clear_chat": "ಚಾಟ್ ತೆರವುಗೊಳಿಸಿ", "new_chat": "ಹೊಸ ಚಾಟ್",
+        "sources": "ಮೂಲಗಳು ಮತ್ತು ಉಲ್ಲೇಖಗಳು", "suggested_questions": "ಸೂಚಿಸಲಾದ ಮುಂದಿನ ಪ್ರಶ್ನೆಗಳು",
+        "ask_with_voice": "ಧ್ವನಿಯ ಮೂಲಕ ಕೇಳಿ",
+        "rag_badge": "ಭಾರತೀಯ ಕಾನೂನು ದಾಖಲೆಗಳ ಆಧಾರಿತ RAG ಉತ್ತರಗಳು",
+        "upload_doc": "ದಾಖಲೆ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ", "explain_doc": "ದಾಖಲೆಯನ್ನು ವಿವರಿಸಿ",
+        "search": "ಹುಡುಕಿ", "logout": "ಲಾಗ್‌ಔಟ್"
+    },
+    "Malayalam": {
+        "nav_home": "ഹോം", "nav_legal": "നിയമപരമായ ചോദ്യം ചോദിക്കുക", "nav_tax": "ടാക്സ് അസിസ്റ്റന്റ്",
+        "nav_general": "ജനറൽ അസിസ്റ്റന്റ്", "nav_doc_exp": "രേഖ വിശകലനം",
+        "nav_risk": "കരാർ റിസ്ക് അനലൈസർ", "nav_compare": "കരാർ താരതമ്യം",
+        "nav_draft": "രേഖ ഡ്രസാഫ്റ്റ്", "nav_case_law": "കേസ് ലാ തിരച്ചിൽ",
+        "nav_section": "സെക്ഷൻ തിരച്ചിൽ", "nav_timeline": "നിയമപരമായ ടൈംലൈൻ",
+        "nav_penalty": "പെനാൽറ്റി കാൽക്കുലേറ്റർ", "nav_glossary": "നിയമ നിഘണ്ടു",
+        "nav_history": "ചോദ്യ ചരിത്രം", "nav_bookmarks": "ബുക്ക്മാർക്കുകൾ",
+        "nav_stats": "എന്റെ കണക്കുകൾ", "nav_admin": "അഡ്മിൻ അനലിറ്റിക്സ്", "nav_profile": "പ്രൊഫൈൽ",
+        "nav_about": "ഞങ്ങളെ കുറിച്ച്", "language": "ഭാഷ",
+        "hero_title": "LexAssist ഇന്ന് നിങ്ങളെ എങ്ങനെ സഹായിക്കും?",
+        "hero_subtitle": "ഇന്ത്യൻ നിയമ രേഖകളെ അടിസ്ഥാനമാക്കിയുള്ള AI നിയമ സഹായി.",
+        "badge_legal_assistant": "⚖️ AI നിയമ സഹായി — ഇന്ത്യൻ നിയമ രേഖകളെ അടിസ്ഥാനമാക്കിയുള്ളത്",
+        "try_asking": "ഇത് ചോദിച്ചു നോക്കൂ",
+        "explore_lexassist": "LexAssist സവിശേഷതകൾ കാണുക",
+        "sugg_1": "ഒരു വാടകക്കാരൻ എന്ന നിലയിൽ എന്റെ അവകാശങ്ങൾ എന്തൊക്കെയാണ്?",
+        "sugg_2": "സെക്ഷൻ 420 (Section 420) ലളിതമായ വാക്കുകളിൽ വിശദീകരിക്കുക",
+        "sugg_3": "നോട്ടീസ് ഇല്ലാതെ തൊഴിലുടമയ്ക്ക് പിരിച്ചുവിടാനാകുമോ?",
+        "sugg_4": "എനിക്ക് ഏതൊക്കെ നികുതി ഇളവുകൾ (Tax Deductions) ക്ലെയിം ചെയ്യാം?",
+        "card_legal_title": "⚖️ നിയമ സഹായി",
+        "card_legal_desc": "ഇന്ത്യൻ നിയമത്തെക്കുറിച്ചുള്ള ചോദ്യങ്ങൾ ചോദിക്കുക.",
+        "card_doc_title": "📄 രേഖ വിശകലനം",
+        "card_doc_desc": "നിയമ രേഖകൾ അപ്‌ലോഡ് ചെയ്ത് മനസ്സിലാക്കുക.",
+        "card_risk_title": "⚠️ കരാർ റിസ്ക് അനലൈസർ",
+        "card_risk_desc": "കരാറുകളിലെ അപകടകരമായ വ്യവസ്ഥകൾ തിരിച്ചറിയുക.",
+        "card_compare_title": "📊 കരാർ താരതമ്യം",
+        "card_compare_desc": "രണ്ട് രേഖകൾ വശങ്ങളിലായി താരതമ്യം ചെയ്യുക.",
+        "card_caselaw_title": "🔍 കേസ് ലാ തിരച്ചിൽ",
+        "card_caselaw_desc": "പ്രധാനപ്പെട്ട ഇന്ത്യൻ കോടതി വിധികൾ തിരയുക.",
+        "card_tax_title": "💰 ടാക്സ് അസിസ്റ്റന്റ്",
+        "card_tax_desc": "ഇന്ത്യൻ നികുതി സംബന്ധിയായ ചോദ്യങ്ങളിൽ സഹായം നേടുക.",
+        "open_feature": "തുറക്കുക →",
+        "trust_privacy": "🔒 സ്വകാര്യത കേന്ദ്രീകൃതം",
+        "trust_rag": "⚡ RAG അധിഷ്ഠിതം",
+        "trust_indian_law": "🇮🇳 ഇന്ത്യൻ നിയമത്തിനായി നിർമ്മിച്ചത്",
+        "disclaimer_text": "LexAssist വിവരങ്ങൾക്കും വിദ്യാഭ്യാസ ആവശ്യങ്ങൾക്കുമായി മാത്രം AI നിയമ വിവരങ്ങൾ നൽകുന്നു.",
+        "ask_question": "ചോദ്യം ചോദിക്കുക",
+        "ask_legal_q": "നിയമപരമായ ചോദ്യം ചോദിക്കുക",
+        "ask_tax_q": "നികുതി ചോദ്യം ചോദിക്കുക",
+        "ask_general_q": "പൊതു ചോദ്യം ചോദിക്കുക",
+        "chat_placeholder": "നിങ്ങളുടെ ചോദ്യം ഇവിടെ ടൈപ്പ് ചെയ്ത് എന്റർ അമർത്തുക...",
+        "send": "അയക്കുക", "clear_chat": "ചാറ്റ് ക്ലിയർ ചെയ്യുക", "new_chat": "പുതിയ ചാറ്റ്",
+        "sources": "ഉറവിടങ്ങളും സൂചനകളും", "suggested_questions": "നിർദ്ദേശിച്ച അടുത്ത ചോദ്യങ്ങൾ",
+        "ask_with_voice": "ശബ്ദം ഉപയോഗിച്ച് ചോദിക്കുക",
+        "rag_badge": "ഇന്ത്യൻ നിയമ രേഖകൾ അധിഷ്ഠിതമായ RAG ഉത്തരങ്ങൾ",
+        "upload_doc": "രേഖ അപ്‌ലോഡ് ചെയ്യുക", "explain_doc": "രേഖ വിശദീകരിക്കുക",
+        "search": "തിരയുക", "logout": "ലോഗ് ഔട്ട്"
+    },
+    "Punjabi": {
+        "nav_home": "ਹੋਮ", "nav_legal": "ਕਾਨੂੰਨੀ ਸਵਾਲ ਪੁੱਛੋ", "nav_tax": "ਟੈਕਸ ਸਹਾਇਕ",
+        "nav_general": "ਆਮ ਸਹਾਇਕ", "nav_doc_exp": "ਦਸਤਾਵੇਜ਼ ਵਿਸ਼ਲੇਸ਼ਣ",
+        "nav_risk": "ਕਰਾਰ ਜੋਖਮ ਵਿਸ਼ਲੇਸ਼ਕ", "nav_compare": "ਕਰਾਰ ਤੁਲਨਾ",
+        "nav_draft": "ਦਸਤਾਵੇਜ਼ ਡਰਾਫਟ", "nav_case_law": "ਕੇਸ ਲਾਅ ਖੋਜ",
+        "nav_section": "ਧਾਰਾ (Section) ਖੋਜ", "nav_timeline": "ਕਾਨੂੰਨੀ ਸਮਾਂ-ਸੀਮਾ",
+        "nav_penalty": "ਜੁਰਮਾਨਾ ਕੈਲਕੁਲੇਟਰ", "nav_glossary": "ਕਾਨੂੰਨੀ ਸ਼ਬਦਾਵਲੀ",
+        "nav_history": "ਸਵਾਲ ਇਤਿਹਾਸ", "nav_bookmarks": "ਬੁੱਕਮਾਰਕ",
+        "nav_stats": "ਮੇਰੇ ਅੰਕੜੇ", "nav_admin": "ਐਡਮਿਨ ਵਿਸ਼ਲੇਸ਼ਣ", "nav_profile": "ਪ੍ਰੋਫਾਈਲ",
+        "nav_about": "ਸਾਡੇ ਬਾਰੇ", "language": "ਭਾਸ਼ਾ",
+        "hero_title": "LexAssist ਅੱਜ ਤੁਹਾਡੀ ਕਿਵੇਂ ਮਦਦ ਕਰ ਸਕਦਾ ਹੈ?",
+        "hero_subtitle": "ਭਾਰਤੀ ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼ਾਂ 'ਤੇ ਆਧਾਰਿਤ AI ਕਾਨੂੰਨੀ ਸਹਾਇਕ।",
+        "badge_legal_assistant": "⚖️ AI ਕਾਨੂੰਨੀ ਸਹਾਇਕ — ਭਾਰਤੀ ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼ਾਂ 'ਤੇ ਆਧਾਰਿਤ",
+        "try_asking": "ਇਹ ਪੁੱਛ ਕੇ ਦੇਖੋ",
+        "explore_lexassist": "LexAssist ਦੀਆਂ ਵਿਸ਼ੇਸ਼ਤਾਵਾਂ ਦੇਖੋ",
+        "sugg_1": "ਇੱਕ ਕਿਰਾਏਦਾਰ ਵਜੋਂ ਮੇਰੇ ਕੀ ਅਧਿਕਾਰ ਹਨ?",
+        "sugg_2": "ਧਾਰਾ 420 (Section 420) ਨੂੰ ਸਰਲ ਸ਼ਬਦਾਂ ਵਿੱਚ ਸਮਝਾਓ",
+        "sugg_3": "ਕੀ ਮਾਲਕ ਬਿਨਾਂ ਨੋਟਿਸ ਦੇ ਨੌਕਰੀ ਤੋਂ ਕੱਢ ਸਕਦਾ ਹੈ?",
+        "sugg_4": "ਮੈਂ ਕਿਹੜੀਆਂ ਟੈਕਸ ਕਟੌਤੀਆਂ (Tax Deductions) ਦਾ ਦਾਅਵਾ ਕਰ ਸਕਦਾ ਹਾਂ?",
+        "card_legal_title": "⚖️ ਕਾਨੂੰਨੀ ਸਹਾਇਕ",
+        "card_legal_desc": "ਭਾਰਤੀ ਕਾਨੂੰਨ ਬਾਰੇ ਸਵਾਲ ਪੁੱਛੋ।",
+        "card_doc_title": "📄 ਦਸਤਾਵੇਜ਼ ਵਿਸ਼ਲੇਸ਼ਣ",
+        "card_doc_desc": "ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼ ਅਪਲੋਡ ਕਰੋ ਅਤੇ ਸਮਝੋ।",
+        "card_risk_title": "⚠️ ਕਰਾਰ ਜੋਖਮ ਵਿਸ਼ਲੇਸ਼ਕ",
+        "card_risk_desc": "ਕਰਾਰਾਂ ਵਿੱਚ ਸੰਭਾਵੀ ਜੋਖਮ ਵਾਲੀਆਂ ਸ਼ਰਤਾਂ ਦੀ ਪਛਾਣ ਕਰੋ।",
+        "card_compare_title": "📊 ਕਰਾਰ ਤੁਲਨਾ",
+        "card_compare_desc": "ਦੋ ਦਸਤਾਵੇਜ਼ਾਂ ਦੀ ਨਾਲ-ਨਾਲ ਤੁਲਨਾ ਕਰੋ।",
+        "card_caselaw_title": "🔍 ਕੇਸ ਲਾਅ ਖੋਜ",
+        "card_caselaw_desc": "ਮਹੱਤਵਪੂਰਨ ਭਾਰਤੀ ਅਦਾਲਤੀ ਫੈਸਲੇ ਖੋਜੋ।",
+        "card_tax_title": "💰 ਟੈਕਸ ਸਹਾਇਕ",
+        "card_tax_desc": "ਭਾਰਤੀ ਟੈਕਸ ਨਾਲ ਸੰਬੰਧਿਤ ਸਵਾਲਾਂ ਵਿੱਚ ਮਦਦ ਲਓ।",
+        "open_feature": "ਖੋਲ੍ਹੋ →",
+        "trust_privacy": "🔒 ਪ੍ਰਾਈਵੇਸੀ-ਕੇਂਦਰਿਤ",
+        "trust_rag": "⚡ RAG-ਸੰਚਾਲਿਤ",
+        "trust_indian_law": "🇮🇳 ਭਾਰਤੀ ਕਾਨੂੰਨ ਲਈ ਨਿਰਮਿਤ",
+        "disclaimer_text": "LexAssist ਸਿਰਫ਼ ਜਾਣਕਾਰੀ ਅਤੇ ਵਿਦਿਅਕ ਉਦੇਸ਼ਾਂ ਲਈ AI ਕਾਨੂੰਨੀ ਜਾਣਕਾਰੀ ਪ੍ਰਦਾਨ ਕਰਦਾ ਹੈ।",
+        "ask_question": "ਸਵਾਲ ਪੁੱਛੋ",
+        "ask_legal_q": "ਕਾਨੂੰਨੀ ਸਵਾਲ ਪੁੱਛੋ",
+        "ask_tax_q": "ਟੈਕਸ ਸਵਾਲ ਪੁੱਛੋ",
+        "ask_general_q": "ਆਮ ਸਵਾਲ ਪੁੱਛੋ",
+        "chat_placeholder": "ਆਪਣਾ ਸਵਾਲ ਇੱਥੇ ਲਿਖੋ ਅਤੇ ਐਂਟਰ ਦਬਾਓ...",
+        "send": "ਭੇਜੋ", "clear_chat": "ਚੈਟ ਸਾਫ਼ ਕਰੋ", "new_chat": "ਨਵੀਂ ਚੈਟ",
+        "sources": "ਸਰੋਤ ਅਤੇ ਹਵਾਲੇ", "suggested_questions": "ਸੁਝਾਏ ਗਏ ਅਗਲੇ ਸਵਾਲ",
+        "ask_with_voice": "ਆਵਾਜ਼ ਨਾਲ ਪੁੱਛੋ",
+        "rag_badge": "ਭਾਰਤੀ ਕਾਨੂੰਨੀ ਦਸਤਾਵੇਜ਼ਾਂ 'ਤੇ ਆਧਾਰਿਤ RAG ਉੱਤਰ",
+        "upload_doc": "ਦਸਤਾਵੇਜ਼ ਅਪਲੋਡ ਕਰੋ", "explain_doc": "ਦਸਤਾਵੇਜ਼ ਸਮਝਾਓ",
+        "search": "ਖੋਜੋ", "logout": "ਲੌਗਆਊਟ"
+    }
+}
+
+def get_native_lang_name(lang_code: str) -> str:
+    for native_name, code in LANGUAGE_OPTIONS.items():
+        if code == lang_code:
+            return native_name
+    return "English"
+
+def get_translation(key: str, default: str = None) -> str:
+    lang = st.session_state.get("chat_language", "English")
+    lang_dict = TRANSLATIONS.get(lang, TRANSLATIONS["English"])
+    return lang_dict.get(key, TRANSLATIONS["English"].get(key, default or key))
+
+def get_lang_index(current_lang: str) -> int:
+    for idx, (label, code) in enumerate(LANGUAGE_OPTIONS.items()):
+        if code == current_lang:
+            return idx
+    return 0
 
 # --- Session State Initialization ---
 for key, default in {
@@ -84,398 +598,45 @@ def clean_ai_response(text: str) -> str:
 
 # ── Theme CSS ──────────────────────────────────────────────────────────────
 def _build_theme_css(dark: bool) -> str:
+    css_file = os.path.join(os.path.dirname(__file__), "style.css")
+    base_css = ""
+    if os.path.exists(css_file):
+        with open(css_file, "r", encoding="utf-8") as f:
+            base_css = f.read()
+
     if dark:
-        bg        = "#0B0F17"  # Primary background
-        bg2       = "#141C29"  # Card background
-        bg3       = "#101722"  # Input/surface background
-        border    = "#263244"  # Subtle borders
-        text      = "#F8FAFC"  # High readability white
-        text2     = "#94A3B8"  # Secondary text
-        accent    = "#8B5CF6"  # Primary purple accent
-        btn_bg    = "#141C29"
-        btn_text  = "#F8FAFC"
-        btn_bdr   = "#263244"
-        alert_bg  = "#141C29"
-        sb_bg     = "#101722"  # Sidebar background
-        sb_bdr    = "#263244"  # Sidebar border
-        sb_text   = "#94A3B8"
-        sb_hover  = "rgba(139, 92, 246, 0.08)"
-        sb_active = "rgba(139, 92, 246, 0.16)"
-        hdr_color = "#8B5CF6"
-        disc_bg   = "rgba(212, 167, 44, 0.1)"
-        disc_text = "#D4A72C"
-        rag_bg    = "rgba(139, 92, 246, 0.1)"
-        rag_bdr   = "rgba(139, 92, 246, 0.3)"
-        rag_text  = "#A78BFA"
-        resp_bg   = "#141C29"
-        resp_text = "#F8FAFC"
-        resp_bdr  = "#263244"
-        resp_shad = "0 8px 32px rgba(0,0,0,0.5)"
-        scrl_bg   = "#0B0F17"
-        scrl_thm  = "#263244"
-        tab_color = "#94A3B8"
-        warn_clr  = "#F59E0B"
-        over_clr  = "#EF4444"
-        file_bg   = "#141C29"
-        chat_bg   = "#141C29"
-        chat_text = "#F8FAFC"
+        bg = "#0B0F1A"
+        surface = "#121829"
+        surface_hover = "#1A2238"
+        border = "#232B45"
+        primary = "#7C5CFF"
+        text = "#E8EAF6"
+        muted = "#8B93B0"
     else:
-        bg        = "#F8FAFC"
-        bg2       = "#FFFFFF"
-        bg3       = "#F1F5F9"
-        border    = "#E2E8F0"
-        text      = "#0F172A"
-        text2     = "#64748B"
-        accent    = "#7C3AED"
-        btn_bg    = "#FFFFFF"
-        btn_text  = "#0F172A"
-        btn_bdr   = "#CBD5E1"
-        alert_bg  = "#F1F5F9"
-        sb_bg     = "#F1F5F9"
-        sb_bdr    = "#E2E8F0"
-        sb_text   = "#64748B"
-        sb_hover  = "rgba(124, 58, 237, 0.06)"
-        sb_active = "rgba(124, 58, 237, 0.12)"
-        hdr_color = "#7C3AED"
-        disc_bg   = "#FEF3C7"
-        disc_text = "#92400E"
-        rag_bg    = "#EDE9FE"
-        rag_bdr   = "#DDD6FE"
-        rag_text  = "#6D28D9"
-        resp_bg   = "#FFFFFF"
-        resp_text = "#0F172A"
-        resp_bdr  = "#E2E8F0"
-        resp_shad = "0 4px 16px rgba(0,0,0,0.06)"
-        scrl_bg   = "#F8FAFC"
-        scrl_thm  = "#CBD5E1"
-        tab_color = "#64748B"
-        warn_clr  = "#D97706"
-        over_clr  = "#DC2626"
-        file_bg   = "#FFFFFF"
-        chat_bg   = "#F1F5F9"
-        chat_text = "#0F172A"
+        bg = "#F8FAFC"
+        surface = "#FFFFFF"
+        surface_hover = "#F1F5F9"
+        border = "#E2E8F0"
+        primary = "#7C3AED"
+        text = "#0F172A"
+        muted = "#64748B"
 
-    return f"""
-<style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+    dynamic_override = f"""
+    :root {{
+        --bg: {bg};
+        --surface: {surface};
+        --surface-hover: {surface_hover};
+        --border: {border};
+        --primary: {primary};
+        --text: {text};
+        --muted: {muted};
+    }}
+    """
+    return f"<style>\n{base_css}\n{dynamic_override}\n</style>"
 
-    /* Show Streamlit Sidebar, Hide Default Toolbar & Header */
-    header[data-testid="stHeader"],
-    [data-testid="stToolbar"],
-    [data-testid="stDecoration"] {{
-        display: none !important;
-    }}
-
-    /* Left Sidebar Panel Styling */
-    [data-testid="stSidebar"],
-    section[data-testid="stSidebar"] {{
-        background-color: {sb_bg} !important;
-        border-right: 1px solid {sb_bdr} !important;
-    }}
-
-    /* Sidebar Navigation Button Styles */
-    [data-testid="stSidebar"] .stButton > button {{
-        width: 100% !important;
-        text-align: left !important;
-        background: transparent !important;
-        color: {sb_text} !important;
-        border: 1px solid transparent !important;
-        border-radius: 8px !important;
-        padding: 8px 12px !important;
-        font-size: 0.88rem !important;
-        font-weight: 500 !important;
-        transition: all 0.15s ease !important;
-        margin-bottom: 3px !important;
-        justify-content: flex-start !important;
-        display: flex !important;
-        align-items: center !important;
-        gap: 8px !important;
-    }}
-    [data-testid="stSidebar"] .stButton > button:hover {{
-        background: {sb_hover} !important;
-        color: {text} !important;
-        border-color: rgba(139, 92, 246, 0.2) !important;
-        transform: translateX(2px) !important;
-    }}
-    [data-testid="stSidebar"] .stButton > button[kind="primary"] {{
-        background: {sb_active} !important;
-        color: #F8FAFC !important;
-        font-weight: 600 !important;
-        border-left: 3.5px solid #8B5CF6 !important;
-        border-radius: 6px !important;
-        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.15) !important;
-    }}
-
-    .sidebar-sec-title {{
-        font-size: 0.68rem !important;
-        font-weight: 700 !important;
-        color: #64748B !important;
-        letter-spacing: 0.08em !important;
-        text-transform: uppercase !important;
-        margin: 1.2rem 0 0.4rem 0.4rem !important;
-    }}
-
-    .saas-user-badge {{
-        font-size: 0.82rem !important;
-        font-weight: 600 !important;
-        color: {text2} !important;
-        background: {bg3} !important;
-        border: 1px solid {border} !important;
-        padding: 6px 12px !important;
-        border-radius: 8px !important;
-        white-space: nowrap !important;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-        text-align: center !important;
-        height: 38px !important;
-        line-height: 24px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        width: 100% !important;
-    }}
-        line-height: 34px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        margin: 0 !important;
-    }}
-
-    .sidebar-sec-title {{
-        font-size: 0.68rem !important;
-        font-weight: 700 !important;
-        color: #64748B !important;
-        letter-spacing: 0.08em !important;
-        text-transform: uppercase !important;
-        margin: 1.1rem 0 0.35rem 0.5rem !important;
-    }}
-
-    [data-testid="stSidebar"] .stButton > button {{
-        width: 100% !important;
-        text-align: left !important;
-        background: transparent !important;
-        color: {sb_text} !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 7px 12px !important;
-        font-size: 0.86rem !important;
-        font-weight: 500 !important;
-        transition: all 0.15s ease !important;
-        margin-bottom: 2px !important;
-        justify-content: flex-start !important;
-    }}
-    [data-testid="stSidebar"] .stButton > button:hover {{
-        background: {sb_hover} !important;
-        color: #F8FAFC !important;
-        border: none !important;
-        transform: translateX(2px) !important;
-    }}
-    [data-testid="stSidebar"] .stButton > button[kind="primary"] {{
-        background: {sb_active} !important;
-        color: #F8FAFC !important;
-        font-weight: 600 !important;
-        border-left: 3px solid #8B5CF6 !important;
-        border-radius: 6px !important;
-    }}
-
-    [data-testid="stSidebar"] .la-logout .stButton > button {{
-        color: #EF4444 !important;
-        border: 1px solid rgba(239, 68, 68, 0.3) !important;
-        background: rgba(239, 68, 68, 0.08) !important;
-        margin-top: 0.8rem !important;
-    }}
-    [data-testid="stSidebar"] .la-logout .stButton > button:hover {{
-        background: #EF4444 !important;
-        color: #FFFFFF !important;
-        border-color: #EF4444 !important;
-    }}
-    [data-testid="stSidebar"] p,
-    [data-testid="stSidebar"] span,
-    [data-testid="stSidebar"] div {{
-        color: {sb_text} !important;
-    }}
-
-    /* Inputs, Textareas, Selectboxes */
-    input, textarea, select,
-    [data-testid="stTextInput"] input,
-    [data-testid="stTextArea"] textarea,
-    .stTextInput input, .stSelectbox select,
-    [data-baseweb="input"] input,
-    [data-baseweb="textarea"] textarea,
-    [data-baseweb="select"] div {{
-        background-color: {bg3} !important;
-        color: {text} !important;
-        border-color: {border} !important;
-        border-radius: 12px !important;
-        transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
-    }}
-    input:focus, textarea:focus, select:focus,
-    [data-baseweb="input"]:focus-within {{
-        border-color: #8B5CF6 !important;
-        box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25) !important;
-    }}
-
-    [data-testid="stChatInput"] textarea,
-    [data-testid="stChatInputContainer"] textarea {{
-        background-color: {bg3} !important;
-        color: {text} !important;
-    }}
-
-    [data-testid="stFileUploader"] {{
-        background-color: {file_bg} !important;
-        border: 1px dashed {border} !important;
-        border-radius: 14px !important;
-        color: {text} !important;
-        padding: 1rem !important;
-    }}
-
-    [data-testid="stChatMessage"] {{
-        background-color: {chat_bg} !important;
-        color: {chat_text} !important;
-        border: 1px solid {border} !important;
-        border-radius: 14px !important;
-        margin-bottom: 0.8rem !important;
-        padding: 1rem 1.2rem !important;
-    }}
-
-    p, span, li, td, th, label, div {{ color: {text}; }}
-    h1, h2, h3, h4, h5, h6 {{ color: {text} !important; }}
-
-    [data-testid="stExpander"] {{
-        background-color: {bg2} !important;
-        border: 1px solid {border} !important;
-        border-radius: 12px !important;
-    }}
-
-    /* Buttons & Actions */
-    .block-container .stButton > button {{
-        background-color: {btn_bg} !important;
-        color: {btn_text} !important;
-        border: 1px solid {btn_bdr} !important;
-        transition: all 0.2s ease !important;
-        border-radius: 12px !important;
-        font-weight: 500 !important;
-    }}
-    .block-container .stButton > button:hover {{
-        transform: translateY(-2px) !important;
-        border-color: #8B5CF6 !important;
-        box-shadow: 0 4px 16px rgba(139, 92, 246, 0.25) !important;
-    }}
-    .block-container .stButton > button[kind="primary"] {{
-        background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%) !important;
-        color: #FFFFFF !important;
-        border: none !important;
-        font-weight: 600 !important;
-        box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35) !important;
-    }}
-    .block-container .stButton > button[kind="primary"]:hover {{
-        background: linear-gradient(135deg, #7C3AED 0%, #2563EB 100%) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5) !important;
-    }}
-
-    [data-testid="stTabs"] [role="tab"] {{
-        color: {tab_color} !important;
-        transition: color 0.2s ease, border-bottom-color 0.2s ease !important;
-    }}
-    [data-testid="stTabs"] [role="tab"]:hover {{ color: {accent} !important; }}
-    [data-testid="stTabs"] [role="tab"][aria-selected="true"] {{
-        color: {accent} !important;
-        border-bottom-color: {accent} !important;
-    }}
-
-    [data-testid="stMetric"] {{
-        background: {bg2} !important;
-        border: 1px solid {border} !important;
-        border-radius: 14px !important;
-        padding: 1rem !important;
-    }}
-
-    ::-webkit-scrollbar {{ background: {scrl_bg}; width: 6px; }}
-    ::-webkit-scrollbar-thumb {{ background: {scrl_thm}; border-radius: 4px; }}
-
-    .main-header {{
-        font-size: 2.2rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #F8FAFC 0%, #8B5CF6 50%, #3B82F6 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-align: center;
-        margin-bottom: 1rem;
-        font-family: 'Outfit', sans-serif !important;
-        letter-spacing: -0.02em;
-    }}
-    .sub-header {{ font-size: 1.05rem; color: {text2}; text-align: center; margin-bottom: 1.8rem; }}
-    .disclaimer-box {{
-        background: rgba(212, 167, 44, 0.08) !important;
-        border-left: 4px solid #D4A72C;
-        padding: 0.9rem 1.2rem; margin: 1rem 0; border-radius: 10px;
-        color: #D4A72C !important;
-        font-size: 0.83rem;
-    }}
-    .rag-badge {{
-        background: rgba(139, 92, 246, 0.12);
-        border: 1px solid rgba(139, 92, 246, 0.3);
-        padding: 0.35rem 0.9rem; border-radius: 20px;
-        color: #8B5CF6; font-size: 0.82rem; display: inline-block; margin-bottom: 1rem;
-        font-weight: 600;
-    }}
-    .response-box {{
-        background: {bg2} !important;
-        color: {resp_text} !important;
-        padding: 1.4rem; border-radius: 16px;
-        border: 1px solid {border};
-        margin: 1rem 0; box-shadow: {resp_shad};
-    }}
-    /* --- SaaS Hero & Feature Card Styling --- */
-    .saas-card {{
-        background: {bg2};
-        border: 1px solid {border};
-        border-radius: 16px;
-        padding: 1.3rem;
-        transition: all 0.2s ease;
-        height: 100%;
-    }}
-    .saas-card:hover {{
-        transform: translateY(-3px);
-        border-color: #8B5CF6;
-        box-shadow: 0 8px 24px rgba(139, 92, 246, 0.18);
-    }}
-    .saas-card-title {{
-        font-family: 'Outfit', sans-serif;
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #F8FAFC;
-        margin-bottom: 0.4rem;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }}
-    .saas-card-desc {{
-        font-size: 0.85rem;
-        color: #94A3B8;
-        line-height: 1.5;
-    }}
-    button[data-testid="stChatInputSubmitButton"] {{
-        background: linear-gradient(135deg, #8B5CF6, #3B82F6) !important;
-        color: #ffffff !important;
-        border: none !important;
-        border-radius: 50% !important;
-        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4) !important;
-        transition: transform 0.15s ease, background 0.15s ease !important;
-    }}
-    button[data-testid="stChatInputSubmitButton"]:hover {{
-        background: linear-gradient(135deg, #7C3AED, #2563EB) !important;
-        transform: scale(1.08) !important;
-    }}
-    .char-counter {{ font-size: 0.78rem; color: #888; text-align: right; margin-top: -0.5rem; margin-bottom: 0.5rem; }}
-    .char-counter.warn {{ color: {warn_clr}; }}
-    .char-counter.over  {{ color: {over_clr}; }}
-</style>
-"""
-
+# Inject custom CSS theme on every run
 st.markdown(_build_theme_css(st.session_state.dark_mode), unsafe_allow_html=True)
-st.markdown('<a name="top" style="display:none"></a>', unsafe_allow_html=True)
+
 
 def _char_counter_html(text: str) -> str:
     n = len(text)
@@ -808,16 +969,15 @@ def show_chat_page(category: str, page_title: str):
 
     ctrl_col, lang_col = st.columns([3, 1])
     with lang_col:
-        language = st.selectbox(
+        sel_label = st.selectbox(
             "🌐 Language",
-            ["English", "Hindi", "Tamil", "Telugu", "Kannada", "Malayalam", "Bengali", "Marathi", "Gujarati"],
-            index=["English", "Hindi", "Tamil", "Telugu", "Kannada", "Malayalam", "Bengali", "Marathi", "Gujarati"].index(
-                st.session_state.chat_language
-            ),
-            key=f"{category}_lang"
+            options=list(LANGUAGE_OPTIONS.keys()),
+            index=get_lang_index(st.session_state.chat_language),
+            key=f"{category}_lang_select"
         )
-        if language != st.session_state.chat_language:
-            st.session_state.chat_language = language
+        new_lang = LANGUAGE_OPTIONS[sel_label]
+        if new_lang != st.session_state.chat_language:
+            st.session_state.chat_language = new_lang
             st.rerun()
     with ctrl_col:
         st.markdown('<div class="rag-badge">RAG-Enhanced answers from Indian legal documents</div>', unsafe_allow_html=True)
@@ -1044,99 +1204,122 @@ def show_chat_page(category: str, page_title: str):
             st.rerun()
 
 def show_home_page():
+    # Hero Section Container (Max width 900px)
     st.markdown(
-        """
-        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 1rem 0 0.8rem; text-align:center;">
-            <div style="font-family:'Outfit',sans-serif; font-size: 2.4rem; font-weight: 800; background: linear-gradient(135deg, #8B5CF6, #3B82F6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.6rem; letter-spacing:-0.02em;">
+        f"""
+        <div class="hero-container">
+            <h1 class="hero-title-main">
                 LexAssist
-            </div>
-            <div style="display:inline-flex; align-items:center; gap:8px; padding: 5px 16px; background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: #8B5CF6; margin-bottom: 1rem;">
-                ⚖️ AI LEGAL ASSISTANT — Grounded in Indian Legal Documents
-            </div>
-            <h1 style="font-family:'Outfit',sans-serif; font-size: 2.6rem; font-weight: 800; color: #F8FAFC; margin-bottom: 0.5rem; letter-spacing:-0.03em;">
-                How can LexAssist help you today?
             </h1>
-            <p style="font-size: 1.05rem; color: #94A3B8; max-width: 640px; margin: 0 auto 1.6rem; line-height: 1.6;">
-                AI-powered legal assistance grounded in Indian legal documents.
+            <div class="hero-badge-wrap">
+                <div class="hero-badge">
+                    {get_translation('badge_legal_assistant', '⚖️ AI LEGAL ASSISTANT — Grounded in Indian Legal Documents')}
+                </div>
+            </div>
+            <h2 class="hero-headline">
+                {get_translation('hero_title', 'How can LexAssist help you today?')}
+            </h2>
+            <p class="hero-subtitle">
+                {get_translation('hero_subtitle', 'AI-powered legal assistance grounded in Indian legal documents.')}
             </p>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    # Try Asking Chips
-    st.markdown('<div style="font-size: 0.78rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.06em; margin: 1.4rem 0 0.7rem; text-align: center;">Try asking</div>', unsafe_allow_html=True)
+    # 1. Compact Centered Language Dropdown (Max width 280px, directly below subtitle)
+    l_col1, l_col2, l_col3 = st.columns([1, 1.2, 1])
+    with l_col2:
+        st.markdown('<div class="lang-selector-container">', unsafe_allow_html=True)
+        selected_lang_label = st.selectbox(
+            f"🌐 {get_translation('language', 'Language')}",
+            options=list(LANGUAGE_OPTIONS.keys()),
+            index=get_lang_index(st.session_state.chat_language),
+            key="home_page_lang_selector"
+        )
+        selected_lang_code = LANGUAGE_OPTIONS[selected_lang_label]
+        if selected_lang_code != st.session_state.chat_language:
+            st.session_state.chat_language = selected_lang_code
+            toast(f"Language changed to {selected_lang_code}", "🌐")
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # 2. Suggestion Chips ("TRY ASKING")
+    st.markdown(
+        f'<div class="try-asking-header">'
+        f'{get_translation("try_asking", "TRY ASKING")}'
+        f'</div>',
+        unsafe_allow_html=True
+    )
     
     sc1, sc2, sc3, sc4 = st.columns(4)
     suggs = [
-        (sc1, "What are my rights as a tenant?", "Ask Legal Question", "legal_prefill"),
-        (sc2, "Explain Section 420 in simple terms", "Ask Legal Question", "legal_prefill"),
-        (sc3, "Can an employer terminate without notice?", "Ask Legal Question", "legal_prefill"),
-        (sc4, "What tax deductions can I claim?", "Tax Assistant", "tax_prefill"),
+        (sc1, get_translation("sugg_1", "What are my rights as a tenant?"), "Ask Legal Question", "legal_prefill"),
+        (sc2, get_translation("sugg_2", "Explain Section 420 in simple terms"), "Ask Legal Question", "legal_prefill"),
+        (sc3, get_translation("sugg_3", "Can an employer terminate without notice?"), "Ask Legal Question", "legal_prefill"),
+        (sc4, get_translation("sugg_4", "What tax deductions can I claim?"), "Tax Assistant", "tax_prefill"),
     ]
-    for col, label, page_target, p_key in suggs:
+    for idx, (col, label, page_target, p_key) in enumerate(suggs):
         with col:
-            if st.button(label, key=f"try_ask_{label[:15]}", use_container_width=True):
+            st.markdown('<div class="try-ask-chip">', unsafe_allow_html=True)
+            if st.button(label, key=f"try_ask_{idx}_{p_key}", use_container_width=True):
                 st.session_state[p_key] = label
                 st.session_state.current_page = page_target
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    # Explore LexAssist Feature Cards
-    st.markdown('<div style="font-size: 1.25rem; font-weight: 700; color: #F8FAFC; font-family: \'Outfit\', sans-serif; margin: 0.8rem 0 1rem;">Explore LexAssist</div>', unsafe_allow_html=True)
+    # 3. Explore LexAssist Feature Cards
+    st.markdown(
+        f'<div class="explore-header">'
+        f'{get_translation("explore_lexassist", "Explore LexAssist")}'
+        f'</div>',
+        unsafe_allow_html=True
+    )
     
     fc1, fc2, fc3 = st.columns(3)
     feat_cards_row1 = [
-        (fc1, "⚖️ Legal Assistant", "Ask questions about Indian law.", "Ask Legal Question"),
-        (fc2, "📄 Document Analysis", "Upload and understand legal documents.", "Document Explanation"),
-        (fc3, "⚠️ Contract Risk Analyzer", "Identify potentially risky contract clauses.", "Contract Risk Analyzer"),
+        (fc1, get_translation("card_legal_title", "⚖️ Legal Assistant"), get_translation("card_legal_desc", "Ask questions about Indian law."), "Ask Legal Question"),
+        (fc2, get_translation("card_doc_title", "📄 Document Analysis"), get_translation("card_doc_desc", "Upload and understand legal documents."), "Document Explanation"),
+        (fc3, get_translation("card_risk_title", "⚠️ Contract Risk Analyzer"), get_translation("card_risk_desc", "Identify potentially risky contract clauses."), "Contract Risk Analyzer"),
     ]
     for col, title, desc, page_target in feat_cards_row1:
         with col:
-            st.markdown(
-                f'<div class="saas-card">'
-                f'<div class="saas-card-title">{title}</div>'
-                f'<div class="saas-card-desc">{desc}</div>'
-                f'</div>',
-                unsafe_allow_html=True
-            )
-            if st.button(f"Open {title.split()[-1]} →", key=f"fc_{page_target}", use_container_width=True):
+            st.markdown('<div class="explore-card-wrap">', unsafe_allow_html=True)
+            card_label = f"**{title}**\n\n{desc}"
+            if st.button(card_label, key=f"fc_{page_target}", use_container_width=True):
                 st.session_state.current_page = page_target
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 12px;'></div>", unsafe_allow_html=True)
+
     fc4, fc5, fc6 = st.columns(3)
     feat_cards_row2 = [
-        (fc4, "📊 Compare Contracts", "Compare two legal documents side by side.", "Compare Contracts"),
-        (fc5, "🔍 Case Law Search", "Find relevant Indian judgments and case law.", "Case Law Search"),
-        (fc6, "💰 Tax Assistant", "Get assistance with Indian tax-related questions.", "Tax Assistant"),
+        (fc4, get_translation("card_compare_title", "📊 Compare Contracts"), get_translation("card_compare_desc", "Compare two legal documents side by side."), "Compare Contracts"),
+        (fc5, get_translation("card_caselaw_title", "🔍 Case Law Search"), get_translation("card_caselaw_desc", "Find relevant Indian judgments and case law."), "Case Law Search"),
+        (fc6, get_translation("card_tax_title", "💰 Tax Assistant"), get_translation("card_tax_desc", "Get assistance with Indian tax-related questions."), "Tax Assistant"),
     ]
     for col, title, desc, page_target in feat_cards_row2:
         with col:
-            st.markdown(
-                f'<div class="saas-card">'
-                f'<div class="saas-card-title">{title}</div>'
-                f'<div class="saas-card-desc">{desc}</div>'
-                f'</div>',
-                unsafe_allow_html=True
-            )
-            if st.button(f"Open {title.split()[-1]} →", key=f"fc_{page_target}", use_container_width=True):
+            st.markdown('<div class="explore-card-wrap">', unsafe_allow_html=True)
+            card_label = f"**{title}**\n\n{desc}"
+            if st.button(card_label, key=f"fc_{page_target}", use_container_width=True):
                 st.session_state.current_page = page_target
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
     # Trust Indicators & Legal Disclaimer Footer
     st.markdown(
-        """
-        <div style="display:flex; justify-content:center; align-items:center; gap: 2rem; margin: 3rem 0 1.2rem; color: #94A3B8; font-size: 0.85rem; font-weight: 500;">
-            <span>🔒 Privacy-focused</span>
+        f"""
+        <div style="display:flex; justify-content:center; align-items:center; gap: 2rem; margin: 3rem 0 1.2rem; color: var(--muted); font-size: 0.85rem; font-weight: 500;">
+            <span>{get_translation('trust_privacy', '🔒 Privacy-focused')}</span>
             <span>•</span>
-            <span>⚡ RAG-powered</span>
+            <span>{get_translation('trust_rag', '⚡ RAG-powered')}</span>
             <span>•</span>
-            <span>🇮🇳 Built for Indian Law</span>
+            <span>{get_translation('trust_indian_law', '🇮🇳 Built for Indian Law')}</span>
         </div>
-        <div style="background: rgba(20,28,41,0.6); border: 1px solid #263244; border-radius: 12px; padding: 0.9rem 1.2rem; text-align: center; font-size: 0.82rem; color: #94A3B8;">
-            LexAssist provides AI-generated legal information for educational and informational purposes and does not replace advice from a qualified legal professional.
+        <div style="background: rgba(18, 24, 41, 0.6); border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1.2rem; text-align: center; font-size: 0.82rem; color: var(--muted);">
+            {get_translation('disclaimer_text', 'LexAssist provides AI-generated legal information for educational and informational purposes and does not replace advice from a qualified legal professional.')}
         </div>
         """,
         unsafe_allow_html=True
@@ -1632,7 +1815,16 @@ def show_main_app():
         )
 
         if username:
-            st.markdown(f'<div class="saas-user-badge" style="margin-bottom: 0.8rem;">👤 <b>{username}</b></div>', unsafe_allow_html=True)
+            first_char = username[0].upper() if username else "U"
+            st.markdown(
+                f"""
+                <div class="saas-user-profile">
+                    <div class="saas-avatar">{first_char}</div>
+                    <div class="saas-username">{username}</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
         def _nav_button(label: str, target: str, icon: str):
             is_active = (page == target)
@@ -1641,38 +1833,51 @@ def show_main_app():
                 st.session_state.current_page = target
                 st.rerun()
 
-        # Section 1: MAIN ASSISTANTS
+        # Section 1: CORE ASSISTANTS
         st.markdown('<div class="sidebar-sec-title">Core Assistants</div>', unsafe_allow_html=True)
-        _nav_button("Home", "Home", "🏠")
-        _nav_button("Legal Question", "Ask Legal Question", "⚖️")
-        _nav_button("Tax Assistant", "Tax Assistant", "💰")
-        _nav_button("General Assistant", "General Assistant", "💬")
+        _nav_button(get_translation("nav_home"), "Home", "🏠")
+        _nav_button(get_translation("nav_legal"), "Ask Legal Question", "⚖️")
+        _nav_button(get_translation("nav_tax"), "Tax Assistant", "💰")
+        _nav_button(get_translation("nav_general"), "General Assistant", "💬")
 
         # Section 2: DOCUMENT AI
         st.markdown('<div class="sidebar-sec-title">Document AI</div>', unsafe_allow_html=True)
-        _nav_button("Document Analysis", "Document Explanation", "📄")
-        _nav_button("Contract Risk Analyzer", "Contract Risk Analyzer", "⚠️")
-        _nav_button("Compare Contracts", "Compare Contracts", "📊")
-        _nav_button("Draft Document", "Draft Document", "📝")
+        _nav_button(get_translation("nav_doc_exp"), "Document Explanation", "📄")
+        _nav_button(get_translation("nav_risk"), "Contract Risk Analyzer", "⚠️")
+        _nav_button(get_translation("nav_compare"), "Compare Contracts", "📊")
+        _nav_button(get_translation("nav_draft"), "Draft Document", "📝")
 
         # Section 3: LEGAL TOOLS
         st.markdown('<div class="sidebar-sec-title">Legal Tools</div>', unsafe_allow_html=True)
-        _nav_button("Case Law Search", "Case Law Search", "🔍")
-        _nav_button("Section Lookup", "Section Lookup", "📌")
-        _nav_button("Legal Timeline", "Legal Timeline", "🗓️")
-        _nav_button("Penalty Calculator", "Penalty Calculator", "⚖️")
-        _nav_button("Legal Glossary", "Legal Glossary", "📖")
+        _nav_button(get_translation("nav_case_law"), "Case Law Search", "🔍")
+        _nav_button(get_translation("nav_section"), "Section Lookup", "📌")
+        _nav_button(get_translation("nav_timeline"), "Legal Timeline", "🗓️")
+        _nav_button(get_translation("nav_penalty"), "Penalty Calculator", "⚖️")
+        _nav_button(get_translation("nav_glossary"), "Legal Glossary", "📖")
 
         # Section 4: HISTORY & ACCOUNT
         st.markdown('<div class="sidebar-sec-title">History & Account</div>', unsafe_allow_html=True)
-        _nav_button("Query History", "Query History", "📜")
-        _nav_button("Bookmarks", "Bookmarks", "⭐")
-        _nav_button("My Stats", "My Stats", "📈")
-        _nav_button("Admin Analytics", "Admin Analytics", "📊")
-        _nav_button("Profile", "Profile", "👤")
-        _nav_button("About", "About", "ℹ️")
+        _nav_button(get_translation("nav_history"), "Query History", "📜")
+        _nav_button(get_translation("nav_bookmarks"), "Bookmarks", "⭐")
+        _nav_button(get_translation("nav_stats"), "My Stats", "📈")
+        _nav_button(get_translation("nav_admin"), "Admin Analytics", "📊")
+        _nav_button(get_translation("nav_profile"), "Profile", "👤")
+        _nav_button(get_translation("nav_about"), "About", "ℹ️")
 
         st.markdown('<div style="margin-top: 1.2rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.8rem;"></div>', unsafe_allow_html=True)
+
+        # Sidebar Language Selector
+        sb_lang_label = st.selectbox(
+            f"🌐 {get_translation('language')}",
+            options=list(LANGUAGE_OPTIONS.keys()),
+            index=get_lang_index(st.session_state.chat_language),
+            key="sb_language_selector"
+        )
+        sb_lang_code = LANGUAGE_OPTIONS[sb_lang_label]
+        if sb_lang_code != st.session_state.chat_language:
+            st.session_state.chat_language = sb_lang_code
+            toast(f"Language set to {sb_lang_code}", "🌐")
+            st.rerun()
 
         col_th, col_lg = st.columns(2)
         with col_th:
@@ -1680,7 +1885,7 @@ def show_main_app():
                 st.session_state.dark_mode = not dark
                 st.rerun()
         with col_lg:
-            if st.button("🚪 Logout", key="snav_logout", use_container_width=True):
+            if st.button(f"🚪 {get_translation('logout')}", key="snav_logout", use_container_width=True):
                 try:
                     requests.post(f"{API_URL}/logout", headers=auth_headers(), timeout=TIMEOUT_SHORT)
                 except Exception:

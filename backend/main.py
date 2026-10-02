@@ -1,4 +1,10 @@
 import sys
+import os
+
+_DIR = os.path.dirname(os.path.abspath(__file__))
+if _DIR not in sys.path:
+    sys.path.insert(0, _DIR)
+
 if sys.platform == "win32":
     try:
         sys.stdout.reconfigure(encoding="utf-8")
@@ -140,7 +146,7 @@ class QueryRequest(BaseModel):
     @field_validator("language")
     @classmethod
     def validate_language(cls, v):
-        allowed = {"English", "Hindi", "Tamil", "Telugu", "Kannada", "Malayalam", "Bengali", "Marathi", "Gujarati"}
+        allowed = {"English", "Hindi", "Gujarati", "Marathi", "Bengali", "Tamil", "Telugu", "Kannada", "Malayalam", "Punjabi"}
         return v if v in allowed else "English"
 
 class QueryResponse(BaseModel):

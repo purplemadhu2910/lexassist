@@ -1,7 +1,13 @@
 import os
+import sys
 import json
 import re
 import logging
+
+_DIR = os.path.dirname(os.path.abspath(__file__))
+if _DIR not in sys.path:
+    sys.path.insert(0, _DIR)
+
 from groq import Groq
 from rag_engine import build_context_with_sources
 
@@ -437,19 +443,27 @@ class AIEngine:
 
     def _get_system_prompt(self, category: str, language: str = "English") -> str:
         extras = {
-            "legal": "Focus on Indian legal matters, IPC sections, Constitutional articles, and regulations.",
+            "legal": "Focus on Indian legal matters, IPC/BNS sections, Constitutional articles, and court precedents.",
             "tax": "Focus on Indian tax laws, Income Tax Act sections, GST, deductions, and filing requirements.",
             "document": "Focus on explaining legal documents and contracts under Indian law."
         }
         base = (
             "You are LexAssist, an AI legal and tax assistant specializing in Indian law. "
-            "Provide clear simplified explanations, reference relevant Indian legal sections accurately. "
-            "Preserve exact legal terminology from sources (e.g., IPC, CrPC, BNS, BSA, Income Tax Act, Indian Contract Act). "
-            "Never invent or substitute non-existent statute abbreviations (such as 'APC'). "
-            "Remind users this is not professional legal advice."
+            "Provide clear, simplified explanations and reference relevant Indian legal sections accurately. "
+            "Remind users that this is AI-generated legal information for educational purposes and does not constitute professional legal advice."
         )
-        lang_note = f" Always respond in {language}." if language != "English" else ""
-        return base + " " + extras.get(category, "") + lang_note
+        if language and language != "English":
+            lang_instruction = (
+                f" Answer the user's question in {language}. "
+                "Preserve legal accuracy, section numbers, Act names, dates, percentages, monetary values, and citations. "
+                "Do not translate legal provisions or statutory section names in a way that alters their legal meaning. "
+                "Where helpful for clarity, include the original English legal term in parentheses alongside the translation. "
+                "Base the answer strictly on the retrieved context whenever legal or tax information is requested."
+            )
+        else:
+            lang_instruction = " Answer in clear, professional English while preserving exact legal terminology."
+            
+        return base + " " + extras.get(category, "") + lang_instruction
 
     def generate_suggestions(self, query: str, category: str) -> list:
         if not self.client:
