@@ -1,7 +1,7 @@
 # ⚖️ LexAssist — AI Legal & Tax Assistant for Indian Law
 
 LexAssist is an AI-powered legal and tax assistant that helps users understand complex Indian legal and tax concepts in simple, easy-to-understand language. It uses Retrieval-Augmented Generation (RAG) to ground answers in real Indian legal documents.
-
+**Link: https://lexassist-1paa.onrender.com**
 ---
 
 ## 🚀 Features
